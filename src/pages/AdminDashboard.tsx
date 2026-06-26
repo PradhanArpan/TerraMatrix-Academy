@@ -259,7 +259,6 @@ const taxonomyThemeDefaults: Record<string, string[]> = {
   ],
 };
 
-const courseCategories = taxonomyCategoryOptions;
 
 const courseLevelOptions = [
   "Foundation",
@@ -356,7 +355,6 @@ const emptyLearningToolForm: LearningToolForm = {
   order: 1,
 };
 
-const contentCategoryOptions = taxonomyCategoryOptions;
 
 type ContentCategoryKey = "courses" | "videos" | "webinars" | "workshops";
 type TaxonomyMode = "levels" | "categories" | "themes";
@@ -367,12 +365,6 @@ type TaxonomySettings = {
   themesByCategory: Record<string, string[]>;
 };
 
-const categoryGroupLabels: Record<ContentCategoryKey, string> = {
-  courses: "Courses",
-  videos: "Learning Videos",
-  webinars: "Webinars",
-  workshops: "Workshops",
-};
 
 function uniqueCategoryList(values: string[]) {
   return Array.from(
@@ -452,28 +444,7 @@ function saveTaxonomySettings(settings: TaxonomySettings) {
   return normalized;
 }
 
-function loadContentCategoryMap(): Record<ContentCategoryKey, string[]> {
-  const taxonomy = loadTaxonomySettings();
 
-  return {
-    courses: taxonomy.categories,
-    videos: taxonomy.categories,
-    webinars: taxonomy.categories,
-    workshops: taxonomy.categories,
-  };
-}
-
-function saveContentCategoryMap(updated: Record<ContentCategoryKey, string[]>) {
-  const taxonomy = loadTaxonomySettings();
-  const mergedCategories = uniqueCategoryList([
-    ...taxonomy.categories,
-    ...updated.courses,
-    ...updated.videos,
-    ...updated.webinars,
-    ...updated.workshops,
-  ]);
-  saveTaxonomySettings({ ...taxonomy, categories: mergedCategories });
-}
 
 function updateStoredCategoryReferences(
   _group: ContentCategoryKey,
@@ -4586,12 +4557,6 @@ const overviewTitle: CSSProperties = {
   margin: 0,
 };
 
-const overviewText: CSSProperties = {
-  color: "#53665E",
-  fontSize: "16px",
-  lineHeight: "1.65",
-  margin: 0,
-};
 
 const overviewGrid: CSSProperties = {
   display: "grid",
@@ -4628,52 +4593,10 @@ const overviewMetricRow: CSSProperties = {
   fontSize: "14px",
 };
 
-const overviewNoteCard: CSSProperties = {
-  background: "#DDE9E2",
-  border: "1px solid #C9DDD3",
-  borderRadius: "16px",
-  padding: "16px 20px",
-  color: "#173F35",
-  display: "flex",
-  gap: "8px",
-  alignItems: "center",
-  flexWrap: "wrap",
-};
 
-const adminActionSection: CSSProperties = {
-  maxWidth: "1280px",
-  margin: "0 auto",
-  padding: "22px 48px 40px",
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: "28px",
-  alignItems: "stretch",
-};
 
-const actionCard: CSSProperties = {
-  background: "#FFFFFF",
-  border: "1px solid #E8E1D2",
-  borderRadius: "22px",
-  padding: "30px",
-  boxShadow: "0 14px 36px rgba(23,63,53,0.07)",
-  display: "grid",
-  gap: "14px",
-  alignContent: "start",
-};
 
-const actionCardTitle: CSSProperties = {
-  color: "#173F35",
-  fontSize: "28px",
-  lineHeight: "1.2",
-  margin: 0,
-};
 
-const actionCardText: CSSProperties = {
-  color: "#53665E",
-  fontSize: "16px",
-  lineHeight: "1.65",
-  margin: 0,
-};
 
 const largeActionButton: CSSProperties = {
   background: "#173F35",
@@ -4716,11 +4639,7 @@ const formModalClose: CSSProperties = {
 };
 
 const contentAdminLayout: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(380px, 0.9fr) minmax(420px, 1.1fr)", gap: "18px", alignItems: "start" };
-const categoryAdminLayout: CSSProperties = { display: "grid", gridTemplateColumns: "260px 1fr", gap: "18px", alignItems: "start" };
 const taxonomySinglePanel: CSSProperties = { maxWidth: "900px", margin: "0 auto" };
-const categoryGroupList: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "18px", padding: "12px", display: "grid", gap: "8px", boxShadow: "0 12px 26px rgba(23,63,53,0.06)" };
-const categoryGroupButton: CSSProperties = { background: "#FBFAF6", color: "#173F35", border: "1px solid #E8E1D2", borderRadius: "12px", padding: "12px", cursor: "pointer", fontWeight: 900, textAlign: "left" };
-const activeCategoryGroupButton: CSSProperties = { ...categoryGroupButton, background: "#173F35", color: "#FFFFFF", border: "1px solid #173F35" };
 const categoryAddRow: CSSProperties = { display: "grid", gridTemplateColumns: "1fr auto", gap: "10px", alignItems: "center", marginBottom: "14px" };
 const categoryRows: CSSProperties = { display: "grid", gap: "9px" };
 const categoryRow: CSSProperties = { display: "grid", gridTemplateColumns: "1fr auto", gap: "10px", alignItems: "center" };
@@ -4850,7 +4769,6 @@ const toolAdminLogo: CSSProperties = { width: "100%", height: "100%", objectFit:
 const tableShell: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "16px", overflow: "hidden", boxShadow: "0 10px 28px rgba(23,63,53,0.05)" };
 const dataTable: CSSProperties = { width: "100%", borderCollapse: "collapse", tableLayout: "fixed" };
 const courseDataTable: CSSProperties = { ...dataTable };
-const instructorDataTable: CSSProperties = { ...dataTable };
 const instructorTableShell: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "16px", overflow: "hidden", boxShadow: "0 10px 28px rgba(23,63,53,0.05)" };
 const instructorGridColumns = "24% 21% 25% 21% 9%";
 const instructorGridHeader: CSSProperties = { display: "grid", gridTemplateColumns: instructorGridColumns, alignItems: "center", background: "#F5F2EA", color: "#173F35", fontSize: "11.5px", fontWeight: 900, letterSpacing: "0.55px", textTransform: "uppercase", borderBottom: "1px solid #E8E1D2" };
@@ -4898,13 +4816,8 @@ const tableMutedText: CSSProperties = {
 };
 const instructorNameLine: CSSProperties = { ...tableMutedText, whiteSpace: "nowrap" };
 const designationLine: CSSProperties = { ...tablePrimaryText, whiteSpace: "nowrap" };
-const badgeStack: CSSProperties = { display: "grid", gap: "7px", justifyItems: "start" };
 const nameStack: CSSProperties = { display: "grid", gap: "2px", justifyItems: "start", textAlign: "left" };
 const courseActionGrid: CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", minWidth: 0, justifyItems: "stretch" };
-const tableActionRow: CSSProperties = { display: "flex", gap: "7px", flexWrap: "wrap" };
-const tablePillReady: CSSProperties = { display: "inline-flex", alignItems: "center", background: "#DDE9E2", color: "#173F35", padding: "5px 8px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 850, marginRight: "4px", whiteSpace: "nowrap" };
-const tablePillPending: CSSProperties = { ...tablePillReady, background: "#F6E6E6", color: "#8B2B2B" };
-const tablePillNeutral: CSSProperties = { ...tablePillReady, background: "#F0E6CF", color: "#173F35" };
 const sessionLinkReady: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
@@ -4928,18 +4841,8 @@ const sessionLinkPending: CSSProperties = {
 };
 const emptyState: CSSProperties = { background: "#FFFFFF", border: "1px dashed #C9DDD3", borderRadius: "16px", padding: "26px", color: "#53665E", textAlign: "center", fontWeight: 800 };
 
-const courseList: CSSProperties = { display: "grid", gap: "18px" };
-const courseItem: CSSProperties = { display: "grid", gridTemplateColumns: "140px 1fr", gap: "14px", border: "1px solid #E8E1D2", borderRadius: "14px", padding: "12px", background: "#FFFFFF", textAlign: "left", boxShadow: "0 8px 20px rgba(23,63,53,0.04)" };
-const courseThumb: CSSProperties = { minHeight: "108px", borderRadius: "12px", backgroundSize: "cover", backgroundPosition: "center", backgroundColor: "#DDE9E2" };
-const courseItemBody: CSSProperties = { display: "flex", flexDirection: "column" };
-const courseItemTop: CSSProperties = { display: "flex", justifyContent: "space-between", gap: "10px", marginBottom: "10px" };
 const categoryBadge: CSSProperties = { background: "#F0E6CF", color: "#173F35", padding: "6px 9px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 800, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" };
-const publishedBadge: CSSProperties = { background: "#DDE9E2", color: "#173F35", padding: "6px 9px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 800, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" };
-const draftBadge: CSSProperties = { background: "#F6E6E6", color: "#8B2B2B", padding: "6px 9px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 800, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" };
-const courseItemTitle: CSSProperties = { color: "#173F35", margin: "0 0 8px" };
 const courseItemText: CSSProperties = { color: "#53665E", fontSize: "15px", lineHeight: "1.55", margin: "0 0 12px" };
-const linkedText: CSSProperties = { color: "#8A661E", fontSize: "14px", fontWeight: 800, margin: "0 0 12px" };
-const courseDetails: CSSProperties = { display: "flex", gap: "10px", flexWrap: "wrap", color: "#53665E", fontSize: "13px", fontWeight: 700, marginBottom: "14px" };
 const actionRow: CSSProperties = { display: "flex", gap: "10px", flexWrap: "wrap" };
 const eventActionRow: CSSProperties = {
   display: "flex",
@@ -4970,16 +4873,11 @@ const statusMoveButton: CSSProperties = {
   border: "1px solid #DEC893",
   color: "#173F35",
 };
-const smallLinkButton: CSSProperties = { ...smallButton, textDecoration: "none" };
 const instructorActionRow: CSSProperties = { display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "7px", minWidth: 0, padding: "10px 8px" };
-const instructorActionLeft: CSSProperties = { display: "flex", alignItems: "center", gap: "5px", flexWrap: "nowrap" };
 const deleteIconButton: CSSProperties = { width: "24px", height: "24px", borderRadius: "50%", border: "1px solid #F4C7C7", background: "#FDE8E8", color: "#9B1C1C", cursor: "pointer", fontWeight: 900, fontSize: "16px", lineHeight: "1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 };
 const smallDanger: CSSProperties = { background: "#FDE8E8", color: "#9B1C1C", border: "1px solid #F4C7C7", padding: "8px 10px", borderRadius: "9px", cursor: "pointer", fontWeight: 800 };
 const deleteButton: CSSProperties = { background: "#FDE8E8", color: "#9B1C1C", border: "1px solid #F4C7C7", padding: "6px 8px", borderRadius: "8px", cursor: "pointer", fontWeight: 850, fontSize: "11.5px" };
 const courseDeleteButton: CSSProperties = { ...deleteButton, gridColumn: "1 / -1" };
-const instructorList: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "18px" };
-const instructorItem: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "18px", padding: "16px", display: "grid", gridTemplateColumns: "100px 1fr", gap: "16px", textAlign: "left" };
-const smallPhoto: CSSProperties = { width: "92px", height: "115px", borderRadius: "12px", backgroundSize: "cover", backgroundPosition: "center", backgroundColor: "#DDE9E2" };
 const enquiryHeaderActions: CSSProperties = { display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" };
 const exportButton: CSSProperties = { background: "#173F35", color: "#FFFFFF", border: "none", padding: "10px 14px", borderRadius: "999px", cursor: "pointer", fontWeight: 900 };
 const enquiryCount: CSSProperties = { background: "#DDE9E2", color: "#173F35", padding: "10px 14px", borderRadius: "999px", fontWeight: 800 };
