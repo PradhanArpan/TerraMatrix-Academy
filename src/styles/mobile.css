@@ -1,0 +1,234 @@
+/* TerraMatrix mobile mode
+   This file gives the whole MVP a usable phone layout without changing every page component.
+*/
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  max-width: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+
+/* Tablet and phone */
+@media (max-width: 900px) {
+  .tm-header-bar {
+    padding: 9px 12px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    align-items: start !important;
+  }
+
+  .tm-brand-link {
+    min-width: 0 !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .tm-brand-logo {
+    width: 42px !important;
+    height: 42px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .tm-brand-title {
+    font-size: 19px !important;
+    white-space: normal !important;
+    line-height: 1.05 !important;
+  }
+
+  .tm-brand-tagline {
+    font-size: 10.5px !important;
+    white-space: normal !important;
+    line-height: 1.15 !important;
+  }
+
+  .tm-nav-cluster {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    padding: 0 0 2px !important;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tm-nav-pill {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+  }
+
+  .tm-dropdown-menu {
+    position: fixed !important;
+    top: 98px !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    max-width: none !important;
+    z-index: 5000 !important;
+    padding: 6px !important;
+    gap: 5px !important;
+  }
+
+  .tm-dropdown-item {
+    min-height: 34px !important;
+    padding: 7px 9px !important;
+    font-size: 13px !important;
+  }
+
+  /* Page containers */
+  #root [style*="max-width: 1220px"],
+  #root [style*="max-width: 1200px"],
+  #root [style*="max-width: 1180px"],
+  #root [style*="max-width: 1100px"],
+  #root [style*="max-width: 1000px"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Most desktop grids should become one-column on phone */
+  #root [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* But small info/stat boxes can stay in two columns */
+  #root [style*="repeat(5"],
+  #root [style*="repeat(4"],
+  #root [style*="repeat(3"],
+  #root [style*="repeat(2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Form fields */
+  #root input,
+  #root select,
+  #root textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+  }
+
+  #root button {
+    max-width: 100%;
+  }
+
+  /* Large headings */
+  h1,
+  h2 {
+    overflow-wrap: anywhere;
+  }
+
+  /* Tables inside admin/instructor pages */
+  table {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+  }
+
+  th,
+  td {
+    white-space: normal;
+  }
+}
+
+/* Small phones */
+@media (max-width: 560px) {
+  .tm-header-bar {
+    padding: 8px 10px !important;
+  }
+
+  .tm-brand-logo {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .tm-brand-title {
+    font-size: 17px !important;
+  }
+
+  .tm-brand-tagline {
+    font-size: 9.8px !important;
+  }
+
+  .tm-nav-pill {
+    padding: 7px 9px !important;
+    font-size: 11.5px !important;
+  }
+
+  .tm-dropdown-menu {
+    top: 92px !important;
+  }
+
+  #root [style*="padding: 58px"],
+  #root [style*="padding: 54px"],
+  #root [style*="padding: 48px"],
+  #root [style*="padding: 46px"],
+  #root [style*="padding: 42px"],
+  #root [style*="padding: 36px"] {
+    padding: 22px 12px !important;
+  }
+
+  #root [style*="font-size: 56px"],
+  #root [style*="font-size: 52px"],
+  #root [style*="font-size: 48px"],
+  #root [style*="font-size: 44px"],
+  #root [style*="font-size: 40px"] {
+    font-size: 30px !important;
+    line-height: 1.08 !important;
+  }
+
+  #root [style*="font-size: 36px"],
+  #root [style*="font-size: 34px"],
+  #root [style*="font-size: 32px"] {
+    font-size: 25px !important;
+    line-height: 1.12 !important;
+  }
+
+  /* Card-like blocks */
+  #root [style*="border-radius: 18px"],
+  #root [style*="border-radius: 16px"],
+  #root [style*="border-radius: 14px"] {
+    border-radius: 12px !important;
+  }
+
+  /* Keep phone view clean */
+  #root [style*="min-width: 360px"] {
+    min-width: 0 !important;
+  }
+
+  #root [style*="width: 310px"],
+  #root [style*="width: 330px"],
+  #root [style*="max-width: 310px"],
+  #root [style*="max-width: 330px"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #root [style*="repeat(5"],
+  #root [style*="repeat(4"],
+  #root [style*="repeat(3"] {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -16,6 +16,7 @@ import InstructorPortal from "./pages/InstructorPortal";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import logo from "./assets/terramatrix-logo.png";
+import "./styles/mobile.css";
 
 function App() {
   const [loginMenuOpen, setLoginMenuOpen] = useState(false);
@@ -55,18 +56,18 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div style={appShell}>
-        <nav style={headerBar}>
-          <NavLink to="/" style={brandLink} onClick={closeMenus}>
-            <img src={logo} alt="TerraMatrix Academy" style={brandLogo} />
-            <div style={brandTextBlock}>
-              <div style={brandTitle}>TerraMatrix Academy</div>
-              <div style={brandTagline}>Engineering Knowledge for Real-World Impact</div>
+      <div style={appShell} className="tm-app-shell">
+        <nav style={headerBar} className="tm-header-bar">
+          <NavLink to="/" style={brandLink} className="tm-brand-link" onClick={closeMenus}>
+            <img src={logo} alt="TerraMatrix Academy" style={brandLogo} className="tm-brand-logo" />
+            <div style={brandTextBlock} className="tm-brand-text-block">
+              <div style={brandTitle} className="tm-brand-title">TerraMatrix Academy</div>
+              <div style={brandTagline} className="tm-brand-tagline">Engineering Knowledge for Real-World Impact</div>
             </div>
           </NavLink>
 
-          <div style={navCluster}>
-            <NavLink end to="/" style={navStyle} onClick={closeMenus}>
+          <div style={navCluster} className="tm-nav-cluster">
+            <NavLink end to="/" style={navStyle} className="tm-nav-pill" onClick={closeMenus}>
               Home
             </NavLink>
 
@@ -78,25 +79,26 @@ function App() {
                   setLoginMenuOpen(false);
                 }}
                 style={learningDropdownButton}
+                className="tm-nav-pill tm-learning-button"
               >
                 Learning Hub ▾
               </button>
 
               {learningMenuOpen && (
-                <div style={learningMenu}>
-                  <NavLink to="/learning-videos" style={dropdownItem} onClick={closeMenus}>
+                <div style={learningMenu} className="tm-dropdown-menu tm-learning-menu">
+                  <NavLink to="/learning-videos" style={dropdownItem} className="tm-dropdown-item" onClick={closeMenus}>
                     Learning Videos
                     <span style={dropdownHint}>Open video library</span>
                   </NavLink>
-                  <NavLink to="/webinars" style={dropdownItem} onClick={closeMenus}>
+                  <NavLink to="/webinars" style={dropdownItem} className="tm-dropdown-item" onClick={closeMenus}>
                     Webinars
                     <span style={dropdownHint}>Live knowledge sessions</span>
                   </NavLink>
-                  <NavLink to="/workshops" style={dropdownItem} onClick={closeMenus}>
+                  <NavLink to="/workshops" style={dropdownItem} className="tm-dropdown-item" onClick={closeMenus}>
                     Workshops
                     <span style={dropdownHint}>Practice-oriented events</span>
                   </NavLink>
-                  <NavLink to="/student" style={dropdownItem} onClick={closeMenus}>
+                  <NavLink to="/student" style={dropdownItem} className="tm-dropdown-item" onClick={closeMenus}>
                     Courses
                     <span style={dropdownHint}>Structured LMS programmes</span>
                   </NavLink>
@@ -104,7 +106,7 @@ function App() {
               )}
             </div>
 
-            <NavLink to="/instructors" style={navStyle} onClick={closeMenus}>
+            <NavLink to="/instructors" style={navStyle} className="tm-nav-pill" onClick={closeMenus}>
               Instructors
             </NavLink>
 
@@ -116,21 +118,22 @@ function App() {
                   setLearningMenuOpen(false);
                 }}
                 style={loginDropdownButton}
+                className="tm-nav-pill tm-login-button"
               >
                 Login ▾
               </button>
 
               {loginMenuOpen && (
-                <div style={dropdownMenu}>
-                  <NavLink to="/student-login" style={dropdownItem} onClick={closeMenus}>
+                <div style={dropdownMenu} className="tm-dropdown-menu tm-login-menu">
+                  <NavLink to="/student-login" style={dropdownItem} className="tm-dropdown-item" onClick={closeMenus}>
                     Student Login
                     <span style={dropdownHint}>Registered learners</span>
                   </NavLink>
-                  <NavLink to="/instructor-login" style={dropdownItem} onClick={closeMenus}>
+                  <NavLink to="/instructor-login" style={dropdownItem} className="tm-dropdown-item" onClick={closeMenus}>
                     Instructor Login
                     <span style={dropdownHint}>Classroom management</span>
                   </NavLink>
-                  <NavLink to="/admin" style={dropdownItem} onClick={closeMenus}>
+                  <NavLink to="/admin" style={dropdownItem} className="tm-dropdown-item" onClick={closeMenus}>
                     Admin Login
                     <span style={dropdownHint}>Courses, events and setup</span>
                   </NavLink>
