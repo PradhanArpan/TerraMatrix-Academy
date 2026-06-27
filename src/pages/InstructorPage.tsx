@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 type Instructor = {
   id: number;
+  remoteId?: string;
   name: string;
   designation: string;
   company: string;
@@ -67,6 +69,7 @@ function normalizePublicAssetPath(value: string) {
 function normalizeInstructor(instructor: Partial<Instructor>): Instructor {
   return {
     id: instructor.id || Date.now(),
+    remoteId: instructor.remoteId || "",
     name: instructor.name || "Instructor",
     designation: instructor.designation || "Course Instructor",
     company: instructor.company || "TerraMatrix Academy",
@@ -78,6 +81,47 @@ function normalizeInstructor(instructor: Partial<Instructor>): Instructor {
     cvName: instructor.cvName || "",
     cvData: normalizePublicAssetPath(instructor.cvData || ""),
   };
+}
+
+type SupabaseInstructorRow = {
+  id: string;
+  name: string | null;
+  designation: string | null;
+  organisation: string | null;
+  email: string | null;
+  phone: string | null;
+  profile: string | null;
+  expertise: string[] | null;
+  photo_url: string | null;
+  resume_url: string | null;
+  status: string | null;
+};
+
+function stableNumericId(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash || Date.now();
+}
+
+function supabaseRowToInstructor(row: SupabaseInstructorRow): Instructor {
+  return normalizeInstructor({
+    id: stableNumericId(row.id),
+    remoteId: row.id,
+    name: row.name || "Instructor",
+    designation: row.designation || "Course Instructor",
+    company: row.organisation || "TerraMatrix Academy",
+    expertise: Array.isArray(row.expertise) && row.expertise.length > 0
+      ? row.expertise.join(", ")
+      : "Engineering Training",
+    email: row.email || "",
+    phone: row.phone || "",
+    bio: row.profile || "Instructor profile will be updated soon.",
+    photoUrl: row.photo_url || defaultPhoto,
+    cvName: row.resume_url ? getFileNameFromPath(row.resume_url, "Resume") : "",
+    cvData: row.resume_url || "",
+  });
 }
 
 function formatExpertiseKeywords(value: string) {
@@ -124,30 +168,49 @@ export default function InstructorPage() {
   const [pdfViewer, setPdfViewer] = useState<{ title: string; url: string; error?: string } | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("terramatrix_instructors");
-
-    if (saved) {
+    const loadInstructors = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        setInstructors(
-          parsed.map((instructor: Partial<Instructor>) =>
-            normalizeInstructor(instructor)
-          )
+        const { data, error } = await supabase
+          .from("instructors")
+          .select("*")
+          .order("display_order", { ascending: true })
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const onlineInstructors = (data || []).map((row) =>
+          supabaseRowToInstructor(row as SupabaseInstructorRow)
         );
-      } catch {
-        setInstructors(sampleInstructors);
-        localStorage.setItem(
-          "terramatrix_instructors",
-          JSON.stringify(sampleInstructors)
-        );
+
+        if (onlineInstructors.length > 0) {
+          setInstructors(onlineInstructors);
+          localStorage.setItem("terramatrix_instructors", JSON.stringify(onlineInstructors));
+          return;
+        }
+      } catch (error) {
+        console.error("Could not load instructors from Supabase.", error);
       }
-    } else {
+
+      const saved = localStorage.getItem("terramatrix_instructors");
+
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setInstructors(
+            parsed.map((instructor: Partial<Instructor>) =>
+              normalizeInstructor(instructor)
+            )
+          );
+          return;
+        } catch {
+          // fallback below
+        }
+      }
+
       setInstructors(sampleInstructors);
-      localStorage.setItem(
-        "terramatrix_instructors",
-        JSON.stringify(sampleInstructors)
-      );
-    }
+    };
+
+    void loadInstructors();
   }, []);
 
   const openResume = async (instructor: Instructor) => {
