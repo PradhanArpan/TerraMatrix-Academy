@@ -79,27 +79,18 @@ const highlights = [
 ];
 
 const genericSkillItems = [
-  { name: "GIS", icon: "🗺️", logoUrl: "/logos/gis.png" },
-  { name: "Remote Sensing", icon: "🛰️" },
-  { name: "CAD", icon: "📐", logoUrl: "/logos/cad.png" },
-  { name: "BIM", icon: "🏢" },
-  { name: "Structural Modelling", icon: "🌉" },
-  { name: "Hydrology", icon: "🌊" },
-  { name: "Groundwater", icon: "💧" },
-  { name: "Field Survey", icon: "📍" },
-  { name: "Drone Survey", icon: "🛩️" },
-  { name: "Mobile Mapping", icon: "🧭" },
-  { name: "Data Collection", icon: "📱" },
-  { name: "Statistics", icon: "📊" },
-  { name: "Spreadsheet Skills", icon: "📗" },
-  { name: "Data Analysis", icon: "📈" },
-  { name: "Programming", icon: "🐍" },
-  { name: "Research Methods", icon: "📝" },
-  { name: "Impact Assessment", icon: "📋" },
-  { name: "Documentation", icon: "📑" },
-  { name: "Teaching & Assessment", icon: "🎓" },
-  { name: "Sustainability", icon: "🌱" },
-  { name: "Risk & Resilience", icon: "🛡️" },
+  { name: "BIM", logoUrl: "/logos/bim.png" },
+  { name: "CAD", logoUrl: "/logos/cad.png" },
+  { name: "API", logoUrl: "/logos/api.png" },
+  { name: "GIS", logoUrl: "/logos/gis.png" },
+  { name: "Structural Design", logoUrl: "/logos/structural-design.png" },
+  { name: "Structural Analysis", logoUrl: "/logos/structural-analysis.png" },
+  { name: "Hydrologic Modeling", logoUrl: "/logos/hydrologic-modeling.png" },
+  { name: "River Analysis", logoUrl: "/logos/river-analysis.png" },
+  { name: "Data Analysis", logoUrl: "/logos/data-analysis.png" },
+  { name: "Field Survey", logoUrl: "/logos/field-survey.png" },
+  { name: "Remote Sensing", logoUrl: "/logos/remote-sensing.png" },
+  { name: "Programming", logoUrl: "/logos/programming.png" },
 ];
 
 function normalizeToolName(name: string) {
@@ -436,10 +427,10 @@ export default function Home() {
               {[...genericSkillItems, ...genericSkillItems].map((tool, index) => (
                 <article key={`${tool.name}-${index}`} style={genericToolCard}>
                   <div style={genericToolLogo}>
-                    {"logoUrl" in tool && tool.logoUrl ? (
+                    {tool.logoUrl ? (
                       <img src={tool.logoUrl} alt={tool.name} style={genericToolLogoImage} />
                     ) : (
-                      tool.icon
+                      <span>{tool.name}</span>
                     )}
                   </div>
                   <span style={genericToolName}>{tool.name}</span>
@@ -818,40 +809,35 @@ const toolsCarouselTrack: CSSProperties = {
   width: "max-content",
   gap: "14px",
   padding: "0 14px",
-  animation: "tmToolsAutoScroll 48s linear infinite",
+  animation: "tmToolsAutoScroll 42s linear infinite",
 };
 
 const genericToolCard: CSSProperties = {
-  width: "128px",
-  minHeight: "108px",
+  width: "142px",
+  minHeight: "126px",
   background: "#FBFAF6",
   border: "1px solid #E8E1D2",
   borderRadius: "14px",
   display: "grid",
   justifyItems: "center",
   alignContent: "center",
-  gap: "8px",
+  gap: "7px",
   padding: "12px 10px",
   boxShadow: "0 8px 18px rgba(23,63,53,0.04)",
 };
 
 const genericToolLogo: CSSProperties = {
-  width: "62px",
-  height: "62px",
-  borderRadius: "15px",
-  background: "#DDE9E2",
-  border: "1px solid #C9DDD3",
+  width: "76px",
+  height: "76px",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "30px",
   lineHeight: 1,
-  overflow: "hidden",
 };
 
 const genericToolLogoImage: CSSProperties = {
-  width: "100%",
-  height: "100%",
+  width: "76px",
+  height: "76px",
   objectFit: "contain",
   display: "block",
 };
