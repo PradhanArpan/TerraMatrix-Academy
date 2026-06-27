@@ -78,6 +78,30 @@ const highlights = [
   { icon: "📈", title: "Real-World Impact" },
 ];
 
+const genericSkillItems = [
+  { name: "GIS", icon: "🗺️", logoUrl: "/logos/gis.png" },
+  { name: "Remote Sensing", icon: "🛰️" },
+  { name: "CAD", icon: "📐", logoUrl: "/logos/cad.png" },
+  { name: "BIM", icon: "🏢" },
+  { name: "Structural Modelling", icon: "🌉" },
+  { name: "Hydrology", icon: "🌊" },
+  { name: "Groundwater", icon: "💧" },
+  { name: "Field Survey", icon: "📍" },
+  { name: "Drone Survey", icon: "🛩️" },
+  { name: "Mobile Mapping", icon: "🧭" },
+  { name: "Data Collection", icon: "📱" },
+  { name: "Statistics", icon: "📊" },
+  { name: "Spreadsheet Skills", icon: "📗" },
+  { name: "Data Analysis", icon: "📈" },
+  { name: "Programming", icon: "🐍" },
+  { name: "Research Methods", icon: "📝" },
+  { name: "Impact Assessment", icon: "📋" },
+  { name: "Documentation", icon: "📑" },
+  { name: "Teaching & Assessment", icon: "🎓" },
+  { name: "Sustainability", icon: "🌱" },
+  { name: "Risk & Resilience", icon: "🛡️" },
+];
+
 function normalizeToolName(name: string) {
   const clean = name.trim();
   const lower = clean.toLowerCase();
@@ -333,6 +357,12 @@ export default function Home() {
 
   return (
     <main>
+      <style>{`
+        @keyframes tmToolsAutoScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
       <section style={heroSection}>
         <div style={heroOverlay}>
           <div style={heroContent}>
@@ -398,83 +428,25 @@ export default function Home() {
       </section>
 
       <section style={learningSection}>
-        <div style={sectionHeader}>
-          <div style={sectionEyebrow}>LEARNING AREAS</div>
-          <h2 style={sectionTitle}>Tools, Methods and Applied Skills</h2>
-        </div>
+        <div style={learningPanel}>
+          <h2 style={toolsPanelTitle}>Tools, Methods and Applied Skills</h2>
 
-        <div style={areaCarouselFrame}>
-          {groupedTools.length > 4 && (
-            <button
-              type="button"
-              onClick={() => moveAreaCarousel(-1)}
-              style={{ ...areaCarouselButton, ...areaCarouselButtonLeft }}
-              aria-label="Previous learning area"
-            >
-              ‹
-            </button>
-          )}
-
-          <div style={toolGrid}>
-          {visibleAreaGroups.map((group) => {
-            const visibleTools = getVisibleTools(group.area, group.tools);
-            const pageCount = Math.max(1, Math.ceil(group.tools.length / 3));
-
-            return (
-              <article key={group.area} style={toolCard}>
-                <h3 style={toolTitle}>{group.area}</h3>
-
-                <div style={toolLogoGrid}>
-                  {visibleTools.map((tool) => (
-                    <div key={tool.id} style={toolLogoItem} title={tool.name}>
-                      <div style={toolLogoBox}>
-                        {tool.logoData ? (
-                          <img src={tool.logoData} alt={tool.name} style={toolLogoImage} />
-                        ) : (
-                          <span style={toolIconText}>{tool.icon || "🧩"}</span>
-                        )}
-                      </div>
-                      <span style={toolName}>{tool.name}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {pageCount > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => moveToolCarousel(group.area, group.tools, -1)}
-                      style={{ ...carouselButton, ...carouselButtonLeft }}
-                      aria-label={`Previous ${group.area} tools`}
-                    >
-                      ‹
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => moveToolCarousel(group.area, group.tools, 1)}
-                      style={{ ...carouselButton, ...carouselButtonRight }}
-                      aria-label={`Next ${group.area} tools`}
-                    >
-                      ›
-                    </button>
-                  </>
-                )}
-              </article>
-            );
-          })}
+          <div style={toolsCarouselFrame}>
+            <div style={toolsCarouselTrack}>
+              {[...genericSkillItems, ...genericSkillItems].map((tool, index) => (
+                <article key={`${tool.name}-${index}`} style={genericToolCard}>
+                  <div style={genericToolLogo}>
+                    {"logoUrl" in tool && tool.logoUrl ? (
+                      <img src={tool.logoUrl} alt={tool.name} style={genericToolLogoImage} />
+                    ) : (
+                      tool.icon
+                    )}
+                  </div>
+                  <span style={genericToolName}>{tool.name}</span>
+                </article>
+              ))}
+            </div>
           </div>
-
-          {groupedTools.length > 4 && (
-            <button
-              type="button"
-              onClick={() => moveAreaCarousel(1)}
-              style={{ ...areaCarouselButton, ...areaCarouselButtonRight }}
-              aria-label="Next learning area"
-            >
-              ›
-            </button>
-          )}
         </div>
       </section>
       <section style={enquirySection}>
@@ -701,8 +673,8 @@ const heroSecondaryButton: CSSProperties = {
 
 const highlightWrap: CSSProperties = {
   maxWidth: "1220px",
-  margin: "-30px auto 0",
-  padding: "0 48px 42px",
+  margin: "0 auto",
+  padding: "26px 48px 42px",
 };
 
 const highlightGrid: CSSProperties = {
@@ -716,8 +688,8 @@ const highlightGrid: CSSProperties = {
 };
 
 const highlightCard: CSSProperties = {
-  minHeight: "112px",
-  padding: "22px 18px",
+  minHeight: "92px",
+  padding: "16px 18px",
   display: "grid",
   alignContent: "center",
   justifyItems: "center",
@@ -810,13 +782,86 @@ const statLabel: CSSProperties = {
 const learningSection: CSSProperties = {
   maxWidth: "1220px",
   margin: "0 auto",
-  padding: "8px 48px 78px",
+  padding: "0 48px 56px",
 };
 
-const sectionHeader: CSSProperties = {
+const learningPanel: CSSProperties = {
+  background: "linear-gradient(90deg, #F2F8F5, #FBFAF6)",
+  border: "1px solid #DDE9E2",
+  borderRadius: "18px",
+  padding: "20px 24px 24px",
+  boxShadow: "0 14px 36px rgba(23,63,53,0.06)",
+  overflow: "hidden",
+};
+
+const toolsPanelTitle: CSSProperties = {
+  color: "#8A661E",
+  fontSize: "14px",
+  fontWeight: 900,
+  letterSpacing: "2px",
+  textTransform: "uppercase",
+  margin: "0 0 16px",
+  textAlign: "left",
+};
+
+const toolsCarouselFrame: CSSProperties = {
+  width: "100%",
+  overflow: "hidden",
+  background: "#FFFFFF",
+  border: "1px solid #E8E1D2",
+  borderRadius: "14px",
+  padding: "14px 0",
+};
+
+const toolsCarouselTrack: CSSProperties = {
+  display: "flex",
+  width: "max-content",
+  gap: "14px",
+  padding: "0 14px",
+  animation: "tmToolsAutoScroll 48s linear infinite",
+};
+
+const genericToolCard: CSSProperties = {
+  width: "128px",
+  minHeight: "108px",
+  background: "#FBFAF6",
+  border: "1px solid #E8E1D2",
+  borderRadius: "14px",
+  display: "grid",
+  justifyItems: "center",
+  alignContent: "center",
+  gap: "8px",
+  padding: "12px 10px",
+  boxShadow: "0 8px 18px rgba(23,63,53,0.04)",
+};
+
+const genericToolLogo: CSSProperties = {
+  width: "62px",
+  height: "62px",
+  borderRadius: "15px",
+  background: "#DDE9E2",
+  border: "1px solid #C9DDD3",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "30px",
+  lineHeight: 1,
+  overflow: "hidden",
+};
+
+const genericToolLogoImage: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
+  display: "block",
+};
+
+const genericToolName: CSSProperties = {
+  color: "#173F35",
+  fontSize: "13px",
+  fontWeight: 900,
+  lineHeight: "1.12",
   textAlign: "center",
-  maxWidth: "860px",
-  margin: "0 auto 22px",
 };
 
 const sectionEyebrow: CSSProperties = {
@@ -824,154 +869,16 @@ const sectionEyebrow: CSSProperties = {
   fontSize: "14px",
   fontWeight: 900,
   letterSpacing: "2px",
-  marginBottom: "10px",
+  textTransform: "uppercase",
+  marginBottom: "8px",
 };
 
 const sectionTitle: CSSProperties = {
   color: "#173F35",
-  fontSize: "38px",
+  fontSize: "34px",
   lineHeight: "1.15",
   margin: 0,
 };
-
-const areaCarouselFrame: CSSProperties = {
-  position: "relative",
-  padding: "0 54px",
-};
-
-const areaCarouselButton: CSSProperties = {
-  width: "30px",
-  height: "30px",
-  borderRadius: "50%",
-  border: "1px solid #C9DDD3",
-  background: "#DDE9E2",
-  color: "#173F35",
-  cursor: "pointer",
-  fontWeight: 900,
-  fontSize: "20px",
-  lineHeight: "1",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  position: "absolute",
-  top: "50%",
-  transform: "translateY(-50%)",
-  zIndex: 3,
-};
-
-const areaCarouselButtonLeft: CSSProperties = {
-  left: "6px",
-};
-
-const areaCarouselButtonRight: CSSProperties = {
-  right: "6px",
-};
-
-const toolGrid: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
-  gap: "14px",
-};
-
-const toolCard: CSSProperties = {
-  background: "#FFFFFF",
-  border: "1px solid #E8E1D2",
-  borderRadius: "14px",
-  padding: "12px 34px",
-  boxShadow: "0 8px 18px rgba(23,63,53,0.04)",
-  display: "grid",
-  gap: "10px",
-  alignContent: "start",
-  position: "relative",
-};
-
-const toolTitle: CSSProperties = {
-  color: "#173F35",
-  fontSize: "17px",
-  lineHeight: "1.15",
-  margin: 0,
-  textAlign: "center",
-  whiteSpace: "nowrap",
-};
-
-const toolLogoGrid: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: "5px",
-  alignItems: "start",
-};
-
-const toolLogoItem: CSSProperties = {
-  display: "grid",
-  justifyItems: "center",
-  gap: "6px",
-  minWidth: 0,
-};
-
-const toolLogoBox: CSSProperties = {
-  width: "38px",
-  height: "38px",
-  borderRadius: "12px",
-  background: "#DDE9E2",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  overflow: "hidden",
-  border: "1px solid #C9DDD3",
-};
-
-const toolLogoImage: CSSProperties = {
-  width: "100%",
-  height: "100%",
-  objectFit: "contain",
-  background: "#FFFFFF",
-};
-
-const toolIconText: CSSProperties = {
-  fontSize: "23px",
-};
-
-const toolName: CSSProperties = {
-  color: "#173F35",
-  fontSize: "10.2px",
-  fontWeight: 850,
-  textAlign: "center",
-  lineHeight: "1.08",
-  minHeight: "22px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  whiteSpace: "nowrap",
-  maxWidth: "64px",
-};
-
-const carouselButton: CSSProperties = {
-  width: "24px",
-  height: "24px",
-  borderRadius: "50%",
-  border: "1px solid #C9DDD3",
-  background: "#DDE9E2",
-  color: "#173F35",
-  cursor: "pointer",
-  fontWeight: 900,
-  fontSize: "17px",
-  lineHeight: "1",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  position: "absolute",
-  top: "52%",
-  transform: "translateY(-50%)",
-};
-
-const carouselButtonLeft: CSSProperties = {
-  left: "6px",
-};
-
-const carouselButtonRight: CSSProperties = {
-  right: "6px",
-};
-
 
 const enquirySection: CSSProperties = {
   maxWidth: "1220px",
