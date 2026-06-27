@@ -25,6 +25,7 @@ type PortalStat = {
   label: string;
   value: number;
   icon: string;
+  iconUrl?: string;
 };
 
 const emptyGeneralEnquiryForm: GeneralEnquiryForm = {
@@ -221,11 +222,36 @@ function getPortalStats(): PortalStat[] {
   const visibleWorkshops = workshops.filter((item) => item.status !== "Draft").length;
 
   return [
-    { label: "Courses", value: publishedCourses || 1, icon: "📖" },
-    { label: "Learning Videos", value: publishedVideos || 3, icon: "▶️" },
-    { label: "Webinars", value: visibleWebinars || 1, icon: "📅" },
-    { label: "Workshops", value: visibleWorkshops || 1, icon: "🧑‍🏫" },
-    { label: "Expert Instructors", value: instructors.length || 6, icon: "👤" },
+    {
+      label: "Courses",
+      value: publishedCourses || 1,
+      icon: "📖",
+      iconUrl: "/logos/courses.png",
+    },
+    {
+      label: "Learning Videos",
+      value: publishedVideos || 3,
+      icon: "▶️",
+      iconUrl: "/logos/learning-videos.png",
+    },
+    {
+      label: "Webinars",
+      value: visibleWebinars || 1,
+      icon: "📅",
+      iconUrl: "/logos/webinars.png",
+    },
+    {
+      label: "Workshops",
+      value: visibleWorkshops || 1,
+      icon: "🧑‍🏫",
+      iconUrl: "/logos/workshops.png",
+    },
+    {
+      label: "Expert Instructors",
+      value: instructors.length || 6,
+      icon: "👤",
+      iconUrl: "/logos/instructors.png",
+    },
   ];
 }
 
@@ -408,7 +434,13 @@ export default function Home() {
             {portalStats.map((item) => (
               <article key={item.label} style={statCard}>
                 <div style={statTopLine}>
-                  <span style={statIcon}>{item.icon}</span>
+                  <span style={statIcon}>
+                    {item.iconUrl ? (
+                      <img src={item.iconUrl} alt={item.label} style={statIconImage} />
+                    ) : (
+                      item.icon
+                    )}
+                  </span>
                   <strong style={statValue}>{item.value}</strong>
                 </div>
                 <span style={statLabel}>{item.label}</span>
@@ -433,7 +465,6 @@ export default function Home() {
                       <span>{tool.name}</span>
                     )}
                   </div>
-                  <span style={genericToolName}>{tool.name}</span>
                 </article>
               ))}
             </div>
@@ -738,10 +769,10 @@ const statCard: CSSProperties = {
   border: "1px solid #E8E1D2",
   borderRadius: "14px",
   padding: "14px 14px",
-  minHeight: "82px",
+  minHeight: "138px",
   display: "grid",
   alignContent: "center",
-  gap: "6px",
+  gap: "8px",
   textAlign: "left",
 };
 
@@ -753,8 +784,20 @@ const statTopLine: CSSProperties = {
 };
 
 const statIcon: CSSProperties = {
+  width: "104px",
+  height: "104px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   fontSize: "28px",
   lineHeight: 1,
+};
+
+const statIconImage: CSSProperties = {
+  width: "104px",
+  height: "104px",
+  objectFit: "contain",
+  display: "block",
 };
 
 const statValue: CSSProperties = {
@@ -807,28 +850,23 @@ const toolsCarouselFrame: CSSProperties = {
 const toolsCarouselTrack: CSSProperties = {
   display: "flex",
   width: "max-content",
-  gap: "14px",
-  padding: "0 14px",
-  animation: "tmToolsAutoScroll 42s linear infinite",
+  gap: "26px",
+  padding: "0 18px",
+  animation: "tmToolsAutoScroll 46s linear infinite",
 };
 
 const genericToolCard: CSSProperties = {
-  width: "142px",
-  minHeight: "126px",
-  background: "#FBFAF6",
-  border: "1px solid #E8E1D2",
-  borderRadius: "14px",
-  display: "grid",
-  justifyItems: "center",
-  alignContent: "center",
-  gap: "7px",
-  padding: "12px 10px",
-  boxShadow: "0 8px 18px rgba(23,63,53,0.04)",
+  width: "160px",
+  minHeight: "150px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "4px",
 };
 
 const genericToolLogo: CSSProperties = {
-  width: "76px",
-  height: "76px",
+  width: "136px",
+  height: "136px",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -836,18 +874,10 @@ const genericToolLogo: CSSProperties = {
 };
 
 const genericToolLogoImage: CSSProperties = {
-  width: "76px",
-  height: "76px",
+  width: "136px",
+  height: "136px",
   objectFit: "contain",
   display: "block",
-};
-
-const genericToolName: CSSProperties = {
-  color: "#173F35",
-  fontSize: "13px",
-  fontWeight: 900,
-  lineHeight: "1.12",
-  textAlign: "center",
 };
 
 const sectionEyebrow: CSSProperties = {
