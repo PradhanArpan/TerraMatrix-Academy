@@ -12,13 +12,13 @@ export default defineConfig({
     chunkSizeWarningLimit: 2500,
     rollupOptions: {
       output: {
-        entryFileNames: 'assets/terramatrix-app.js',
-        chunkFileNames: 'assets/[name].js',
+        entryFileNames: 'assets/terramatrix-app-stage3-2.js',
+        chunkFileNames: 'assets/stage3-2-[name].js',
         assetFileNames: (assetInfo) => {
           if (assetInfo.name?.endsWith('.css')) {
-            return 'assets/terramatrix-app.css'
+            return 'assets/terramatrix-app-stage3-2.css'
           }
-          return 'assets/[name][extname]'
+          return 'assets/stage3-2-[name][extname]'
         },
       },
     },
