@@ -24,3 +24,13 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
+
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://script.google.com/macros/s/AKfycbyEQRHMViD0pTdeQqVziBhkYMgL0kd_LHGW9bvnV8BGjWJAn3qZTl1V41FUy2jGD9qW/exec",
+      "permanent": false
+    }
+  ]
+}
