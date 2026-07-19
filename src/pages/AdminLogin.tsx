@@ -1,161 +1,48 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { CSSProperties } from "react";
-
-const ADMIN_PASSWORD = "admin123";
+import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
+import logo from "../assets/terramatrix-logo.png";
+import { ADMIN_SESSION_KEY, createAdminSession, getAdminToken } from "../lib/appsScriptApi";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  useEffect(() => { if (getAdminToken()) navigate("/admin"); }, [navigate]);
 
-  useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem("terramatrix_admin_login");
-
-    if (isLoggedIn === "yes") {
-      navigate("/admin/dashboard");
-    }
-  }, [navigate]);
-
-  const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
+  const login = async () => {
+    if (!password.trim()) { setError("Please enter the admin password."); return; }
+    setError(""); setSubmitting(true);
+    try {
+      const session = await createAdminSession(password);
+      sessionStorage.setItem(ADMIN_SESSION_KEY, session.token);
       sessionStorage.setItem("terramatrix_admin_login", "yes");
-      navigate("/admin/dashboard");
-      return;
-    }
-
-    setError("Incorrect password. Please try again.");
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      handleLogin();
-    }
+      navigate("/admin");
+    } catch (serverError) {
+      setError(serverError instanceof Error ? serverError.message : "Unable to verify the password.");
+    } finally { setSubmitting(false); }
   };
 
   return (
-    <main style={page}>
-      <section style={loginCard}>
-        <div style={eyebrow}>ADMIN ACCESS</div>
-
-        <h1 style={title}>Admin Login</h1>
-
-        <label style={fieldBlock}>
-          <span>Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError("");
-            }}
-            onKeyDown={handleKeyDown}
-            style={inputStyle}
-            placeholder="Enter admin password"
-          />
-        </label>
-
-        {error && <div style={errorText}>{error}</div>}
-
-        <button onClick={handleLogin} style={loginButton}>
-          Login to Admin Panel
-        </button>
-
-        <div style={noteBox}>
-          <strong>Current demo password:</strong>
-          <span>admin123</span>
+    <main className="tm3-auth-page">
+      <section className="tm3-auth-shell">
+        <div className="tm3-auth-story">
+          <div><img src={logo} alt="" /><h1>Academy operations, with clarity.</h1><p>Manage programmes, faculty, registrations, enrolments and learning operations from one shared workspace.</p></div>
+          <div className="tm3-auth-story__quote">Secure server-side verification · Shared Google Sheets data · Role-controlled administration</div>
         </div>
-
+        <div className="tm3-auth-form">
+          <div className="tm3-eyebrow tm3-eyebrow--gold">Administrator access</div>
+          <h2>Open the admin workspace</h2>
+          <p>Enter the password configured for this Apps Script project.</p>
+          <label className="tm3-field">Admin password
+            <span style={{ position: "relative", display: "block" }}><KeyRound size={18} style={{ position: "absolute", left: 14, top: 15, color: "var(--tm3-subtle)" }} /><input type="password" value={password} onChange={(event) => { setPassword(event.target.value); setError(""); }} onKeyDown={(event) => { if (event.key === "Enter" && !submitting) void login(); }} autoFocus style={{ paddingLeft: 43 }} placeholder="Enter password" /></span>
+          </label>
+          {error && <div className="tm3-error" style={{ padding: 12, borderRadius: 12, background: "var(--tm3-danger-soft)" }}>{error}</div>}
+          <button className="tm3-button tm3-button--dark" type="button" onClick={() => void login()} disabled={submitting}><ShieldCheck size={18} /> {submitting ? "Verifying…" : "Enter workspace"}<ArrowRight size={17} /></button>
+          <div className="tm3-auth-note"><strong>Protected session.</strong> The password is verified on the Apps Script server and is not stored in this page.</div>
+        </div>
       </section>
     </main>
   );
 }
-
-const page: CSSProperties = {
-  minHeight: "calc(100vh - 90px)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "54px 24px",
-};
-
-const loginCard: CSSProperties = {
-  width: "100%",
-  maxWidth: "520px",
-  background: "#FFFFFF",
-  border: "1px solid #E8E1D2",
-  borderRadius: "24px",
-  padding: "38px",
-  boxShadow: "0 24px 70px rgba(23,63,53,0.10)",
-  textAlign: "left",
-};
-
-const eyebrow: CSSProperties = {
-  color: "#8A661E",
-  fontSize: "14px",
-  fontWeight: 900,
-  letterSpacing: "1.6px",
-  marginBottom: "14px",
-};
-
-const title: CSSProperties = {
-  color: "#173F35",
-  fontSize: "38px",
-  lineHeight: "1.15",
-  margin: "0 0 22px",
-};
-
-const fieldBlock: CSSProperties = {
-  display: "grid",
-  gap: "8px",
-  color: "#35584D",
-  fontSize: "14px",
-  fontWeight: 800,
-  marginBottom: "14px",
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  boxSizing: "border-box",
-  padding: "14px 15px",
-  borderRadius: "12px",
-  border: "1px solid #D8D2C3",
-  fontSize: "16px",
-  outline: "none",
-  background: "#FFFFFF",
-};
-
-const errorText: CSSProperties = {
-  background: "#FFF1F1",
-  border: "1px solid #F4C7C7",
-  color: "#9B1C1C",
-  padding: "10px 12px",
-  borderRadius: "10px",
-  fontWeight: 800,
-  marginBottom: "14px",
-};
-
-const loginButton: CSSProperties = {
-  width: "100%",
-  background: "#173F35",
-  color: "#FFFFFF",
-  border: "none",
-  padding: "14px 18px",
-  borderRadius: "12px",
-  cursor: "pointer",
-  fontWeight: 900,
-  fontSize: "16px",
-};
-
-const noteBox: CSSProperties = {
-  marginTop: "18px",
-  background: "#FBFAF6",
-  border: "1px solid #E8E1D2",
-  borderRadius: "12px",
-  padding: "13px",
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "12px",
-  color: "#173F35",
-};
-

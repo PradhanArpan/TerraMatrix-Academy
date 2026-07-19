@@ -1,16 +1,15 @@
 {
-  "name": "terramatrix-mvp-app",
+  "name": "terramatrix-academy",
   "private": true,
-  "version": "0.0.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.108.2",
     "lucide-react": "^1.21.0",
     "react": "^19.2.6",
     "react-countup": "^6.5.3",
@@ -31,5 +30,6 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"
-  }
+  },
+  "description": "TerraMatrix Academy engineering intelligence platform frontend"
 }

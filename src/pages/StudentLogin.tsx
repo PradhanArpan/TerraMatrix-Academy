@@ -1,36 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { CSSProperties, KeyboardEvent } from "react";
+import { ArrowRight, GraduationCap, Mail, Phone } from "lucide-react";
+import logo from "../assets/terramatrix-logo.png";
 
 type EnrollmentStatus = "Enrolled" | "Course Completed" | "Certificate Issued";
+type Enrollment = { id: number; courseId: number; courseTitle: string; name: string; email: string; phone: string; organisation: string; enrolledAt: string; status: EnrollmentStatus };
+const activeStatuses: EnrollmentStatus[] = ["Enrolled", "Course Completed", "Certificate Issued"];
 
-type Enrollment = {
-  id: number;
-  courseId: number;
-  courseTitle: string;
-  name: string;
-  email: string;
-  phone: string;
-  organisation: string;
-  enrolledAt: string;
-  status: EnrollmentStatus;
-};
-
-const activeStatuses: EnrollmentStatus[] = [
-  "Enrolled",
-  "Course Completed",
-  "Certificate Issued",
-];
-
-function getValidIndianPhone(phone: string) {
-  let cleaned = phone.replace(/[\s\-()]/g, "");
-
-  if (cleaned.startsWith("+91")) cleaned = cleaned.slice(3);
-  else if (cleaned.startsWith("91") && cleaned.length === 12) cleaned = cleaned.slice(2);
-  else if (cleaned.startsWith("0") && cleaned.length === 11) cleaned = cleaned.slice(1);
-
-  if (/^[6-9]\d{9}$/.test(cleaned)) return cleaned;
-  return null;
+function validPhone(phone: string) {
+  let clean = phone.replace(/[\s\-()]/g, "");
+  if (clean.startsWith("+91")) clean = clean.slice(3); else if (clean.startsWith("91") && clean.length === 12) clean = clean.slice(2); else if (clean.startsWith("0") && clean.length === 11) clean = clean.slice(1);
+  return /^[6-9]\d{9}$/.test(clean) ? clean : null;
 }
 
 export default function StudentLogin() {
@@ -39,178 +19,35 @@ export default function StudentLogin() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
 
-  const loginStudent = () => {
-    const cleanedEmail = email.trim().toLowerCase();
-    const cleanedPhone = getValidIndianPhone(phone);
-
-    if (!cleanedEmail || !cleanedPhone) {
-      setError("Please enter the registered email and a valid Indian mobile number.");
-      return;
-    }
-
-    const saved = localStorage.getItem("terramatrix_enrollments");
-    const enrollments: Enrollment[] = saved ? JSON.parse(saved) : [];
-
-    const matching = enrollments.filter(
-      (enrollment) =>
-        enrollment.email.toLowerCase() === cleanedEmail &&
-        enrollment.phone === cleanedPhone &&
-        activeStatuses.includes(enrollment.status)
-    );
-
-    if (matching.length === 0) {
-      setError(
-        "No enrolled course was found for this email and phone. Please check whether payment was completed and admin has enrolled you."
-      );
-      return;
-    }
-
-    const loginData = JSON.stringify({
-      email: cleanedEmail,
-      phone: cleanedPhone,
-    });
-
-    localStorage.setItem("terramatrix_student_login", loginData);
-    sessionStorage.setItem("terramatrix_student_login", loginData);
-
-    navigate("/student-portal");
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") loginStudent();
+  const login = () => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = validPhone(phone);
+    if (!cleanEmail || !cleanPhone) { setError("Enter the registered email and a valid Indian mobile number."); return; }
+    const enrollments: Enrollment[] = JSON.parse(localStorage.getItem("terramatrix_enrollments") || "[]");
+    const matching = enrollments.filter((item) => item.email.toLowerCase() === cleanEmail && item.phone === cleanPhone && activeStatuses.includes(item.status));
+    if (!matching.length) { setError("No active enrolment was found. Confirm that payment was completed and the academy enrolled you."); return; }
+    const loginData = JSON.stringify({ email: cleanEmail, phone: cleanPhone });
+    localStorage.setItem("terramatrix_student_login", loginData); sessionStorage.setItem("terramatrix_student_login", loginData); navigate("/student-portal");
   };
 
   return (
-    <main style={page}>
-      <section style={loginCard}>
-        <div style={eyebrow}>REGISTERED STUDENT ACCESS</div>
-        <h1 style={title}>Student Login</h1>
-
-        <p style={text}>
-          Login after payment is completed and the admin enrolls you into a
-          course. Your dashboard will show all courses registered under this
-          email and phone number.
-        </p>
-
-        <label style={fieldBlock}>
-          <span>Email</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setError("");
-            }}
-            onKeyDown={onKeyDown}
-            style={inputStyle}
-            placeholder="email@example.com"
-          />
-        </label>
-
-        <label style={fieldBlock}>
-          <span>Phone</span>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => {
-              setPhone(e.target.value);
-              setError("");
-            }}
-            onKeyDown={onKeyDown}
-            style={inputStyle}
-            placeholder="10-digit mobile number"
-          />
-        </label>
-
-        {error && <div style={errorText}>{error}</div>}
-
-        <button onClick={loginStudent} style={loginButton}>
-          Login to My Dashboard
-        </button>
+    <main className="tm3-auth-page">
+      <section className="tm3-auth-shell">
+        <div className="tm3-auth-story">
+          <div><img src={logo} alt="" /><h1>Your learning, organised around progress.</h1><p>Access enrolled programmes, live classes, resources, assignments, recordings and certificates from one learner workspace.</p></div>
+          <div className="tm3-auth-story__quote">My Learning · Live agenda · Classroom resources · Progress and completion</div>
+        </div>
+        <div className="tm3-auth-form">
+          <div className="tm3-eyebrow tm3-eyebrow--gold">Learner access</div>
+          <h2>Continue your learning journey</h2>
+          <p>Use the email and mobile number registered with your enrolment.</p>
+          <label className="tm3-field">Registered email<span style={{ position: "relative" }}><Mail size={18} style={{ position: "absolute", left: 14, top: 15, color: "var(--tm3-subtle)" }} /><input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError(""); }} style={{ paddingLeft: 43 }} placeholder="name@example.com" /></span></label>
+          <label className="tm3-field">Registered phone<span style={{ position: "relative" }}><Phone size={18} style={{ position: "absolute", left: 14, top: 15, color: "var(--tm3-subtle)" }} /><input value={phone} onChange={(event) => { setPhone(event.target.value); setError(""); }} onKeyDown={(event) => { if (event.key === "Enter") login(); }} style={{ paddingLeft: 43 }} placeholder="10-digit mobile number" /></span></label>
+          {error && <div className="tm3-error" style={{ padding: 12, borderRadius: 12, background: "var(--tm3-danger-soft)" }}>{error}</div>}
+          <button className="tm3-button tm3-button--dark" type="button" onClick={login}><GraduationCap size={18} /> Open My Learning <ArrowRight size={17} /></button>
+          <div className="tm3-auth-note">Access becomes active after the academy confirms payment and enrolment.</div>
+        </div>
       </section>
     </main>
   );
 }
-
-const page: CSSProperties = {
-  minHeight: "calc(100vh - 90px)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "54px 24px",
-};
-
-const loginCard: CSSProperties = {
-  width: "100%",
-  maxWidth: "540px",
-  background: "#FFFFFF",
-  border: "1px solid #E8E1D2",
-  borderRadius: "24px",
-  padding: "38px",
-  boxShadow: "0 24px 70px rgba(23,63,53,0.10)",
-  textAlign: "left",
-};
-
-const eyebrow: CSSProperties = {
-  color: "#8A661E",
-  fontSize: "14px",
-  fontWeight: 900,
-  letterSpacing: "1.6px",
-  marginBottom: "14px",
-};
-
-const title: CSSProperties = {
-  color: "#173F35",
-  fontSize: "38px",
-  lineHeight: "1.15",
-  margin: "0 0 12px",
-};
-
-const text: CSSProperties = {
-  color: "#53665E",
-  fontSize: "17px",
-  lineHeight: "1.7",
-  margin: "0 0 26px",
-};
-
-const fieldBlock: CSSProperties = {
-  display: "grid",
-  gap: "8px",
-  color: "#35584D",
-  fontSize: "14px",
-  fontWeight: 800,
-  marginBottom: "14px",
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  boxSizing: "border-box",
-  padding: "14px 15px",
-  borderRadius: "12px",
-  border: "1px solid #D8D2C3",
-  fontSize: "16px",
-  outline: "none",
-  background: "#FFFFFF",
-};
-
-const errorText: CSSProperties = {
-  background: "#FFF1F1",
-  border: "1px solid #F4C7C7",
-  color: "#9B1C1C",
-  padding: "10px 12px",
-  borderRadius: "10px",
-  fontWeight: 800,
-  marginBottom: "14px",
-};
-
-const loginButton: CSSProperties = {
-  width: "100%",
-  background: "#173F35",
-  color: "#FFFFFF",
-  border: "none",
-  padding: "14px 18px",
-  borderRadius: "12px",
-  cursor: "pointer",
-  fontWeight: 900,
-  fontSize: "16px",
-};

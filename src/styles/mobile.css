@@ -1,234 +1,129 @@
-/* TerraMatrix mobile mode
-   This file gives the whole MVP a usable phone layout without changing every page component.
-*/
-
-* {
-  box-sizing: border-box;
+@media (max-width: 1100px) {
+  .tm3-header__inner { grid-template-columns: 220px 1fr auto; }
+  .tm3-nav > a, .tm3-nav-dropdown > button { padding-inline: 10px; }
+  .tm3-hero__inner { grid-template-columns: minmax(0,1fr) 340px; gap: 35px; }
+  .tm3-hero h1 { letter-spacing: -3.8px; }
+  .tm3-card-grid, .tm3-catalogue-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .tm3-pillar-grid { grid-template-columns: repeat(3,1fr); }
+  .tm3-pillar-card:nth-child(2), .tm3-pillar-card:nth-child(4) { transform: none; }
+  .tm3-domain-grid { grid-template-columns: repeat(2,1fr); }
+  .tm3-course-body, .tm3-course-hero__inner { grid-template-columns: minmax(0,1fr) 330px; }
 }
 
-html,
-body,
-#root {
-  max-width: 100%;
-}
-
-body {
-  margin: 0;
-  overflow-x: hidden;
-  -webkit-text-size-adjust: 100%;
-}
-
-img,
-video,
-iframe {
-  max-width: 100%;
-}
-
-/* Tablet and phone */
 @media (max-width: 900px) {
-  .tm-header-bar {
-    padding: 9px 12px !important;
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
-    align-items: start !important;
-  }
-
-  .tm-brand-link {
-    min-width: 0 !important;
-    width: 100% !important;
-    gap: 8px !important;
-  }
-
-  .tm-brand-logo {
-    width: 42px !important;
-    height: 42px !important;
-    flex: 0 0 auto !important;
-  }
-
-  .tm-brand-title {
-    font-size: 19px !important;
-    white-space: normal !important;
-    line-height: 1.05 !important;
-  }
-
-  .tm-brand-tagline {
-    font-size: 10.5px !important;
-    white-space: normal !important;
-    line-height: 1.15 !important;
-  }
-
-  .tm-nav-cluster {
-    width: 100% !important;
-    display: flex !important;
-    justify-content: flex-start !important;
-    gap: 6px !important;
-    overflow-x: auto !important;
-    padding: 0 0 2px !important;
-    scrollbar-width: thin;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .tm-nav-pill {
-    padding: 8px 10px !important;
-    font-size: 12px !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-    flex: 0 0 auto !important;
-  }
-
-  .tm-dropdown-menu {
-    position: fixed !important;
-    top: 98px !important;
-    left: 10px !important;
-    right: 10px !important;
-    width: auto !important;
-    max-width: none !important;
-    z-index: 5000 !important;
-    padding: 6px !important;
-    gap: 5px !important;
-  }
-
-  .tm-dropdown-item {
-    min-height: 34px !important;
-    padding: 7px 9px !important;
-    font-size: 13px !important;
-  }
-
-  /* Page containers */
-  #root [style*="max-width: 1220px"],
-  #root [style*="max-width: 1200px"],
-  #root [style*="max-width: 1180px"],
-  #root [style*="max-width: 1100px"],
-  #root [style*="max-width: 1000px"] {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-  }
-
-  /* Most desktop grids should become one-column on phone */
-  #root [style*="grid-template-columns"] {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* But small info/stat boxes can stay in two columns */
-  #root [style*="repeat(5"],
-  #root [style*="repeat(4"],
-  #root [style*="repeat(3"],
-  #root [style*="repeat(2"] {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  /* Form fields */
-  #root input,
-  #root select,
-  #root textarea {
-    width: 100% !important;
-    max-width: 100% !important;
-    font-size: 16px !important;
-  }
-
-  #root button {
-    max-width: 100%;
-  }
-
-  /* Large headings */
-  h1,
-  h2 {
-    overflow-wrap: anywhere;
-  }
-
-  /* Tables inside admin/instructor pages */
-  table {
-    display: block !important;
-    width: 100% !important;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-  }
-
-  th,
-  td {
-    white-space: normal;
-  }
+  .tm3-topline__message { display: none; }
+  .tm3-header__inner { width: min(100% - 28px, var(--tm3-content)); grid-template-columns: 1fr auto; min-height: 70px; }
+  .tm3-brand strong { font-size: 19px; }
+  .tm3-brand small { display: none; }
+  .tm3-nav { position: absolute; top: calc(100% + 1px); left: 14px; right: 14px; display: none; flex-direction: column; align-items: stretch; padding: 12px; border: 1px solid var(--tm3-line); border-radius: 20px; background: var(--tm3-surface); box-shadow: var(--tm3-shadow-lg); }
+  .tm3-nav.is-open { display: flex; }
+  .tm3-nav > a, .tm3-nav-dropdown > button { width: 100%; justify-content: space-between; border-radius: 13px; padding: 12px 14px; }
+  .tm3-nav-dropdown { width: 100%; }
+  .tm3-mega-menu, .tm3-login-menu { position: static; min-width: 0; width: 100%; box-shadow: none; margin-top: 5px; border-radius: 14px; }
+  .tm3-menu-button { display: grid; }
+  .tm3-search-link { display: none; }
+  .tm3-hero__image { inset: 0; }
+  .tm3-hero__inner { min-height: auto; grid-template-columns: 1fr; padding: 70px 0; }
+  .tm3-hero-card { max-width: 520px; margin-bottom: 0; }
+  .tm3-brand-strip__inner { grid-template-columns: repeat(3,1fr); }
+  .tm3-brand-strip__item:nth-child(3) { border-right: 0; }
+  .tm3-brand-strip__item:nth-child(n+4) { border-top: 1px solid var(--tm3-line); }
+  .tm3-journey { grid-template-columns: 1fr; }
+  .tm3-journey__visual { min-height: 420px; }
+  .tm3-cta { grid-template-columns: 1fr; padding: 45px; }
+  .tm3-cta__actions { justify-self: start; }
+  .tm3-filter-shell { grid-template-columns: 1fr 1fr; }
+  .tm3-search-field { grid-column: 1 / -1; }
+  .tm3-course-hero__inner, .tm3-course-body { grid-template-columns: 1fr; }
+  .tm3-course-summary { max-width: 500px; }
+  .tm3-course-side { position: static; }
+  .tm3-workspace { grid-template-columns: 82px minmax(0,1fr); }
+  .tm3-workspace__sidebar { padding: 18px 11px; align-items: center; }
+  .tm3-workspace__brand span, .tm3-workspace__profile, .tm3-workspace-nav span, .tm3-workspace__sidebar-footer span { display: none; }
+  .tm3-workspace-nav button, .tm3-workspace-nav a { width: 48px; height: 48px; padding: 0; justify-content: center; }
+  .tm3-workspace__sidebar-footer button { width: 48px; }
+  .tm3-dashboard-grid { grid-template-columns: 1fr; }
+  .tm-admin-workspace-v3 { padding-left: 108px !important; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs { width: 82px !important; padding: 115px 10px 20px !important; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs:before { content: "TM\A ADMIN"; left: 20px; font-size: 13px; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs:after { display: none; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs > button, .tm-admin-workspace-v3 .tm-admin-v3-tabs > div > button { overflow: hidden !important; white-space: nowrap !important; text-indent: -999px !important; position: relative !important; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs > button:after, .tm-admin-workspace-v3 .tm-admin-v3-tabs > div > button:after { content: "•"; text-indent: 0; position: absolute; inset: 0; display: grid; place-items: center; font-size: 20px; }
 }
 
-/* Small phones */
-@media (max-width: 560px) {
-  .tm-header-bar {
-    padding: 8px 10px !important;
-  }
+@media (max-width: 680px) {
+  .tm3-topline { padding-inline: 14px; justify-content: space-between; }
+  .tm3-topline > span:first-child { font-size: 9px; }
+  .tm3-topline a { font-size: 10px; }
+  .tm3-header__inner { width: calc(100% - 22px); }
+  .tm3-brand img { width: 43px; height: 43px; }
+  .tm3-brand strong { font-size: 17px; }
+  .tm3-header-actions { gap: 6px; }
+  .tm3-theme, .tm3-menu-button { width: 38px; height: 38px; }
+  .tm3-shell, .tm3-page-intro, .tm3-filter-shell, .tm3-catalogue, .tm3-course-body, .tm3-course-hero__inner, .tm3-cta, .tm3-footer__main, .tm3-footer__bottom { width: calc(100% - 28px); }
+  .tm3-section { padding: 68px 0; }
+  .tm3-section-heading h2 { font-size: 37px; letter-spacing: -1.6px; }
+  .tm3-hero__inner { width: calc(100% - 28px); padding: 56px 0; }
+  .tm3-hero h1 { font-size: 53px; letter-spacing: -3.3px; }
+  .tm3-hero__lead { font-size: 16px; }
+  .tm3-hero__actions { flex-direction: column; align-items: stretch; }
+  .tm3-button { width: 100%; }
+  .tm3-hero__proof { display: grid; grid-template-columns: 1fr 1fr; }
+  .tm3-hero-card { border-radius: 22px; }
+  .tm3-brand-strip__inner { width: 100%; grid-template-columns: 1fr; }
+  .tm3-brand-strip__item { border-right: 0; border-top: 1px solid var(--tm3-line); min-height: 80px; padding-inline: 22px; }
+  .tm3-brand-strip__item:first-child { border-top: 0; }
+  .tm3-card-grid, .tm3-catalogue-grid, .tm3-pillar-grid, .tm3-domain-grid { grid-template-columns: 1fr; }
+  .tm3-programme-card__image { height: 190px; }
+  .tm3-pillar-card { min-height: auto; }
+  .tm3-journey__visual { min-height: 330px; }
+  .tm3-cta { margin-block: 30px 65px; padding: 32px 24px; }
+  .tm3-cta__actions { width: 100%; flex-direction: column; }
+  .tm3-page-intro { padding: 50px 0 30px; grid-template-columns: 1fr; }
+  .tm3-page-intro h1 { font-size: 48px; letter-spacing: -2.2px; }
+  .tm3-page-intro__aside { min-width: 0; }
+  .tm3-metric { border-left: 0; border-top: 1px solid var(--tm3-line); padding: 17px 0 0; }
+  .tm3-filter-shell { grid-template-columns: 1fr; }
+  .tm3-search-field { grid-column: auto; }
+  .tm3-course-hero { min-height: auto; }
+  .tm3-course-hero__inner { min-height: auto; padding: 52px 0; }
+  .tm3-course-hero h1 { font-size: 45px; letter-spacing: -2.4px; }
+  .tm3-course-body { padding: 45px 0 70px; }
+  .tm3-panel { padding: 20px; }
+  .tm3-instructor-row { grid-template-columns: 62px 1fr; }
+  .tm3-instructor-row img { width: 62px; height: 62px; }
+  .tm3-instructor-row .tm3-button { grid-column: 1 / -1; }
+  .tm3-modal { padding: 24px 19px; border-radius: 22px; }
+  .tm3-form-grid { grid-template-columns: 1fr; }
+  .tm3-auth-page { padding: 24px 14px; }
+  .tm3-auth-shell { grid-template-columns: 1fr; min-height: auto; }
+  .tm3-auth-story { padding: 30px; min-height: 300px; }
+  .tm3-auth-story h1 { font-size: 34px; }
+  .tm3-auth-form { padding: 30px 22px; }
+  .tm3-workspace { display: block; }
+  .tm3-workspace__sidebar { position: fixed; z-index: 1000; left: 0; right: 0; top: auto; bottom: 0; width: 100%; height: 70px; padding: 8px 12px; flex-direction: row; justify-content: center; background: var(--tm3-green-950); }
+  .tm3-workspace__brand, .tm3-workspace__sidebar-footer { display: none; }
+  .tm3-workspace-nav { width: 100%; display: flex; justify-content: space-around; gap: 4px; }
+  .tm3-workspace-nav button, .tm3-workspace-nav a { width: 54px; height: 54px; }
+  .tm3-workspace-topbar { padding: 15px 18px; }
+  .tm3-workspace-topbar__actions .tm3-button { width: auto; min-height: 40px; padding-inline: 13px; }
+  .tm3-workspace-content { padding: 18px 14px 95px; }
+  .tm3-dashboard-hero { padding: 23px; grid-template-columns: 1fr; }
+  .tm3-dashboard-hero__progress { display: none; }
+  .tm3-stat-grid { grid-template-columns: 1fr 1fr; }
+  .tm3-learning-item { grid-template-columns: 68px 1fr; }
+  .tm3-learning-item__image { width: 68px; height: 58px; }
+  .tm3-learning-item > .tm3-button { grid-column: 1 / -1; }
+  .tm-admin-workspace-v3 { padding: 20px 14px 100px !important; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs { position: fixed !important; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; height: 76px !important; padding: 9px !important; flex-direction: row !important; overflow-x: auto !important; overflow-y: hidden !important; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs:before, .tm-admin-workspace-v3 .tm-admin-v3-tabs:after { display: none; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs > button, .tm-admin-workspace-v3 .tm-admin-v3-tabs > div { min-width: 55px !important; flex: 0 0 55px !important; }
+  .tm-admin-workspace-v3 .tm-admin-v3-tabs > div > button { height: 54px !important; }
+  .tm-admin-workspace-v3 .tm-admin-v3-header { grid-template-columns: 1fr !important; }
+  .tm3-footer__main { grid-template-columns: 1fr; gap: 30px; padding-block: 45px 30px; }
+  .tm3-footer__bottom { flex-direction: column; gap: 6px; }
+}
 
-  .tm-brand-logo {
-    width: 38px !important;
-    height: 38px !important;
-  }
-
-  .tm-brand-title {
-    font-size: 17px !important;
-  }
-
-  .tm-brand-tagline {
-    font-size: 9.8px !important;
-  }
-
-  .tm-nav-pill {
-    padding: 7px 9px !important;
-    font-size: 11.5px !important;
-  }
-
-  .tm-dropdown-menu {
-    top: 92px !important;
-  }
-
-  #root [style*="padding: 58px"],
-  #root [style*="padding: 54px"],
-  #root [style*="padding: 48px"],
-  #root [style*="padding: 46px"],
-  #root [style*="padding: 42px"],
-  #root [style*="padding: 36px"] {
-    padding: 22px 12px !important;
-  }
-
-  #root [style*="font-size: 56px"],
-  #root [style*="font-size: 52px"],
-  #root [style*="font-size: 48px"],
-  #root [style*="font-size: 44px"],
-  #root [style*="font-size: 40px"] {
-    font-size: 30px !important;
-    line-height: 1.08 !important;
-  }
-
-  #root [style*="font-size: 36px"],
-  #root [style*="font-size: 34px"],
-  #root [style*="font-size: 32px"] {
-    font-size: 25px !important;
-    line-height: 1.12 !important;
-  }
-
-  /* Card-like blocks */
-  #root [style*="border-radius: 18px"],
-  #root [style*="border-radius: 16px"],
-  #root [style*="border-radius: 14px"] {
-    border-radius: 12px !important;
-  }
-
-  /* Keep phone view clean */
-  #root [style*="min-width: 360px"] {
-    min-width: 0 !important;
-  }
-
-  #root [style*="width: 310px"],
-  #root [style*="width: 330px"],
-  #root [style*="max-width: 310px"],
-  #root [style*="max-width: 330px"] {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  #root [style*="repeat(5"],
-  #root [style*="repeat(4"],
-  #root [style*="repeat(3"] {
-    grid-template-columns: 1fr !important;
-  }
+@media (prefers-reduced-motion: reduce) {
+  *, *:before, *:after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

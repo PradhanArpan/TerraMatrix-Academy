@@ -1,137 +1,44 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { CSSProperties, KeyboardEvent } from "react";
+import { ArrowRight, Mail, Phone, UserRound } from "lucide-react";
+import logo from "../assets/terramatrix-logo.png";
+import { loadInstructors } from "../lib/catalogData";
 
-type Instructor = {
-  id: number;
-  name: string;
-  designation: string;
-  company: string;
-  expertise: string;
-  email: string;
-  phone: string;
-  bio: string;
-  photoUrl: string;
-  cvName: string;
-  cvData: string;
-};
-
-function getValidIndianPhone(phone: string) {
-  let cleaned = phone.replace(/[\s\-()]/g, "");
-
-  if (cleaned.startsWith("+91")) cleaned = cleaned.slice(3);
-  else if (cleaned.startsWith("91") && cleaned.length === 12) cleaned = cleaned.slice(2);
-  else if (cleaned.startsWith("0") && cleaned.length === 11) cleaned = cleaned.slice(1);
-
-  if (/^[6-9]\d{9}$/.test(cleaned)) return cleaned;
-  return null;
+function validPhone(phone: string) {
+  let clean = phone.replace(/[\s\-()]/g, "");
+  if (clean.startsWith("+91")) clean = clean.slice(3); else if (clean.startsWith("91") && clean.length === 12) clean = clean.slice(2); else if (clean.startsWith("0") && clean.length === 11) clean = clean.slice(1);
+  return /^[6-9]\d{9}$/.test(clean) ? clean : null;
 }
 
 export default function InstructorLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [error, setError] = useState("");
-
-  const loginInstructor = () => {
-    const cleanedEmail = email.trim().toLowerCase();
-    const cleanedPhone = getValidIndianPhone(phone);
-
-    if (!cleanedEmail || !cleanedPhone) {
-      setError("Please enter the instructor email and valid mobile number.");
-      return;
-    }
-
-    const saved = localStorage.getItem("terramatrix_instructors");
-    const instructors: Instructor[] = saved ? JSON.parse(saved) : [];
-
-    const instructor = instructors.find(
-      (item) =>
-        item.email.trim().toLowerCase() === cleanedEmail &&
-        getValidIndianPhone(item.phone || "") === cleanedPhone
-    );
-
-    if (!instructor) {
-      setError(
-        "No instructor profile was found for this email and phone. Please check Admin > Add Instructor."
-      );
-      return;
-    }
-
-    const loginData = JSON.stringify({
-      id: instructor.id,
-      email: cleanedEmail,
-      phone: cleanedPhone,
-      name: instructor.name,
-    });
-
-    localStorage.setItem("terramatrix_instructor_login", loginData);
-    sessionStorage.setItem("terramatrix_instructor_login", loginData);
-
-    navigate("/instructor-portal");
+  const [email, setEmail] = useState(""); const [phone, setPhone] = useState(""); const [error, setError] = useState("");
+  const login = () => {
+    const cleanEmail = email.trim().toLowerCase(); const cleanPhone = validPhone(phone);
+    if (!cleanEmail || !cleanPhone) { setError("Enter the instructor email and valid mobile number."); return; }
+    const instructor = loadInstructors().find((item) => item.email.trim().toLowerCase() === cleanEmail && validPhone(item.phone) === cleanPhone);
+    if (!instructor) { setError("No matching instructor profile was found. Ask the admin to check your faculty record."); return; }
+    const data = JSON.stringify({ id: instructor.id, email: cleanEmail, phone: cleanPhone, name: instructor.name });
+    localStorage.setItem("terramatrix_instructor_login", data); sessionStorage.setItem("terramatrix_instructor_login", data); navigate("/instructor-portal");
   };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") loginInstructor();
-  };
-
   return (
-    <main style={page}>
-      <section style={loginCard}>
-        <div style={eyebrow}>COURSE INSTRUCTOR ACCESS</div>
-        <h1 style={title}>Instructor Login</h1>
-
-        <p style={text}>
-          Course instructors can manage only the LMS classroom fields for their
-          linked courses: online meeting link, materials, assignments and recordings.
-        </p>
-
-        <label style={fieldBlock}>
-          <span>Email</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setError("");
-            }}
-            onKeyDown={onKeyDown}
-            style={inputStyle}
-            placeholder="instructor@example.com"
-          />
-        </label>
-
-        <label style={fieldBlock}>
-          <span>Phone</span>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => {
-              setPhone(e.target.value);
-              setError("");
-            }}
-            onKeyDown={onKeyDown}
-            style={inputStyle}
-            placeholder="10-digit mobile number"
-          />
-        </label>
-
-        {error && <div style={errorText}>{error}</div>}
-
-        <button onClick={loginInstructor} style={loginButton}>
-          Login to Instructor Portal
-        </button>
+    <main className="tm3-auth-page">
+      <section className="tm3-auth-shell">
+        <div className="tm3-auth-story">
+          <div><img src={logo} alt="" /><h1>Teach, guide and manage learning with confidence.</h1><p>Access assigned courses, class schedules, announcements, resources, learners, submissions and analytics.</p></div>
+          <div className="tm3-auth-story__quote">Course workspace · Classroom stream · People · Grades · Learning analytics</div>
+        </div>
+        <div className="tm3-auth-form">
+          <div className="tm3-eyebrow tm3-eyebrow--gold">Instructor access</div>
+          <h2>Open your teaching workspace</h2>
+          <p>Use the email and mobile number stored in your instructor profile.</p>
+          <label className="tm3-field">Instructor email<span style={{ position: "relative" }}><Mail size={18} style={{ position: "absolute", left: 14, top: 15, color: "var(--tm3-subtle)" }} /><input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError(""); }} style={{ paddingLeft: 43 }} /></span></label>
+          <label className="tm3-field">Instructor phone<span style={{ position: "relative" }}><Phone size={18} style={{ position: "absolute", left: 14, top: 15, color: "var(--tm3-subtle)" }} /><input value={phone} onChange={(event) => { setPhone(event.target.value); setError(""); }} onKeyDown={(event) => { if (event.key === "Enter") login(); }} style={{ paddingLeft: 43 }} /></span></label>
+          {error && <div className="tm3-error" style={{ padding: 12, borderRadius: 12, background: "var(--tm3-danger-soft)" }}>{error}</div>}
+          <button className="tm3-button tm3-button--dark" type="button" onClick={login}><UserRound size={18} /> Open Instructor Workspace <ArrowRight size={17} /></button>
+          <div className="tm3-auth-note">Instructor access is limited to courses linked to the faculty profile.</div>
+        </div>
       </section>
     </main>
   );
 }
-
-const page: CSSProperties = { minHeight: "calc(100vh - 90px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "54px 24px" };
-const loginCard: CSSProperties = { width: "100%", maxWidth: "560px", background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "24px", padding: "38px", boxShadow: "0 24px 70px rgba(23,63,53,0.10)", textAlign: "left" };
-const eyebrow: CSSProperties = { color: "#8A661E", fontSize: "14px", fontWeight: 900, letterSpacing: "1.6px", marginBottom: "14px" };
-const title: CSSProperties = { color: "#173F35", fontSize: "38px", lineHeight: "1.15", margin: "0 0 12px" };
-const text: CSSProperties = { color: "#53665E", fontSize: "17px", lineHeight: "1.7", margin: "0 0 26px" };
-const fieldBlock: CSSProperties = { display: "grid", gap: "8px", color: "#35584D", fontSize: "14px", fontWeight: 800, marginBottom: "14px" };
-const inputStyle: CSSProperties = { width: "100%", boxSizing: "border-box", padding: "14px 15px", borderRadius: "12px", border: "1px solid #D8D2C3", fontSize: "16px", outline: "none", background: "#FFFFFF" };
-const errorText: CSSProperties = { background: "#FFF1F1", border: "1px solid #F4C7C7", color: "#9B1C1C", padding: "10px 12px", borderRadius: "10px", fontWeight: 800, marginBottom: "14px" };
-const loginButton: CSSProperties = { width: "100%", background: "#173F35", color: "#FFFFFF", border: "none", padding: "14px 18px", borderRadius: "12px", cursor: "pointer", fontWeight: 900, fontSize: "16px" };

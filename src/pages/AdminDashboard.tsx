@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CSSProperties, ReactNode } from "react";
-import { supabase } from "../lib/supabaseClient";
+import {
+  clearAdminSession,
+  deleteAdminRecord,
+  getAdminToken,
+  loadAdminBootstrap,
+  saveAdminRecord,
+} from "../lib/appsScriptApi";
 
 type EnquiryStatus =
   | "New Enquiry"
@@ -745,7 +751,7 @@ function normalizePublicAssetPath(value: string) {
     clean = "/" + clean;
   }
 
-  return clean;
+  return window.__TM_ASSETS?.[clean] || clean;
 }
 
 function normalizeInstructor(instructor: Partial<Instructor>): Instructor {
@@ -765,68 +771,6 @@ function normalizeInstructor(instructor: Partial<Instructor>): Instructor {
   };
 }
 
-type SupabaseInstructorRow = {
-  id: string;
-  name: string | null;
-  designation: string | null;
-  organisation: string | null;
-  email: string | null;
-  phone: string | null;
-  profile: string | null;
-  expertise: string[] | null;
-  photo_url: string | null;
-  resume_url: string | null;
-  status: string | null;
-};
-
-function stableNumericId(value: string) {
-  let hash = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-  return hash || Date.now();
-}
-
-function expertiseTextToArray(value: string) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function supabaseRowToInstructor(row: SupabaseInstructorRow): Instructor {
-  return normalizeInstructor({
-    id: stableNumericId(row.id),
-    remoteId: row.id,
-    name: row.name || "Instructor",
-    designation: row.designation || "Course Instructor",
-    company: row.organisation || "TerraMatrix Academy",
-    expertise: Array.isArray(row.expertise) && row.expertise.length > 0
-      ? row.expertise.join(", ")
-      : "Engineering Training",
-    email: row.email || "",
-    phone: row.phone || "",
-    bio: row.profile || "Instructor profile will be updated soon.",
-    photoUrl: row.photo_url || defaultImage,
-    cvName: row.resume_url ? getFileNameFromPath(row.resume_url, "Resume") : "",
-    cvData: row.resume_url || "",
-  });
-}
-
-function instructorPayloadFromForm(form: InstructorForm) {
-  return {
-    name: form.name.trim(),
-    designation: form.designation || "Course Instructor",
-    organisation: form.company || "TerraMatrix Academy",
-    expertise: expertiseTextToArray(normalizeExpertiseKeywords(form.expertise) || "Engineering Training"),
-    email: form.email || "",
-    phone: form.phone || "",
-    profile: form.bio || "Instructor profile will be updated soon.",
-    photo_url: normalizePublicAssetPath(form.photoUrl || "") || defaultImage,
-    resume_url: normalizePublicAssetPath(form.cvData || ""),
-    status: "Active",
-  };
-}
 
 function normalizeToolName(name: string) {
   const clean = name.trim();
@@ -1110,6 +1054,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   const [courses, setCourses] = useState<Course[]>([]);
+  const [adminLoading, setAdminLoading] = useState(true);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [learningTools, setLearningTools] = useState<LearningTool[]>([]);
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
@@ -1142,8 +1087,7 @@ export default function AdminDashboard() {
     useState("Geospatial Tools");
 
   useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem("terramatrix_admin_login");
-    if (isLoggedIn !== "yes") {
+    if (!getAdminToken()) {
       navigate("/admin");
       return;
     }
@@ -1179,153 +1123,123 @@ export default function AdminDashboard() {
   }, []);
 
   const loadInitialData = async () => {
-    const savedCourses = localStorage.getItem("terramatrix_courses");
-    const savedInstructors = localStorage.getItem("terramatrix_instructors");
-    const savedLearningTools = localStorage.getItem("terramatrix_learning_tools");
-    const savedEnquiries = localStorage.getItem("terramatrix_enquiries");
-    const savedEnrollments = localStorage.getItem("terramatrix_enrollments");
-
     try {
-      const { data, error } = await supabase
-        .from("instructors")
-        .select("*")
-        .order("display_order", { ascending: true })
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      const supabaseInstructors = (data || []).map((row) =>
-        supabaseRowToInstructor(row as SupabaseInstructorRow)
+      const data = await loadAdminBootstrap();
+      setCourses((data.courses || []).map((course) => normalizeCourse(course as Partial<Course>)));
+      setInstructors(
+        (data.instructors || []).map((instructor) =>
+          normalizeInstructor(instructor as Partial<Instructor>)
+        )
       );
-
-      if (supabaseInstructors.length > 0) {
-        setInstructors(supabaseInstructors);
-        localStorage.setItem("terramatrix_instructors", JSON.stringify(supabaseInstructors));
-      } else if (savedInstructors) {
-        const normalized = JSON.parse(savedInstructors).map(
-          (instructor: Partial<Instructor>) => normalizeInstructor(instructor)
-        );
-        setInstructors(normalized);
-      } else {
-        setInstructors(sampleInstructors);
-      }
-    } catch (error) {
-      console.error("Could not load instructors from Supabase.", error);
-
-      if (savedInstructors) {
-        try {
-          const normalized = JSON.parse(savedInstructors).map(
-            (instructor: Partial<Instructor>) => normalizeInstructor(instructor)
-          );
-          setInstructors(normalized);
-        } catch {
-          setInstructors(sampleInstructors);
-        }
-      } else {
-        setInstructors(sampleInstructors);
-      }
-    }
-
-    if (savedLearningTools) {
-      try {
-        const normalized = mergeWithDefaultLearningTools(
-          JSON.parse(savedLearningTools).map((tool: Partial<LearningTool>) =>
-            normalizeLearningTool(tool)
+      setLearningTools(
+        mergeWithDefaultLearningTools(
+          (data.learningTools || []).map((tool) =>
+            normalizeLearningTool(tool as Partial<LearningTool>)
           )
-        );
-        setLearningTools(normalized);
-        localStorage.setItem("terramatrix_learning_tools", JSON.stringify(normalized));
-      } catch {
-        setLearningTools(defaultLearningTools);
-        localStorage.setItem("terramatrix_learning_tools", JSON.stringify(defaultLearningTools));
-      }
-    } else {
-      setLearningTools(defaultLearningTools);
-      localStorage.setItem("terramatrix_learning_tools", JSON.stringify(defaultLearningTools));
-    }
-
-    if (savedCourses) {
-      try {
-        const normalized = JSON.parse(savedCourses).map((course: Partial<Course>) =>
-          normalizeCourse(course)
-        );
-        setCourses(normalized);
-        localStorage.setItem("terramatrix_courses", JSON.stringify(normalized));
-      } catch {
-        setCourses(sampleCourses);
-        localStorage.setItem("terramatrix_courses", JSON.stringify(sampleCourses));
-      }
-    } else {
-      setCourses(sampleCourses);
-      localStorage.setItem("terramatrix_courses", JSON.stringify(sampleCourses));
-    }
-
-    if (savedEnquiries) {
-      try {
-        const normalized = JSON.parse(savedEnquiries).map(
-          (enquiry: Partial<Enquiry>) => normalizeEnquiry(enquiry)
-        );
-        setEnquiries(normalized);
-        localStorage.setItem("terramatrix_enquiries", JSON.stringify(normalized));
-      } catch {
-        setEnquiries([]);
-      }
-    }
-
-    if (savedEnrollments) {
-      try {
-        const normalized = JSON.parse(savedEnrollments).map(
-          (enrollment: Partial<Enrollment>) => normalizeEnrollment(enrollment)
-        );
-        setEnrollments(normalized);
-        localStorage.setItem("terramatrix_enrollments", JSON.stringify(normalized));
-      } catch {
-        setEnrollments([]);
-      }
+        )
+      );
+      setEnquiries(
+        (data.enquiries || []).map((enquiry) =>
+          normalizeEnquiry(enquiry as Partial<Enquiry>)
+        )
+      );
+      setEnrollments(
+        (data.enrollments || []).map((enrollment) =>
+          normalizeEnrollment(enrollment as Partial<Enrollment>)
+        )
+      );
+      setAdminLoading(false);
+    } catch (error) {
+      console.error("Could not load shared TerraMatrix data.", error);
+      setAdminLoading(false);
+      clearAdminSession();
+      alert(error instanceof Error ? error.message : "The admin session has expired.");
+      navigate("/admin");
     }
   };
 
   const logoutAdmin = () => {
-    sessionStorage.removeItem("terramatrix_admin_login");
+    clearAdminSession();
     navigate("/admin");
   };
 
+  const persistCollection = async <T extends { id: number }>(
+    tableName: "Courses" | "Instructors" | "Learning_Tools" | "Enquiries" | "Enrollments",
+    previous: T[],
+    updated: T[]
+  ) => {
+    const deletedIds = previous
+      .filter((item) => !updated.some((next) => next.id === item.id))
+      .map((item) => item.id);
+
+    const previousById = new Map(previous.map((item) => [String(item.id), item]));
+    const changedItems = updated.filter((item) => {
+      const prior = previousById.get(String(item.id));
+      return !prior || JSON.stringify(prior) !== JSON.stringify(item);
+    });
+
+    await Promise.all([
+      ...changedItems.map((item) =>
+        saveAdminRecord(tableName, item as unknown as Record<string, unknown>)
+      ),
+      ...deletedIds.map((id) => deleteAdminRecord(tableName, id)),
+    ]);
+  };
+
   const saveCourses = (updated: Course[]) => {
-    try {
-      setCourses(updated);
-      localStorage.setItem("terramatrix_courses", JSON.stringify(updated));
-    } catch {
-      alert("Could not save course details. Please check the file paths and try again.");
-    }
+    const previous = courses;
+    setCourses(updated);
+    localStorage.setItem("terramatrix_courses", JSON.stringify(updated));
+    void persistCollection("Courses", previous, updated).catch((error) => {
+      console.error("Could not save courses.", error);
+      alert(error instanceof Error ? error.message : "Could not save course details.");
+      void loadInitialData();
+    });
   };
 
   const saveInstructors = (updated: Instructor[]) => {
-    try {
-      setInstructors(updated);
-      localStorage.setItem("terramatrix_instructors", JSON.stringify(updated));
-    } catch {
-      alert("Could not save instructor details. Please check the file paths and try again.");
-    }
+    const previous = instructors;
+    setInstructors(updated);
+    localStorage.setItem("terramatrix_instructors", JSON.stringify(updated));
+    void persistCollection("Instructors", previous, updated).catch((error) => {
+      console.error("Could not save instructors.", error);
+      alert(error instanceof Error ? error.message : "Could not save instructor details.");
+      void loadInitialData();
+    });
   };
 
   const saveLearningTools = (updated: LearningTool[]) => {
-    try {
-      const sorted = dedupeLearningTools(updated);
-      setLearningTools(sorted);
-      localStorage.setItem("terramatrix_learning_tools", JSON.stringify(sorted));
-    } catch {
-      alert("The uploaded tool logo may be too large for browser storage.");
-    }
+    const sorted = dedupeLearningTools(updated);
+    const previous = learningTools;
+    setLearningTools(sorted);
+    localStorage.setItem("terramatrix_learning_tools", JSON.stringify(sorted));
+    void persistCollection("Learning_Tools", previous, sorted).catch((error) => {
+      console.error("Could not save learning tools.", error);
+      alert(error instanceof Error ? error.message : "Could not save learning tools.");
+      void loadInitialData();
+    });
   };
 
   const saveEnquiries = (updated: Enquiry[]) => {
+    const previous = enquiries;
     setEnquiries(updated);
     localStorage.setItem("terramatrix_enquiries", JSON.stringify(updated));
+    void persistCollection("Enquiries", previous, updated).catch((error) => {
+      console.error("Could not update enquiries.", error);
+      alert(error instanceof Error ? error.message : "Could not update enquiries.");
+      void loadInitialData();
+    });
   };
 
   const saveEnrollments = (updated: Enrollment[]) => {
+    const previous = enrollments;
     setEnrollments(updated);
     localStorage.setItem("terramatrix_enrollments", JSON.stringify(updated));
+    void persistCollection("Enrollments", previous, updated).catch((error) => {
+      console.error("Could not update enrollments.", error);
+      alert(error instanceof Error ? error.message : "Could not update enrolments.");
+      void loadInitialData();
+    });
   };
 
   const parseEnrollmentCsv = (file: File | undefined) => {
@@ -1690,55 +1604,29 @@ export default function AdminDashboard() {
     );
   };
 
-  const createOrUpdateInstructor = async () => {
+  const createOrUpdateInstructor = () => {
     if (!instructorForm.name.trim()) {
       alert("Please enter instructor name.");
       return;
     }
 
-    const existingInstructor = instructorEditId
-      ? instructors.find((instructor) => instructor.id === instructorEditId)
-      : null;
+    const instructorData: Instructor = normalizeInstructor({
+      ...instructorForm,
+      id: instructorEditId || Date.now(),
+      remoteId: "",
+    });
 
-    const payload = instructorPayloadFromForm(instructorForm);
-
-    try {
-      if (existingInstructor?.remoteId) {
-        const { data, error } = await supabase
-          .from("instructors")
-          .update(payload)
-          .eq("id", existingInstructor.remoteId)
-          .select("*")
-          .single();
-
-        if (error) throw error;
-
-        const savedInstructor = supabaseRowToInstructor(data as SupabaseInstructorRow);
-        saveInstructors(
-          instructors.map((instructor) =>
-            instructor.id === instructorEditId ? savedInstructor : instructor
-          )
-        );
-      } else {
-        const { data, error } = await supabase
-          .from("instructors")
-          .insert(payload)
-          .select("*")
-          .single();
-
-        if (error) throw error;
-
-        const savedInstructor = supabaseRowToInstructor(data as SupabaseInstructorRow);
-        saveInstructors([savedInstructor, ...instructors]);
-      }
-
-      resetInstructorForm();
-    } catch (error) {
-      console.error("Could not save instructor to Supabase.", error);
-      alert(
-        "Could not save instructor online. Run the instructor write-policy SQL in Supabase, then try again."
+    if (instructorEditId) {
+      saveInstructors(
+        instructors.map((instructor) =>
+          instructor.id === instructorEditId ? instructorData : instructor
+        )
       );
+    } else {
+      saveInstructors([instructorData, ...instructors]);
     }
+
+    resetInstructorForm();
   };
 
   const editInstructor = (instructor: Instructor) => {
@@ -1759,31 +1647,15 @@ export default function AdminDashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const deleteInstructor = async (id: number) => {
-    const targetInstructor = instructors.find((instructor) => instructor.id === id);
-
-    try {
-      if (targetInstructor?.remoteId) {
-        const { error } = await supabase
-          .from("instructors")
-          .delete()
-          .eq("id", targetInstructor.remoteId);
-
-        if (error) throw error;
-      }
-
-      saveInstructors(instructors.filter((instructor) => instructor.id !== id));
-      saveCourses(
-        courses.map((course) => ({
-          ...course,
-          instructorIds: course.instructorIds.filter((instructorId) => instructorId !== id),
-        }))
-      );
-      if (instructorEditId === id) resetInstructorForm();
-    } catch (error) {
-      console.error("Could not delete instructor from Supabase.", error);
-      alert("Could not delete instructor online. Please check Supabase write policy.");
-    }
+  const deleteInstructor = (id: number) => {
+    saveInstructors(instructors.filter((instructor) => instructor.id !== id));
+    saveCourses(
+      courses.map((course) => ({
+        ...course,
+        instructorIds: course.instructorIds.filter((instructorId) => instructorId !== id),
+      }))
+    );
+    if (instructorEditId === id) resetInstructorForm();
   };
 
   const toggleInstructorSelection = (id: number) => {
@@ -1852,6 +1724,19 @@ export default function AdminDashboard() {
     URL.revokeObjectURL(url);
   };
 
+  if (adminLoading) {
+    return (
+      <main className="tm3-admin-loading" style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "40px" }}>
+        <div style={{ width: "min(460px, 100%)", padding: "28px", border: "1px solid var(--tm-border)", borderRadius: "var(--tm-radius-xl)", background: "var(--tm-surface)", boxShadow: "var(--tm-shadow-md)", textAlign: "left" }} role="status">
+          <div style={{ color: "var(--tm-gold-700)", fontSize: "12px", fontWeight: 900, letterSpacing: "1.4px", marginBottom: "8px" }}>ADMIN WORKSPACE</div>
+          <h1 style={{ color: "var(--tm-ink)", fontSize: "28px", margin: "0 0 8px" }}>Loading shared academy data</h1>
+          <p style={{ color: "var(--tm-muted)", margin: "0 0 16px" }}>Courses, instructors, enquiries and enrolments are being synchronised.</p>
+          <div className="tm-skeleton-line" />
+        </div>
+      </main>
+    );
+  }
+
   const publishedCourses = courses.filter(
     (course) => course.status === "Published"
   );
@@ -1864,8 +1749,8 @@ export default function AdminDashboard() {
     learningTools.filter((tool) => tool.area === area).length;
 
   return (
-    <main>
-      <section style={headerSection}>
+    <main className="tm3-admin-workspace">
+      <section className="tm3-admin-header" style={headerSection}>
         <div>
           <div style={eyebrow}>ADMIN PANEL</div>
           <h1 style={pageTitle}>Academy Management</h1>
@@ -1885,7 +1770,7 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <section style={adminTabs}>
+      <section className="tm3-admin-tabs" style={adminTabs}>
         <button
           onClick={() => {
             setActiveAdminTab("overview");
@@ -1994,7 +1879,7 @@ export default function AdminDashboard() {
       </section>
 
       {activeAdminTab === "overview" && (
-      <section style={overviewSection}>
+      <section className="tm3-admin-overview" style={overviewSection}>
         <div style={overviewIntroCard}>
           <div>
             <div style={eyebrow}>ADMIN OVERVIEW</div>
@@ -4173,8 +4058,23 @@ function EventRegistrationAdminPanel() {
   );
 
   const saveRegistered = (updated: EventRegistration[]) => {
+    const previous = registrations;
     setRegistered(updated);
     localStorage.setItem("terramatrix_event_registrations", JSON.stringify(updated));
+
+    const deletedIds = previous
+      .filter((item) => !updated.some((next) => next.id === item.id))
+      .map((item) => item.id);
+
+    void Promise.all([
+      ...updated.map((item) =>
+        saveAdminRecord("Event_Registrations", item as unknown as Record<string, unknown>)
+      ),
+      ...deletedIds.map((id) => deleteAdminRecord("Event_Registrations", id)),
+    ]).catch((error) => {
+      console.error("Could not update registrations.", error);
+      alert(error instanceof Error ? error.message : "Could not update registrations.");
+    });
   };
 
   const updateRegistration = (
@@ -4579,14 +4479,14 @@ function PdfStatus({ name, onRemove }: { name: string; onRemove: () => void }) {
   );
 }
 
-const headerSection: CSSProperties = { maxWidth: "1280px", margin: "0 auto", padding: "30px 48px 16px", display: "grid", gridTemplateColumns: "1fr 420px", gap: "24px", alignItems: "center" };
+const headerSection: CSSProperties = { maxWidth: "1280px", margin: "0 auto", padding: "38px 48px 20px", display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(340px, 430px)", gap: "28px", alignItems: "center" };
 const eyebrow: CSSProperties = { color: "#8A661E", fontSize: "12px", fontWeight: 900, letterSpacing: "1.5px", marginBottom: "7px" };
-const pageTitle: CSSProperties = { color: "#173F35", fontSize: "34px", lineHeight: "1.12", margin: "0" };
+const pageTitle: CSSProperties = { color: "var(--tm-ink)", fontFamily: "var(--tm-font-display)", fontSize: "clamp(34px, 4vw, 48px)", lineHeight: "1.04", letterSpacing: "-1.5px", margin: "0" };
 const pageText: CSSProperties = { color: "#53665E", fontSize: "18px", lineHeight: "1.7", margin: 0 };
-const adminSidePanel: CSSProperties = { display: "grid", gap: "10px" };
-const summaryPanel: CSSProperties = { background: "#DDE9E2", border: "1px solid #C9DDD3", borderRadius: "14px", padding: "10px 14px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", alignItems: "center" };
+const adminSidePanel: CSSProperties = { display: "grid", gap: "10px", padding: "12px", border: "1px solid var(--tm-border)", borderRadius: "var(--tm-radius-xl)", background: "var(--tm-surface)", boxShadow: "var(--tm-shadow-md)" };
+const summaryPanel: CSSProperties = { background: "var(--tm-forest-50)", border: "1px solid var(--tm-border)", borderRadius: "var(--tm-radius-lg)", padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "10px", alignItems: "center" };
 const summaryBox: CSSProperties = { display: "flex", flexDirection: "column", gap: "2px", textAlign: "center", lineHeight: "1.15", color: "#173F35" };
-const logoutButton: CSSProperties = { background: "#FDE8E8", color: "#9B1C1C", border: "1px solid #F4C7C7", padding: "9px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: 900 };
+const logoutButton: CSSProperties = { background: "var(--tm-danger-soft)", color: "var(--tm-danger)", border: "1px solid #e8baba", padding: "10px 14px", borderRadius: "var(--tm-radius-md)", cursor: "pointer", fontWeight: 850 };
 const adminTabs: CSSProperties = {
   maxWidth: "1280px",
   margin: "0 auto",
@@ -4597,30 +4497,32 @@ const adminTabs: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   position: "sticky",
-  top: 0,
+  top: "var(--tm-header-height)",
   zIndex: 20,
-  background: "#FBFAF6",
-  borderBottom: "1px solid #E8E1D2",
+  background: "color-mix(in srgb, var(--tm-canvas) 94%, transparent)",
+  backdropFilter: "blur(14px)",
+  borderBottom: "1px solid var(--tm-border)",
   overflow: "visible",
 };
 
 const adminTabButton: CSSProperties = {
-  background: "#FFFFFF",
-  color: "#173F35",
-  border: "1px solid #E8E1D2",
-  padding: "8px 13px",
+  background: "var(--tm-surface)",
+  color: "var(--tm-ink)",
+  border: "1px solid var(--tm-border)",
+  padding: "9px 14px",
   borderRadius: "999px",
   cursor: "pointer",
-  fontWeight: 900,
+  fontWeight: 800,
   fontSize: "13px",
   whiteSpace: "nowrap",
+  boxShadow: "var(--tm-shadow-sm)",
 };
 
 const activeAdminTabButton: CSSProperties = {
   ...adminTabButton,
-  background: "#173F35",
+  background: "var(--tm-forest-900)",
   color: "#FFFFFF",
-  border: "1px solid #173F35",
+  border: "1px solid var(--tm-forest-900)",
 };
 
 const adminLearningDropdownWrap: CSSProperties = {
@@ -4634,9 +4536,9 @@ const adminDropdownButton: CSSProperties = {
 
 const activeAdminDropdownButton: CSSProperties = {
   ...adminDropdownButton,
-  background: "#173F35",
+  background: "var(--tm-forest-900)",
   color: "#FFFFFF",
-  border: "1px solid #173F35",
+  border: "1px solid var(--tm-forest-900)",
 };
 
 const adminLearningDropdownMenu: CSSProperties = {
@@ -4698,16 +4600,18 @@ const overviewSection: CSSProperties = {
 };
 
 const overviewIntroCard: CSSProperties = {
-  background: "#FFFFFF",
-  border: "1px solid #E8E1D2",
-  borderRadius: "16px",
-  padding: "14px 18px",
-  boxShadow: "0 8px 22px rgba(23,63,53,0.04)",
+  background: "linear-gradient(135deg, var(--tm-surface), var(--tm-forest-50))",
+  border: "1px solid var(--tm-border)",
+  borderRadius: "var(--tm-radius-xl)",
+  padding: "22px 24px",
+  boxShadow: "var(--tm-shadow-sm)",
 };
 
 const overviewTitle: CSSProperties = {
-  color: "#173F35",
-  fontSize: "26px",
+  color: "var(--tm-ink)",
+  fontFamily: "var(--tm-font-display)",
+  fontSize: "30px",
+  letterSpacing: "-0.7px",
   margin: 0,
 };
 
@@ -4720,28 +4624,28 @@ const overviewText: CSSProperties = {
 
 const overviewGrid: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
-  gap: "14px",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: "16px",
 };
 
 const overviewCard: CSSProperties = {
-  background: "#FFFFFF",
-  border: "1px solid #E8E1D2",
-  borderRadius: "14px",
-  padding: "14px",
-  boxShadow: "0 8px 18px rgba(23,63,53,0.04)",
+  background: "var(--tm-surface)",
+  border: "1px solid var(--tm-border)",
+  borderRadius: "var(--tm-radius-lg)",
+  padding: "18px",
+  boxShadow: "var(--tm-shadow-sm)",
   display: "grid",
-  gap: "8px",
+  gap: "10px",
 };
 
 const overviewCardHeader: CSSProperties = {
-  color: "#8A661E",
+  color: "var(--tm-gold-700)",
   fontSize: "13px",
   fontWeight: 900,
   letterSpacing: "0.8px",
   textTransform: "uppercase",
   paddingBottom: "6px",
-  borderBottom: "1px solid #E8E1D2",
+  borderBottom: "1px solid var(--tm-border)",
 };
 
 const overviewMetricRow: CSSProperties = {
@@ -4749,7 +4653,7 @@ const overviewMetricRow: CSSProperties = {
   justifyContent: "space-between",
   gap: "10px",
   alignItems: "center",
-  color: "#35584D",
+  color: "var(--tm-muted)",
   fontSize: "14px",
 };
 
