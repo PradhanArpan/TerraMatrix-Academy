@@ -1088,7 +1088,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!getAdminToken()) {
-      navigate("/admin");
+      navigate("/admin-login", { replace: true });
       return;
     }
     void loadInitialData();
@@ -1154,13 +1154,13 @@ export default function AdminDashboard() {
       setAdminLoading(false);
       clearAdminSession();
       alert(error instanceof Error ? error.message : "The admin session has expired.");
-      navigate("/admin");
+      navigate("/admin-login", { replace: true });
     }
   };
 
   const logoutAdmin = () => {
     clearAdminSession();
-    navigate("/admin");
+    navigate("/admin-login", { replace: true });
   };
 
   const persistCollection = async <T extends { id: number }>(
