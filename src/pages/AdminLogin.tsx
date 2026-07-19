@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
 import logo from "../assets/terramatrix-logo.png";
 import { ADMIN_SESSION_KEY, createAdminSession, getAdminToken } from "../lib/appsScriptApi";
 
@@ -32,6 +32,7 @@ export default function AdminLogin() {
           <div className="tm3-auth-story__quote">Secure server-side verification · Shared Google Sheets data · Role-controlled administration</div>
         </div>
         <div className="tm3-auth-form">
+          <Link to="/" className="tm3-auth-back"><ArrowLeft size={16} /> Back to Academy</Link>
           <div className="tm3-eyebrow tm3-eyebrow--gold">Administrator access</div>
           <h2>Open the admin workspace</h2>
           <p>Enter the password configured for this Apps Script project.</p>

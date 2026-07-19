@@ -139,6 +139,22 @@ export async function deleteAdminRecord(
   return callServer<boolean>("deleteAdminRecord", token, tableName, String(recordId));
 }
 
+export async function saveAdminMediaRecord<T extends Record<string, unknown>>(
+  tableName: "Learning_Videos" | "Webinars" | "Workshops",
+  record: T,
+  token = getAdminToken()
+): Promise<T> {
+  return callServer<T>("saveAdminMediaRecord", token, tableName, record);
+}
+
+export async function deleteAdminMediaRecord(
+  tableName: "Learning_Videos" | "Webinars" | "Workshops",
+  recordId: string | number,
+  token = getAdminToken()
+): Promise<boolean> {
+  return callServer<boolean>("deleteAdminMediaRecord", token, tableName, String(recordId));
+}
+
 export async function submitPublicEnquiry(record: Record<string, unknown>): Promise<{ success: boolean; id: string }> {
   return callServer("submitPublicEnquiry", record);
 }

@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CSSProperties, ReactNode } from "react";
+import { FileText, Home, ImagePlus, UploadCloud } from "lucide-react";
 import {
   clearAdminSession,
+  deleteAdminMediaRecord,
   deleteAdminRecord,
   getAdminToken,
   loadAdminBootstrap,
+  saveAdminMediaRecord,
   saveAdminRecord,
 } from "../lib/appsScriptApi";
 
@@ -1160,7 +1163,7 @@ export default function AdminDashboard() {
 
   const logoutAdmin = () => {
     clearAdminSession();
-    navigate("/admin-login", { replace: true });
+    navigate("/", { replace: true });
   };
 
   const persistCollection = async <T extends { id: number }>(
@@ -1408,6 +1411,10 @@ export default function AdminDashboard() {
     }
     if (expected === "pdf" && file.type !== "application/pdf") {
       alert("Please upload a PDF file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Please upload a file smaller than 5 MB.");
       return;
     }
     const reader = new FileReader();
@@ -1766,7 +1773,12 @@ export default function AdminDashboard() {
             <SummaryBox label="Enquiries" value={enquiries.length} />
             <SummaryBox label="Enrolled" value={enrollments.length} />
           </div>
-          <button onClick={logoutAdmin} style={logoutButton}>Logout</button>
+          <div className="tm-admin-header-actions" style={adminHeaderActionRow}>
+            <button onClick={() => navigate("/")} style={homeButton}>
+              <Home size={16} /> Academy home
+            </button>
+            <button onClick={logoutAdmin} style={logoutButton}>Logout</button>
+          </div>
         </div>
       </section>
 
@@ -2035,52 +2047,52 @@ export default function AdminDashboard() {
             </div>
           </Field>
 
-          <Field label="Course Image Path / URL">
-            <input
+          <div className="tm-admin-upload-grid tm-admin-upload-grid--three" style={mediaUploadGrid}>
+            <UploadField
+              label="Programme image"
+              description="JPG, PNG or WebP · maximum 5 MB"
+              accept="image/jpeg,image/png,image/webp"
+              kind="image"
               value={courseForm.imageUrl}
-              onChange={(e) => setCourseForm({ ...courseForm, imageUrl: normalizePublicAssetPath(e.target.value) })}
-              style={inputStyle}
-              placeholder="/uploads/courses/qgis-course-image.jpg"
+              fileName={getFileNameFromPath(courseForm.imageUrl || "", "programme-image")}
+              onSelect={(file) =>
+                handleFileUpload(file, "image", (dataUrl) =>
+                  setCourseForm({ ...courseForm, imageUrl: dataUrl })
+                )
+              }
+              onRemove={() => setCourseForm({ ...courseForm, imageUrl: defaultImage })}
             />
-            <p style={helperText}>Use /uploads/courses/file-name.jpg only. Do not paste C:\\... path or quotes.</p>
-          </Field>
-          <div style={imagePreviewBox}><img src={courseForm.imageUrl || defaultImage} style={imagePreview} /></div>
 
-          <Field label="Course Structure / Programme PDF Path">
-            <input
+            <UploadField
+              label="Programme brochure"
+              description="PDF shown through the Course Content button"
+              accept="application/pdf"
+              kind="pdf"
               value={courseForm.brochureData}
-              onChange={(e) => {
-                const value = normalizePublicAssetPath(e.target.value);
-                setCourseForm({
-                  ...courseForm,
-                  brochureData: value,
-                  brochureName: value ? getFileNameFromPath(value, "course-structure.pdf") : "",
-                });
-              }}
-              style={inputStyle}
-              placeholder="/uploads/brochures/qgis-course-structure.pdf"
+              fileName={courseForm.brochureName || "programme-brochure.pdf"}
+              onSelect={(file) =>
+                handleFileUpload(file, "pdf", (dataUrl, fileName) =>
+                  setCourseForm({ ...courseForm, brochureData: dataUrl, brochureName: fileName })
+                )
+              }
+              onRemove={() => setCourseForm({ ...courseForm, brochureName: "", brochureData: "" })}
             />
-            <p style={helperText}>This appears as the Course Content button on the course page.</p>
-          </Field>
-          {courseForm.brochureData ? <PdfStatus name={courseForm.brochureName || getFileNameFromPath(courseForm.brochureData, "Course PDF")} onRemove={() => setCourseForm({ ...courseForm, brochureName: "", brochureData: "" })} /> : <p style={helperText}>No course PDF path added yet.</p>}
 
-          <Field label="Course Document / Reading Material Path">
-            <input
+            <UploadField
+              label="Learning material"
+              description="Optional PDF notes or reading material"
+              accept="application/pdf"
+              kind="pdf"
               value={courseForm.materialFileData}
-              onChange={(e) => {
-                const value = normalizePublicAssetPath(e.target.value);
-                setCourseForm({
-                  ...courseForm,
-                  materialFileData: value,
-                  materialFileName: value ? getFileNameFromPath(value, "course-document.pdf") : "",
-                });
-              }}
-              style={inputStyle}
-              placeholder="/uploads/documents/qgis-reading-material.pdf"
+              fileName={courseForm.materialFileName || "learning-material.pdf"}
+              onSelect={(file) =>
+                handleFileUpload(file, "pdf", (dataUrl, fileName) =>
+                  setCourseForm({ ...courseForm, materialFileData: dataUrl, materialFileName: fileName })
+                )
+              }
+              onRemove={() => setCourseForm({ ...courseForm, materialFileName: "", materialFileData: "" })}
             />
-            <p style={helperText}>Use this for course notes, reading material or a detailed course document.</p>
-          </Field>
-          {courseForm.materialFileData ? <PdfStatus name={courseForm.materialFileName || getFileNameFromPath(courseForm.materialFileData, "Course Document")} onRemove={() => setCourseForm({ ...courseForm, materialFileName: "", materialFileData: "" })} /> : <p style={helperText}>No course document path added yet.</p>}
+          </div>
 
           <div style={twoColumn}>
             <Field label="Start Date">
@@ -2157,61 +2169,78 @@ export default function AdminDashboard() {
               ×
             </button>
 
-            <div style={panel}>
-          <div style={eyebrow}>INSTRUCTOR MANAGEMENT</div>
-          <h2 style={panelTitle}>{instructorEditId ? "Edit Instructor" : "Add Instructor"}</h2>
+            <div style={compactPanel}>
+              <div style={compactFormHeading}>
+                <div>
+                  <div style={eyebrow}>INSTRUCTOR MANAGEMENT</div>
+                  <h2 style={compactPanelTitle}>{instructorEditId ? "Edit instructor" : "Add instructor"}</h2>
+                  <p style={compactPanelNote}>Create the faculty profile and upload the photo and CV directly. Files are organised automatically in TerraMatrix Drive folders.</p>
+                </div>
+              </div>
 
-          <Field label="Instructor Name"><input value={instructorForm.name} onChange={(e) => setInstructorForm({ ...instructorForm, name: e.target.value })} style={inputStyle} placeholder="Example: Dr Arpan Pradhan" /></Field>
-          <div style={twoColumn}>
-            <Field label="Designation"><input value={instructorForm.designation} onChange={(e) => setInstructorForm({ ...instructorForm, designation: e.target.value })} style={inputStyle} /></Field>
-            <Field label="Company / Institution"><input value={instructorForm.company} onChange={(e) => setInstructorForm({ ...instructorForm, company: e.target.value })} style={inputStyle} /></Field>
-          </div>
-          <Field label="Tool Expertise Keywords (comma separated)">
-            <input
-              value={instructorForm.expertise}
-              onChange={(e) => setInstructorForm({ ...instructorForm, expertise: e.target.value })}
-              style={inputStyle}
-              placeholder="Example: LaTeX, RAS, QGIS"
-            />
-          </Field>
-          <div style={twoColumn}>
-            <Field label="Email"><input value={instructorForm.email} onChange={(e) => setInstructorForm({ ...instructorForm, email: e.target.value })} style={inputStyle} /></Field>
-            <Field label="Phone"><input value={instructorForm.phone} onChange={(e) => setInstructorForm({ ...instructorForm, phone: e.target.value })} style={inputStyle} /></Field>
-          </div>
-          <Field label="Passport Photo Path / URL">
-            <input
-              value={instructorForm.photoUrl}
-              onChange={(e) => setInstructorForm({ ...instructorForm, photoUrl: normalizePublicAssetPath(e.target.value) })}
-              style={inputStyle}
-              placeholder="/uploads/instructors/sovan-photo.jpg"
-            />
-            <p style={helperText}>Use /uploads/instructors/file-name.jpg only. Do not paste C:\\... path or quotes.</p>
-          </Field>
-          <div style={passportPreviewBox}><img src={instructorForm.photoUrl || defaultImage} style={passportPreview} /></div>
-          <Field label="Resume / CV PDF Path">
-            <input
-              value={instructorForm.cvData}
-              onChange={(e) => {
-                const value = normalizePublicAssetPath(e.target.value);
-                setInstructorForm({
-                  ...instructorForm,
-                  cvData: value,
-                  cvName: value ? getFileNameFromPath(value, "instructor-resume.pdf") : "",
-                });
-              }}
-              style={inputStyle}
-              placeholder="/uploads/instructors/sovan-cv.pdf"
-            />
-            <p style={helperText}>Use /uploads/instructors/file-name.pdf. This controls the Resume button.</p>
-          </Field>
-          {instructorForm.cvData ? <PdfStatus name={instructorForm.cvName || getFileNameFromPath(instructorForm.cvData, "Resume")} onRemove={() => setInstructorForm({ ...instructorForm, cvName: "", cvData: "" })} /> : <p style={helperText}>No resume path added yet.</p>}
-          <Field label="Short Profile"><textarea value={instructorForm.bio} onChange={(e) => setInstructorForm({ ...instructorForm, bio: e.target.value })} style={textareaStyle} /></Field>
+              <div className="tm-admin-compact-grid" style={compactFormGrid}>
+                <Field label="Instructor name">
+                  <input value={instructorForm.name} onChange={(e) => setInstructorForm({ ...instructorForm, name: e.target.value })} style={compactInputStyle} placeholder="Example: Dr Arpan Pradhan" />
+                </Field>
+                <Field label="Designation">
+                  <input value={instructorForm.designation} onChange={(e) => setInstructorForm({ ...instructorForm, designation: e.target.value })} style={compactInputStyle} placeholder="Assistant Professor" />
+                </Field>
+                <Field label="Institution / company">
+                  <input value={instructorForm.company} onChange={(e) => setInstructorForm({ ...instructorForm, company: e.target.value })} style={compactInputStyle} placeholder="Institution or organisation" />
+                </Field>
+                <Field label="Email">
+                  <input type="email" value={instructorForm.email} onChange={(e) => setInstructorForm({ ...instructorForm, email: e.target.value })} style={compactInputStyle} placeholder="name@example.com" />
+                </Field>
+                <Field label="Phone">
+                  <input value={instructorForm.phone} onChange={(e) => setInstructorForm({ ...instructorForm, phone: e.target.value })} style={compactInputStyle} placeholder="Mobile number" />
+                </Field>
+                <Field label="Expertise keywords">
+                  <input value={instructorForm.expertise} onChange={(e) => setInstructorForm({ ...instructorForm, expertise: e.target.value })} style={compactInputStyle} placeholder="QGIS, SAP2000, Hydrology" />
+                </Field>
+              </div>
 
-          <div style={buttonRow}>
-            <button onClick={createOrUpdateInstructor} style={primaryButton}>{instructorEditId ? "Update Instructor" : "Add Instructor"}</button>
-            {instructorEditId && <button onClick={resetInstructorForm} style={plainButton}>Cancel Edit</button>}
-          </div>
-        </div>
+              <div className="tm-admin-upload-grid tm-admin-upload-grid--two" style={mediaUploadGridTwo}>
+                <UploadField
+                  label="Profile photograph"
+                  description="Passport-style JPG, PNG or WebP · maximum 5 MB"
+                  accept="image/jpeg,image/png,image/webp"
+                  kind="image"
+                  value={instructorForm.photoUrl}
+                  fileName={getFileNameFromPath(instructorForm.photoUrl || "", "instructor-photo")}
+                  onSelect={(file) =>
+                    handleFileUpload(file, "image", (dataUrl) =>
+                      setInstructorForm({ ...instructorForm, photoUrl: dataUrl })
+                    )
+                  }
+                  onRemove={() => setInstructorForm({ ...instructorForm, photoUrl: "" })}
+                  compactImage
+                />
+
+                <UploadField
+                  label="Resume / CV"
+                  description="PDF only · maximum 5 MB"
+                  accept="application/pdf"
+                  kind="pdf"
+                  value={instructorForm.cvData}
+                  fileName={instructorForm.cvName || "instructor-cv.pdf"}
+                  onSelect={(file) =>
+                    handleFileUpload(file, "pdf", (dataUrl, fileName) =>
+                      setInstructorForm({ ...instructorForm, cvData: dataUrl, cvName: fileName })
+                    )
+                  }
+                  onRemove={() => setInstructorForm({ ...instructorForm, cvName: "", cvData: "" })}
+                />
+              </div>
+
+              <Field label="Short professional profile">
+                <textarea value={instructorForm.bio} onChange={(e) => setInstructorForm({ ...instructorForm, bio: e.target.value })} style={compactTextareaStyle} placeholder="Write a concise 3–5 line profile highlighting teaching, research and professional expertise." />
+              </Field>
+
+              <div className="tm-admin-sticky-actions" style={stickyFormActions}>
+                <button onClick={createOrUpdateInstructor} style={primaryButton}>{instructorEditId ? "Update instructor" : "Add instructor"}</button>
+                <button onClick={resetInstructorForm} style={plainButton}>{instructorEditId ? "Cancel edit" : "Cancel"}</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -3036,7 +3065,7 @@ export default function AdminDashboard() {
   );
 }
 
-function normalizeVideo(video: Partial<LearningVideo>): LearningVideo {
+function normalizeVideo(video: Partial<LearningVideo> & { thumbnailFileId?: string }): LearningVideo {
   return {
     id: video.id || Date.now(),
     title: video.title || "Untitled Learning Video",
@@ -3044,13 +3073,13 @@ function normalizeVideo(video: Partial<LearningVideo>): LearningVideo {
     theme: video.theme || video.category || "General",
     description: video.description || "Video description will be updated soon.",
     youtubeUrl: video.youtubeUrl || "",
-    thumbnailUrl: normalizePublicAssetPath(video.thumbnailUrl || "") || defaultImage,
+    thumbnailUrl: normalizePublicAssetPath(video.thumbnailUrl || video.thumbnailFileId || "") || defaultImage,
     level: video.level || "Open",
     status: video.status === "Draft" ? "Draft" : "Published",
   };
 }
 
-function normalizeEvent(item: Partial<AcademyEvent>, kind: string): AcademyEvent {
+function normalizeEvent(item: Partial<AcademyEvent> & { imageFileId?: string }, kind: string): AcademyEvent {
   const rawStatus = item.status || "Upcoming";
 
   return {
@@ -3067,7 +3096,7 @@ function normalizeEvent(item: Partial<AcademyEvent>, kind: string): AcademyEvent
     fee: item.fee || "Free",
     certification: "Participation Certificate",
     recordingLink: item.recordingLink || "",
-    imageUrl: normalizePublicAssetPath(item.imageUrl || "") || defaultImage,
+    imageUrl: normalizePublicAssetPath(item.imageUrl || item.imageFileId || "") || defaultImage,
     status:
       rawStatus === "Draft" || rawStatus === "Completed" ? rawStatus : "Upcoming",
   };
@@ -3445,6 +3474,7 @@ function LearningVideoAdminPanel() {
   const [videos, setVideos] = useState<LearningVideo[]>(loadVideoItems);
   const [form, setForm] = useState<LearningVideoForm>(emptyLearningVideoForm);
   const [editId, setEditId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const saveVideos = (updated: LearningVideo[]) => {
     setVideos(updated);
@@ -3456,7 +3486,7 @@ function LearningVideoAdminPanel() {
     setEditId(null);
   };
 
-  const createOrUpdateVideo = () => {
+  const createOrUpdateVideo = async () => {
     if (!form.title.trim()) {
       alert("Please enter the video title.");
       return;
@@ -3474,13 +3504,22 @@ function LearningVideoAdminPanel() {
       theme: form.theme || form.category,
     });
 
-    if (editId) {
-      saveVideos(videos.map((video) => (video.id === editId ? videoData : video)));
-    } else {
-      saveVideos([videoData, ...videos]);
+    setSaving(true);
+    try {
+      const saved = normalizeVideo(
+        await saveAdminMediaRecord("Learning_Videos", videoData as unknown as Record<string, unknown>)
+      );
+      if (editId) {
+        saveVideos(videos.map((video) => (video.id === editId ? saved : video)));
+      } else {
+        saveVideos([saved, ...videos]);
+      }
+      resetForm();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not save the learning video.");
+    } finally {
+      setSaving(false);
     }
-
-    resetForm();
   };
 
   const editVideo = (video: LearningVideo) => {
@@ -3498,9 +3537,15 @@ function LearningVideoAdminPanel() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const deleteVideo = (id: number) => {
-    saveVideos(videos.filter((video) => video.id !== id));
-    if (editId === id) resetForm();
+  const deleteVideo = async (id: number) => {
+    if (!window.confirm("Delete this learning video?")) return;
+    try {
+      await deleteAdminMediaRecord("Learning_Videos", id);
+      saveVideos(videos.filter((video) => video.id !== id));
+      if (editId === id) resetForm();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not delete the learning video.");
+    }
   };
 
   return (
@@ -3586,19 +3631,20 @@ function LearningVideoAdminPanel() {
             />
           </Field>
 
-          <Field label="Thumbnail Image Path / URL">
-            <input
-              value={form.thumbnailUrl}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  thumbnailUrl: normalizePublicAssetPath(e.target.value),
-                })
-              }
-              style={inputStyle}
-              placeholder="/uploads/courses/video-thumbnail.jpg"
-            />
-          </Field>
+          <UploadField
+            label="Video thumbnail"
+            description="JPG, PNG or WebP · maximum 5 MB"
+            accept="image/jpeg,image/png,image/webp"
+            kind="image"
+            value={form.thumbnailUrl}
+            fileName={getFileNameFromPath(form.thumbnailUrl || "", "video-thumbnail")}
+            onSelect={(file) =>
+              readUploadFile(file, "image", (dataUrl) =>
+                setForm({ ...form, thumbnailUrl: dataUrl })
+              )
+            }
+            onRemove={() => setForm({ ...form, thumbnailUrl: defaultImage })}
+          />
 
           <Field label="Short Description">
             <textarea
@@ -3623,8 +3669,8 @@ function LearningVideoAdminPanel() {
           </Field>
 
           <div style={buttonRow}>
-            <button onClick={createOrUpdateVideo} style={primaryButton}>
-              {editId ? "Update Video" : "Save Video"}
+            <button onClick={() => void createOrUpdateVideo()} style={primaryButton} disabled={saving}>
+              {saving ? "Saving…" : editId ? "Update Video" : "Save Video"}
             </button>
             {editId && (
               <button type="button" onClick={resetForm} style={plainButton}>
@@ -3642,7 +3688,7 @@ function LearningVideoAdminPanel() {
             meta: `${video.category} · ${video.theme || "General"} · ${video.status}`,
             description: video.description,
             onEdit: () => editVideo(video),
-            onDelete: () => deleteVideo(video.id),
+            onDelete: () => void deleteVideo(video.id),
           }))}
         />
       </div>
@@ -3671,7 +3717,9 @@ function AcademyEventAdminPanel({
     status: "Upcoming",
   });
   const [editId, setEditId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
   const formAnchorId = `${kind.toLowerCase()}-admin-form`;
+  const mediaTableName = kind === "Webinar" ? "Webinars" : "Workshops";
 
   const saveItems = (updated: AcademyEvent[]) => {
     setItems(updated);
@@ -3697,7 +3745,7 @@ function AcademyEventAdminPanel({
     }));
   };
 
-  const createOrUpdateItem = () => {
+  const createOrUpdateItem = async () => {
     if (!form.title.trim()) {
       alert(`Please enter the ${kind.toLowerCase()} title.`);
       return;
@@ -3717,13 +3765,23 @@ function AcademyEventAdminPanel({
       kind
     );
 
-    if (editId) {
-      saveItems(items.map((item) => (item.id === editId ? eventData : item)));
-    } else {
-      saveItems([eventData, ...items]);
+    setSaving(true);
+    try {
+      const saved = normalizeEvent(
+        await saveAdminMediaRecord(mediaTableName, eventData as unknown as Record<string, unknown>),
+        kind
+      );
+      if (editId) {
+        saveItems(items.map((item) => (item.id === editId ? saved : item)));
+      } else {
+        saveItems([saved, ...items]);
+      }
+      resetForm();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : `Could not save the ${kind.toLowerCase()}.`);
+    } finally {
+      setSaving(false);
     }
-
-    resetForm();
   };
 
   const editItem = (item: AcademyEvent) => {
@@ -3752,18 +3810,29 @@ function AcademyEventAdminPanel({
     }, 0);
   };
 
-  const moveItemStatus = (item: AcademyEvent, status: EventStatus) => {
+  const moveItemStatus = async (item: AcademyEvent, status: EventStatus) => {
     const updatedItem = normalizeEvent({ ...item, status }, kind);
-    saveItems(items.map((current) => (current.id === item.id ? updatedItem : current)));
-
-    if (editId === item.id) {
-      setForm((current) => ({ ...current, status }));
+    try {
+      const saved = normalizeEvent(
+        await saveAdminMediaRecord(mediaTableName, updatedItem as unknown as Record<string, unknown>),
+        kind
+      );
+      saveItems(items.map((current) => (current.id === item.id ? saved : current)));
+      if (editId === item.id) setForm((current) => ({ ...current, status }));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : `Could not update the ${kind.toLowerCase()}.`);
     }
   };
 
-  const deleteItem = (id: number) => {
-    saveItems(items.filter((item) => item.id !== id));
-    if (editId === id) resetForm();
+  const deleteItem = async (id: number) => {
+    if (!window.confirm(`Delete this ${kind.toLowerCase()}?`)) return;
+    try {
+      await deleteAdminMediaRecord(mediaTableName, id);
+      saveItems(items.filter((item) => item.id !== id));
+      if (editId === id) resetForm();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : `Could not delete the ${kind.toLowerCase()}.`);
+    }
   };
 
   const upcomingItems = items.filter((item) => item.status === "Upcoming");
@@ -3943,23 +4012,24 @@ function AcademyEventAdminPanel({
             <p style={helperText}>Use this after the session is completed.</p>
           </Field>
 
-          <Field label="Banner Image Path / URL">
-            <input
-              value={form.imageUrl}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  imageUrl: normalizePublicAssetPath(e.target.value),
-                })
-              }
-              style={inputStyle}
-              placeholder="/uploads/courses/event-banner.jpg"
-            />
-          </Field>
+          <UploadField
+            label={`${kind} banner`}
+            description="JPG, PNG or WebP · maximum 5 MB"
+            accept="image/jpeg,image/png,image/webp"
+            kind="image"
+            value={form.imageUrl}
+            fileName={getFileNameFromPath(form.imageUrl || "", `${kind.toLowerCase()}-banner`)}
+            onSelect={(file) =>
+              readUploadFile(file, "image", (dataUrl) =>
+                setForm({ ...form, imageUrl: dataUrl })
+              )
+            }
+            onRemove={() => setForm({ ...form, imageUrl: defaultImage })}
+          />
 
           <div style={buttonRow}>
-            <button type="button" onClick={createOrUpdateItem} style={primaryButton}>
-              {editId ? `Update ${kind}` : `Save ${kind}`}
+            <button type="button" onClick={() => void createOrUpdateItem()} style={primaryButton} disabled={saving}>
+              {saving ? "Saving…" : editId ? `Update ${kind}` : `Save ${kind}`}
             </button>
             {editId && (
               <button onClick={resetForm} style={plainButton}>
@@ -3975,8 +4045,8 @@ function AcademyEventAdminPanel({
             emptyText={`No upcoming ${titleLabel.toLowerCase()} added yet.`}
             items={upcomingItems}
             onEdit={editItem}
-            onDelete={deleteItem}
-            onStatusChange={moveItemStatus}
+            onDelete={(id) => void deleteItem(id)}
+            onStatusChange={(item, status) => void moveItemStatus(item, status)}
           />
 
           <EventItemList
@@ -3984,8 +4054,8 @@ function AcademyEventAdminPanel({
             emptyText={`No completed ${titleLabel.toLowerCase()} added yet.`}
             items={completedItems}
             onEdit={editItem}
-            onDelete={deleteItem}
-            onStatusChange={moveItemStatus}
+            onDelete={(id) => void deleteItem(id)}
+            onStatusChange={(item, status) => void moveItemStatus(item, status)}
           />
 
           {draftItems.length > 0 && (
@@ -3994,8 +4064,8 @@ function AcademyEventAdminPanel({
               emptyText=""
               items={draftItems}
               onEdit={editItem}
-              onDelete={deleteItem}
-              onStatusChange={moveItemStatus}
+              onDelete={(id) => void deleteItem(id)}
+              onStatusChange={(item, status) => void moveItemStatus(item, status)}
             />
           )}
         </div>
@@ -4404,6 +4474,75 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   return <label style={fieldBlock}><span>{label}</span>{children}</label>;
 }
 
+function UploadField({
+  label,
+  description,
+  accept,
+  kind,
+  value,
+  fileName,
+  onSelect,
+  onRemove,
+  compactImage = false,
+}: {
+  label: string;
+  description: string;
+  accept: string;
+  kind: "image" | "pdf";
+  value: string;
+  fileName: string;
+  onSelect: (file: File | undefined) => void;
+  onRemove: () => void;
+  compactImage?: boolean;
+}) {
+  const hasFile = Boolean(value && value !== defaultImage);
+  const Icon = kind === "image" ? ImagePlus : FileText;
+
+  return (
+    <div className="tm-admin-upload-card" style={uploadCard}>
+      <div style={uploadCardPreview}>
+        {kind === "image" && hasFile ? (
+          <img
+            src={value}
+            alt={`${label} preview`}
+            style={compactImage ? uploadPortraitPreview : uploadImagePreview}
+          />
+        ) : (
+          <span style={uploadIconBox}><Icon size={24} /></span>
+        )}
+      </div>
+
+      <div style={uploadCardContent}>
+        <div>
+          <strong style={uploadCardTitle}>{label}</strong>
+          <p style={uploadCardDescription}>{description}</p>
+          {hasFile && <span style={uploadFileName}>{fileName}</span>}
+        </div>
+
+        <div style={uploadActions}>
+          <label style={uploadButton}>
+            <UploadCloud size={15} /> {hasFile ? "Replace" : "Choose file"}
+            <input
+              type="file"
+              accept={accept}
+              onChange={(event) => {
+                onSelect(event.target.files?.[0]);
+                event.currentTarget.value = "";
+              }}
+              style={hiddenFileInput}
+            />
+          </label>
+          {hasFile && (
+            <button type="button" onClick={onRemove} style={uploadRemoveButton}>
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SummaryBox({ label, value }: { label: string; value: number }) {
   return <div style={summaryBox}><strong>{value}</strong><span>{label}</span></div>;
 }
@@ -4470,13 +4609,27 @@ function getFileNameFromPath(value: string, fallback: string) {
   return fileName || fallback;
 }
 
-function PdfStatus({ name, onRemove }: { name: string; onRemove: () => void }) {
-  return (
-    <div style={pdfStatus}>
-      <div><strong>{name}</strong><span>Attached</span></div>
-      <button onClick={onRemove} style={smallDanger}>Remove</button>
-    </div>
-  );
+function readUploadFile(
+  file: File | undefined,
+  expected: "image" | "pdf",
+  setter: (dataUrl: string, fileName: string) => void
+) {
+  if (!file) return;
+  if (expected === "image" && !file.type.startsWith("image/")) {
+    alert("Please upload an image file.");
+    return;
+  }
+  if (expected === "pdf" && file.type !== "application/pdf") {
+    alert("Please upload a PDF file.");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Please upload a file smaller than 5 MB.");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => setter(String(reader.result), file.name);
+  reader.readAsDataURL(file);
 }
 
 const headerSection: CSSProperties = { maxWidth: "1280px", margin: "0 auto", padding: "38px 48px 20px", display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(340px, 430px)", gap: "28px", alignItems: "center" };
@@ -4487,6 +4640,8 @@ const adminSidePanel: CSSProperties = { display: "grid", gap: "10px", padding: "
 const summaryPanel: CSSProperties = { background: "var(--tm-forest-50)", border: "1px solid var(--tm-border)", borderRadius: "var(--tm-radius-lg)", padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "10px", alignItems: "center" };
 const summaryBox: CSSProperties = { display: "flex", flexDirection: "column", gap: "2px", textAlign: "center", lineHeight: "1.15", color: "#173F35" };
 const logoutButton: CSSProperties = { background: "var(--tm-danger-soft)", color: "var(--tm-danger)", border: "1px solid #e8baba", padding: "10px 14px", borderRadius: "var(--tm-radius-md)", cursor: "pointer", fontWeight: 850 };
+const adminHeaderActionRow: CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" };
+const homeButton: CSSProperties = { background: "var(--tm-surface)", color: "var(--tm-forest-900)", border: "1px solid var(--tm-border)", padding: "10px 14px", borderRadius: "var(--tm-radius-md)", cursor: "pointer", fontWeight: 850, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "7px" };
 const adminTabs: CSSProperties = {
   maxWidth: "1280px",
   margin: "0 auto",
@@ -4718,12 +4873,12 @@ const largeActionButton: CSSProperties = {
 
 const largeFormModal: CSSProperties = {
   background: "#F7F8F5",
-  borderRadius: "24px",
-  width: "min(1080px, 96vw)",
-  maxHeight: "90vh",
+  borderRadius: "22px",
+  width: "min(980px, 95vw)",
+  maxHeight: "88vh",
   overflow: "auto",
   position: "relative",
-  padding: "28px",
+  padding: "18px",
   boxShadow: "0 24px 80px rgba(0,0,0,0.30)",
 };
 
@@ -4811,24 +4966,42 @@ const contentItemText: CSSProperties = {
   fontSize: "14px",
   width: "100%",
 };
-const panel: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "22px", padding: "28px", boxShadow: "0 14px 36px rgba(23,63,53,0.07)" };
-const subPanel: CSSProperties = { background: "#FBFAF6", border: "1px solid #E8E1D2", borderRadius: "18px", padding: "18px", margin: "18px 0" };
-const subPanelTitle: CSSProperties = { color: "#173F35", margin: "0 0 16px" };
+const panel: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "20px", padding: "22px", boxShadow: "0 14px 36px rgba(23,63,53,0.07)" };
+const compactPanel: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "20px", padding: "22px", boxShadow: "0 14px 36px rgba(23,63,53,0.07)" };
+const compactFormHeading: CSSProperties = { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "18px", paddingBottom: "14px", marginBottom: "16px", borderBottom: "1px solid #ECE6DA" };
+const compactPanelTitle: CSSProperties = { color: "#173F35", margin: "0 0 5px", fontSize: "26px", lineHeight: "1.1" };
+const compactPanelNote: CSSProperties = { color: "#60736B", margin: 0, fontSize: "13px", lineHeight: "1.5", maxWidth: "720px" };
+const compactFormGrid: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", columnGap: "12px", rowGap: "0" };
+const subPanel: CSSProperties = { background: "#FBFAF6", border: "1px solid #E8E1D2", borderRadius: "16px", padding: "16px", margin: "16px 0" };
+const subPanelTitle: CSSProperties = { color: "#173F35", margin: "0 0 14px" };
 const sectionNote: CSSProperties = { color: "#53665E", fontSize: "14px", lineHeight: "1.45", margin: "6px 0 0" };
-const panelTitle: CSSProperties = { color: "#173F35", margin: "0 0 22px" };
-const fieldBlock: CSSProperties = { display: "grid", gap: "7px", color: "#35584D", fontSize: "14px", fontWeight: 800, marginBottom: "14px", textAlign: "left" };
+const panelTitle: CSSProperties = { color: "#173F35", margin: "0 0 18px" };
+const fieldBlock: CSSProperties = { display: "grid", gap: "6px", color: "#35584D", fontSize: "13px", fontWeight: 800, marginBottom: "12px", textAlign: "left" };
 const twoColumn: CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" };
-const outcomeInputGrid: CSSProperties = { display: "grid", gridTemplateColumns: "1fr", gap: "4px" };
-const learningOutcomeHeader: CSSProperties = { display: "grid", gap: "4px", color: "#173F35", fontSize: "14px", fontWeight: 900, marginBottom: "12px" };
-const inputStyle: CSSProperties = { width: "100%", boxSizing: "border-box", padding: "13px 14px", borderRadius: "11px", border: "1px solid #D8D2C3", fontSize: "15px", outline: "none", background: "#FFFFFF" };
-const fileInputStyle: CSSProperties = { ...inputStyle, padding: "11px 14px" };
-const textareaStyle: CSSProperties = { ...inputStyle, minHeight: "96px", resize: "vertical" };
-const imagePreviewBox: CSSProperties = { background: "#FBFAF6", border: "1px solid #E8E1D2", borderRadius: "14px", padding: "12px", marginBottom: "16px" };
-const imagePreview: CSSProperties = { width: "100%", height: "170px", objectFit: "cover", borderRadius: "12px", marginBottom: "8px" };
-const passportPreviewBox: CSSProperties = { background: "#FBFAF6", border: "1px solid #E8E1D2", borderRadius: "14px", padding: "12px", marginBottom: "16px", display: "flex", justifyContent: "center" };
-const passportPreview: CSSProperties = { width: "115px", height: "145px", objectFit: "cover", borderRadius: "12px", border: "1px solid #E8E1D2" };
-const pdfStatus: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "12px", padding: "12px", marginBottom: "16px", display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "center" };
-const helperText: CSSProperties = { color: "#53665E", marginTop: "-4px", marginBottom: "16px" };
+const outcomeInputGrid: CSSProperties = { display: "grid", gridTemplateColumns: "1fr", gap: "3px" };
+const learningOutcomeHeader: CSSProperties = { display: "grid", gap: "4px", color: "#173F35", fontSize: "14px", fontWeight: 900, marginBottom: "10px" };
+const inputStyle: CSSProperties = { width: "100%", boxSizing: "border-box", padding: "11px 12px", borderRadius: "10px", border: "1px solid #D8D2C3", fontSize: "14px", outline: "none", background: "#FFFFFF" };
+const compactInputStyle: CSSProperties = { ...inputStyle, padding: "10px 11px", minHeight: "40px" };
+const fileInputStyle: CSSProperties = { ...inputStyle, padding: "10px 12px" };
+const textareaStyle: CSSProperties = { ...inputStyle, minHeight: "88px", resize: "vertical" };
+const compactTextareaStyle: CSSProperties = { ...inputStyle, minHeight: "82px", resize: "vertical" };
+const helperText: CSSProperties = { color: "#53665E", marginTop: "-3px", marginBottom: "13px", fontSize: "12.5px" };
+const mediaUploadGrid: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "12px", margin: "4px 0 16px" };
+const mediaUploadGridTwo: CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", margin: "2px 0 14px" };
+const uploadCard: CSSProperties = { display: "grid", gridTemplateColumns: "78px minmax(0, 1fr)", gap: "12px", alignItems: "center", minHeight: "112px", padding: "12px", border: "1px solid #DED8CA", borderRadius: "14px", background: "#FBFAF6" };
+const uploadCardPreview: CSSProperties = { width: "78px", height: "78px", display: "grid", placeItems: "center", overflow: "hidden", borderRadius: "12px", background: "#EEF3EF", border: "1px solid #D8E3DC" };
+const uploadIconBox: CSSProperties = { width: "46px", height: "46px", borderRadius: "12px", display: "grid", placeItems: "center", color: "#176553", background: "#E2EFE8" };
+const uploadImagePreview: CSSProperties = { width: "100%", height: "100%", objectFit: "cover" };
+const uploadPortraitPreview: CSSProperties = { width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" };
+const uploadCardContent: CSSProperties = { minWidth: 0, display: "grid", gap: "10px" };
+const uploadCardTitle: CSSProperties = { display: "block", color: "#173F35", fontSize: "14px", lineHeight: "1.2" };
+const uploadCardDescription: CSSProperties = { margin: "3px 0 0", color: "#64766E", fontSize: "11.5px", lineHeight: "1.35" };
+const uploadFileName: CSSProperties = { display: "block", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "5px", color: "#8A661E", fontSize: "11.5px", fontWeight: 800 };
+const uploadActions: CSSProperties = { display: "flex", gap: "7px", alignItems: "center", flexWrap: "wrap" };
+const uploadButton: CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", minHeight: "34px", padding: "7px 10px", borderRadius: "9px", background: "#173F35", color: "#FFFFFF", cursor: "pointer", fontSize: "11.5px", fontWeight: 850 };
+const hiddenFileInput: CSSProperties = { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" };
+const uploadRemoveButton: CSSProperties = { minHeight: "34px", padding: "7px 9px", borderRadius: "9px", background: "#FDE8E8", color: "#9B1C1C", border: "1px solid #F4C7C7", cursor: "pointer", fontSize: "11.5px", fontWeight: 850 };
+const stickyFormActions: CSSProperties = { position: "sticky", bottom: 0, display: "flex", gap: "9px", justifyContent: "flex-end", paddingTop: "14px", marginTop: "4px", borderTop: "1px solid #ECE6DA", background: "#FFFFFF" };
 const buttonRow: CSSProperties = { display: "flex", gap: "12px", flexWrap: "wrap" };
 const primaryButton: CSSProperties = { background: "#173F35", color: "white", border: "none", padding: "13px 18px", borderRadius: "11px", cursor: "pointer", fontWeight: 800 };
 const secondaryButton: CSSProperties = { background: "#DDE9E2", color: "#173F35", border: "1px solid #C9DDD3", padding: "13px 18px", borderRadius: "11px", cursor: "pointer", fontWeight: 800 };
@@ -5003,7 +5176,6 @@ const smallLinkButton: CSSProperties = { ...smallButton, textDecoration: "none" 
 const instructorActionRow: CSSProperties = { display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "7px", minWidth: 0, padding: "10px 8px" };
 const instructorActionLeft: CSSProperties = { display: "flex", alignItems: "center", gap: "5px", flexWrap: "nowrap" };
 const deleteIconButton: CSSProperties = { width: "24px", height: "24px", borderRadius: "50%", border: "1px solid #F4C7C7", background: "#FDE8E8", color: "#9B1C1C", cursor: "pointer", fontWeight: 900, fontSize: "16px", lineHeight: "1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 };
-const smallDanger: CSSProperties = { background: "#FDE8E8", color: "#9B1C1C", border: "1px solid #F4C7C7", padding: "8px 10px", borderRadius: "9px", cursor: "pointer", fontWeight: 800 };
 const deleteButton: CSSProperties = { background: "#FDE8E8", color: "#9B1C1C", border: "1px solid #F4C7C7", padding: "6px 8px", borderRadius: "8px", cursor: "pointer", fontWeight: 850, fontSize: "11.5px" };
 const courseDeleteButton: CSSProperties = { ...deleteButton, gridColumn: "1 / -1" };
 const instructorList: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "18px" };
@@ -5030,7 +5202,7 @@ const modalBackdrop: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "30px",
+  padding: "18px",
 };
 
 const messageModal: CSSProperties = {

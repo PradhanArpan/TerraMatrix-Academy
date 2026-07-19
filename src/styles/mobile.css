@@ -127,3 +127,32 @@
 @media (prefers-reduced-motion: reduce) {
   *, *:before, *:after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+@media (max-width: 900px) {
+  .tm-admin-compact-grid,
+  .tm-admin-upload-grid--three {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .tm-admin-compact-grid,
+  .tm-admin-upload-grid--three,
+  .tm-admin-upload-grid--two,
+  .tm-admin-header-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tm-admin-upload-card {
+    grid-template-columns: 66px minmax(0, 1fr) !important;
+    min-height: 98px !important;
+  }
+
+  .tm-admin-sticky-actions {
+    justify-content: stretch !important;
+  }
+
+  .tm-admin-sticky-actions button {
+    flex: 1 1 auto;
+  }
+}

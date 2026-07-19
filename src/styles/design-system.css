@@ -658,3 +658,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .tm3-admin-header h1 { font-size:2.35rem !important; }
 }
 .tm3-badge--blue { color:var(--tm3-info); background:var(--tm3-info-soft); }
+
+.tm3-auth-back {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--tm3-green-800);
+  font-size: 12.5px;
+  font-weight: 850;
+  text-decoration: none;
+}
+.tm3-auth-back:hover { color: var(--tm3-green-950); }

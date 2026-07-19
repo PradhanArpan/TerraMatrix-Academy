@@ -166,7 +166,7 @@ export function normalizeInstructor(value: Partial<Instructor>): Instructor {
   };
 }
 
-export function normalizeEvent(value: Partial<AcademyEvent>): AcademyEvent {
+export function normalizeEvent(value: Partial<AcademyEvent> & { imageFileId?: string }): AcademyEvent {
   return {
     id: Number(value.id || Date.now()),
     title: String(value.title || "Untitled event"),
@@ -181,7 +181,7 @@ export function normalizeEvent(value: Partial<AcademyEvent>): AcademyEvent {
     fee: String(value.fee || "To be announced"),
     certification: normalizeCertification(String(value.certification || "")),
     recordingLink: String(value.recordingLink || ""),
-    imageUrl: normalizePublicAssetPath(value.imageUrl, heroImage),
+    imageUrl: normalizePublicAssetPath(value.imageUrl || value.imageFileId, heroImage),
     status:
       value.status === "Draft" || value.status === "Completed" || value.status === "Upcoming"
         ? value.status
@@ -189,7 +189,7 @@ export function normalizeEvent(value: Partial<AcademyEvent>): AcademyEvent {
   };
 }
 
-export function normalizeVideo(value: Partial<LearningVideo>): LearningVideo {
+export function normalizeVideo(value: Partial<LearningVideo> & { thumbnailFileId?: string }): LearningVideo {
   return {
     id: Number(value.id || Date.now()),
     title: String(value.title || "Learning video"),
@@ -197,7 +197,7 @@ export function normalizeVideo(value: Partial<LearningVideo>): LearningVideo {
     theme: String(value.theme || "Applied Engineering"),
     description: String(value.description || "Video details will be published shortly."),
     youtubeUrl: String(value.youtubeUrl || ""),
-    thumbnailUrl: normalizePublicAssetPath(value.thumbnailUrl, heroImage),
+    thumbnailUrl: normalizePublicAssetPath(value.thumbnailUrl || value.thumbnailFileId, heroImage),
     level: String(value.level || "Open to All"),
     status: value.status === "Draft" ? "Draft" : "Published",
   };
