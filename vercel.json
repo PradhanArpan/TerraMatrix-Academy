@@ -8,6 +8,18 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://script.google.com/macros/s/AKfycbyEQRHMViD0pTdeQqVziBhkYMgLOkd_LHGW9bvnV8BGjWJAn3qZTI1V41FUy2jGD9qW/exec",
+      "permanent": false
+    },
+    {
+      "source": "/index.html",
+      "destination": "https://script.google.com/macros/s/AKfycbyEQRHMViD0pTdeQqVziBhkYMgLOkd_LHGW9bvnV8BGjWJAn3qZTI1V41FUy2jGD9qW/exec",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
