@@ -1098,7 +1098,7 @@ export default function AdminDashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    const closeAdminDropdownOnOutsideClick = (event: MouseEvent | TouchEvent) => {
+    const closeAdminDropdownOnOutsideClick = (event: PointerEvent) => {
       const target = event.target as Node;
 
       if (
@@ -1116,12 +1116,10 @@ export default function AdminDashboard() {
       }
     };
 
-    document.addEventListener("mousedown", closeAdminDropdownOnOutsideClick);
-    document.addEventListener("touchstart", closeAdminDropdownOnOutsideClick);
+    document.addEventListener("pointerdown", closeAdminDropdownOnOutsideClick);
 
     return () => {
-      document.removeEventListener("mousedown", closeAdminDropdownOnOutsideClick);
-      document.removeEventListener("touchstart", closeAdminDropdownOnOutsideClick);
+      document.removeEventListener("pointerdown", closeAdminDropdownOnOutsideClick);
     };
   }, []);
 
@@ -1782,6 +1780,33 @@ export default function AdminDashboard() {
         </div>
       </section>
 
+      <section className="tm3-admin-mobile-nav" aria-label="Admin workspace navigation">
+        <label htmlFor="tm3-admin-section">Manage academy</label>
+        <select
+          id="tm3-admin-section"
+          value={activeAdminTab}
+          onChange={(event) => {
+            setActiveAdminTab(event.target.value as AdminTab);
+            setAdminLearningMenuOpen(false);
+            setAdminSetupMenuOpen(false);
+          }}
+        >
+          <option value="overview">Overview</option>
+          <optgroup label="Learning setup">
+            {adminSetupTabs.map((tab) => <option key={tab} value={tab}>{adminTabLabels[tab]}</option>)}
+            <option value="tools">{adminTabLabels.tools}</option>
+          </optgroup>
+          <optgroup label="Learning hub">
+            {adminLearningHubTabs.map((tab) => <option key={tab} value={tab}>{adminTabLabels[tab]}</option>)}
+          </optgroup>
+          <optgroup label="Operations">
+            {adminDirectTabs.filter((tab) => tab !== "overview").map((tab) => (
+              <option key={tab} value={tab}>{adminTabLabels[tab]}</option>
+            ))}
+          </optgroup>
+        </select>
+      </section>
+
       <section className="tm3-admin-tabs" style={adminTabs}>
         <button
           onClick={() => {
@@ -1806,12 +1831,14 @@ export default function AdminDashboard() {
                 ? activeAdminDropdownButton
                 : adminDropdownButton
             }
+            aria-expanded={adminSetupMenuOpen}
+            aria-controls="tm3-admin-setup-menu"
           >
             Learning Setup ▾
           </button>
 
           {adminSetupMenuOpen && (
-            <div style={adminLearningDropdownMenu}>
+            <div id="tm3-admin-setup-menu" style={adminLearningDropdownMenu}>
               {adminSetupTabs.map((tab) => (
                 <button
                   key={tab}
@@ -1846,12 +1873,14 @@ export default function AdminDashboard() {
                 ? activeAdminDropdownButton
                 : adminDropdownButton
             }
+            aria-expanded={adminLearningMenuOpen}
+            aria-controls="tm3-admin-learning-menu"
           >
             Learning Hub ▾
           </button>
 
           {adminLearningMenuOpen && (
-            <div style={adminLearningDropdownMenu}>
+            <div id="tm3-admin-learning-menu" style={adminLearningDropdownMenu}>
               {adminLearningHubTabs.map((tab) => (
                 <button
                   key={tab}
@@ -1969,8 +1998,8 @@ export default function AdminDashboard() {
       )}
 
       {showCourseForm && (
-        <div style={modalBackdrop}>
-          <div style={largeFormModal}>
+        <div className="tm3-admin-modal-backdrop" style={modalBackdrop}>
+          <div className="tm3-admin-modal" style={largeFormModal}>
             <button onClick={resetCourseForm} style={formModalClose}>
               ×
             </button>
@@ -2163,8 +2192,8 @@ export default function AdminDashboard() {
       )}
 
       {showInstructorForm && (
-        <div style={modalBackdrop}>
-          <div style={largeFormModal}>
+        <div className="tm3-admin-modal-backdrop" style={modalBackdrop}>
+          <div className="tm3-admin-modal" style={largeFormModal}>
             <button onClick={resetInstructorForm} style={formModalClose}>
               ×
             </button>
@@ -2246,8 +2275,8 @@ export default function AdminDashboard() {
       )}
 
       {showEnrollmentForm && (
-        <div style={modalBackdrop}>
-          <div style={largeFormModal}>
+        <div className="tm3-admin-modal-backdrop" style={modalBackdrop}>
+          <div className="tm3-admin-modal" style={largeFormModal}>
             <button
               onClick={() => {
                 setShowEnrollmentForm(false);
@@ -3043,8 +3072,8 @@ export default function AdminDashboard() {
       )}
 
       {selectedEnquiry && (
-        <div style={modalBackdrop}>
-          <div style={messageModal}>
+        <div className="tm3-admin-modal-backdrop" style={modalBackdrop}>
+          <div className="tm3-admin-message-modal" style={messageModal}>
             <button onClick={() => setSelectedEnquiry(null)} style={modalCloseButton}>×</button>
             <div style={eyebrow}>ENQUIRY MESSAGE</div>
             <h2 style={modalTitle}>{selectedEnquiry.name}</h2>

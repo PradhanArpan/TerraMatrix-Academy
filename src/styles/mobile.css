@@ -156,3 +156,547 @@
     flex: 1 1 auto;
   }
 }
+
+/* Stage 4.2 — touch-first fallback.
+   Apps Script custom tabs can report a desktop-like viewport on phones.
+   React adds .tm3-app--compact after checking the physical screen and touch support,
+   so these rules remain reliable even when width-based media queries do not fire. */
+.tm3-mobile-nav-scrim {
+  display: none;
+}
+
+.tm3-admin-mobile-nav {
+  display: none;
+}
+
+.tm3-app--compact {
+  overflow-x: hidden;
+}
+
+.tm3-app--compact button,
+.tm3-app--compact a,
+.tm3-app--compact select,
+.tm3-app--compact input,
+.tm3-app--compact textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tm3-app--compact .tm3-topline {
+  display: none;
+}
+
+.tm3-app--compact .tm3-header {
+  top: 0;
+}
+
+.tm3-app--compact .tm3-header__inner {
+  width: calc(100% - 24px);
+  min-height: 66px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.tm3-app--compact .tm3-brand {
+  min-width: 0;
+  gap: 8px;
+}
+
+.tm3-app--compact .tm3-brand img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+}
+
+.tm3-app--compact .tm3-brand > span {
+  min-width: 0;
+  display: grid;
+  gap: 0;
+}
+
+.tm3-app--compact .tm3-brand strong {
+  max-width: 52vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18px;
+}
+
+.tm3-app--compact .tm3-brand small {
+  display: block;
+  font-size: 10px;
+}
+
+.tm3-app--compact .tm3-header-actions {
+  gap: 7px;
+}
+
+.tm3-app--compact .tm3-search-link {
+  display: none;
+}
+
+.tm3-app--compact .tm3-theme,
+.tm3-app--compact .tm3-menu-button {
+  width: 42px;
+  height: 42px;
+}
+
+.tm3-app--compact .tm3-menu-button {
+  display: grid;
+}
+
+.tm3-app--compact .tm3-mobile-nav-scrim {
+  display: block;
+  position: fixed;
+  inset: 66px 0 0;
+  z-index: 1120;
+  border: 0;
+  border-radius: 0;
+  background: rgba(1, 28, 24, .52);
+  backdrop-filter: blur(3px);
+}
+
+.tm3-app--compact .tm3-nav {
+  position: fixed;
+  z-index: 1140;
+  top: 66px;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(88vw, 370px);
+  margin: 0;
+  padding: 14px 14px calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 5px;
+  overflow-y: auto;
+  border: 0;
+  border-left: 1px solid var(--tm3-line);
+  border-radius: 0;
+  background: var(--tm3-surface);
+  box-shadow: -22px 0 52px rgba(1, 28, 24, .2);
+  transform: translateX(105%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform .2s ease, opacity .2s ease, visibility .2s ease;
+}
+
+.tm3-app--compact .tm3-nav.is-open {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.tm3-app--compact .tm3-nav > a,
+.tm3-app--compact .tm3-nav-dropdown > button {
+  width: 100%;
+  min-height: 50px;
+  justify-content: space-between;
+  padding: 13px 15px;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+.tm3-app--compact .tm3-nav > a.is-active {
+  background: var(--tm3-soft);
+}
+
+.tm3-app--compact .tm3-nav-dropdown {
+  width: 100%;
+}
+
+.tm3-app--compact .tm3-login-trigger {
+  margin-top: 3px;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+}
+
+.tm3-app--compact .tm3-login-trigger svg:last-child {
+  margin-left: auto;
+}
+
+.tm3-app--compact .tm3-mega-menu,
+.tm3-app--compact .tm3-login-menu {
+  position: static;
+  width: 100%;
+  min-width: 0;
+  margin-top: 5px;
+  padding: 6px;
+  border-radius: 15px;
+  box-shadow: none;
+  background: var(--tm3-soft);
+  animation: none;
+}
+
+.tm3-app--compact .tm3-mega-menu a,
+.tm3-app--compact .tm3-login-menu a {
+  min-height: 58px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  padding: 10px;
+  background: var(--tm3-surface);
+}
+
+.tm3-app--compact .tm3-mega-menu small,
+.tm3-app--compact .tm3-login-menu small {
+  font-size: 11px;
+}
+
+.tm3-app--compact .tm3-shell,
+.tm3-app--compact .tm3-page-intro,
+.tm3-app--compact .tm3-filter-shell,
+.tm3-app--compact .tm3-catalogue,
+.tm3-app--compact .tm3-course-body,
+.tm3-app--compact .tm3-course-hero__inner,
+.tm3-app--compact .tm3-cta,
+.tm3-app--compact .tm3-footer__main,
+.tm3-app--compact .tm3-footer__bottom,
+.tm3-app--compact .tm3-hero__inner {
+  width: calc(100% - 28px);
+}
+
+.tm3-app--compact .tm3-section {
+  padding: 58px 0;
+}
+
+.tm3-app--compact .tm3-section-heading h2 {
+  font-size: clamp(2rem, 9vw, 2.75rem);
+  letter-spacing: -1.5px;
+}
+
+.tm3-app--compact .tm3-hero__inner {
+  min-height: auto;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  padding: 46px 0 52px;
+}
+
+.tm3-app--compact .tm3-hero h1 {
+  font-size: clamp(2.7rem, 12vw, 4.15rem);
+  line-height: .95;
+  letter-spacing: -2.8px;
+}
+
+.tm3-app--compact .tm3-hero__lead {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.tm3-app--compact .tm3-hero__actions,
+.tm3-app--compact .tm3-cta__actions {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.tm3-app--compact .tm3-button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.tm3-app--compact .tm3-hero__proof {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tm3-app--compact .tm3-hero-card {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 22px;
+}
+
+.tm3-app--compact .tm3-brand-strip__inner {
+  width: 100%;
+  grid-template-columns: 1fr;
+}
+
+.tm3-app--compact .tm3-brand-strip__item {
+  min-height: 78px;
+  border-right: 0;
+  border-top: 1px solid var(--tm3-line);
+  padding-inline: 20px;
+}
+
+.tm3-app--compact .tm3-brand-strip__item:first-child {
+  border-top: 0;
+}
+
+.tm3-app--compact .tm3-card-grid,
+.tm3-app--compact .tm3-catalogue-grid,
+.tm3-app--compact .tm3-pillar-grid,
+.tm3-app--compact .tm3-domain-grid,
+.tm3-app--compact .tm3-course-hero__inner,
+.tm3-app--compact .tm3-course-body,
+.tm3-app--compact .tm3-journey,
+.tm3-app--compact .tm3-page-intro,
+.tm3-app--compact .tm3-filter-shell,
+.tm3-app--compact .tm3-footer__main {
+  grid-template-columns: 1fr;
+}
+
+.tm3-app--compact .tm3-page-intro {
+  padding: 44px 0 28px;
+}
+
+.tm3-app--compact .tm3-page-intro h1 {
+  font-size: clamp(2.5rem, 11vw, 3.5rem);
+  letter-spacing: -2px;
+}
+
+.tm3-app--compact .tm3-page-intro__aside {
+  min-width: 0;
+}
+
+.tm3-app--compact .tm3-metric {
+  border-left: 0;
+  border-top: 1px solid var(--tm3-line);
+  padding: 16px 0 0;
+}
+
+.tm3-app--compact .tm3-search-field {
+  grid-column: auto;
+}
+
+.tm3-app--compact .tm3-programme-card__image {
+  height: 190px;
+}
+
+.tm3-app--compact .tm3-cta {
+  margin-block: 28px 56px;
+  padding: 30px 22px;
+  grid-template-columns: 1fr;
+}
+
+.tm3-app--compact .tm3-footer__main {
+  gap: 28px;
+  padding-block: 42px 28px;
+}
+
+.tm3-app--compact .tm3-footer__bottom {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tm3-app--compact .tm3-auth-page {
+  min-height: auto;
+  padding: 24px 14px 48px;
+  place-items: start center;
+}
+
+.tm3-app--compact .tm3-auth-shell {
+  width: 100%;
+  min-height: auto;
+  grid-template-columns: 1fr;
+  border-radius: 24px;
+}
+
+.tm3-app--compact .tm3-auth-story {
+  min-height: 240px;
+  padding: 28px;
+}
+
+.tm3-app--compact .tm3-auth-story h1 {
+  font-size: 34px;
+}
+
+.tm3-app--compact .tm3-auth-form {
+  padding: 30px 22px;
+}
+
+.tm3-app--compact .tm3-auth-form h2 {
+  font-size: 30px;
+}
+
+.tm3-app--compact .tm3-auth-form input,
+.tm3-app--compact .tm3-auth-form select,
+.tm3-app--compact .tm3-auth-form button {
+  min-height: 48px;
+}
+
+/* Mobile admin uses one native select instead of nested custom dropdowns. */
+.tm3-app--compact .tm3-admin-mobile-nav {
+  position: sticky;
+  z-index: 950;
+  top: 0;
+  width: calc(100% - 24px);
+  margin: 12px auto 0;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--tm3-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--tm3-surface) 94%, transparent);
+  box-shadow: var(--tm3-shadow-sm);
+  backdrop-filter: blur(16px);
+}
+
+.tm3-app--compact .tm3-admin-mobile-nav label {
+  color: var(--tm3-text-soft);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.tm3-app--compact .tm3-admin-mobile-nav select {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 38px 10px 12px;
+  border: 1px solid var(--tm3-border);
+  border-radius: 12px;
+  background: var(--tm3-surface);
+  color: var(--tm3-text);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.tm3-app--compact .tm3-admin-tabs {
+  display: none !important;
+}
+
+.tm3-app--compact .tm3-admin-header,
+.tm3-app--compact .tm3-admin-overview,
+.tm3-app--compact .tm3-admin-workspace > section:not(.tm3-admin-header):not(.tm3-admin-tabs):not(.tm3-admin-overview):not(.tm3-admin-mobile-nav) {
+  width: calc(100% - 24px) !important;
+}
+
+.tm3-app--compact .tm3-admin-header {
+  min-height: auto !important;
+  padding: 28px 22px !important;
+  grid-template-columns: 1fr !important;
+  gap: 24px !important;
+  border-radius: 0 0 24px 24px !important;
+}
+
+.tm3-app--compact .tm3-admin-header h1 {
+  font-size: clamp(2.15rem, 10vw, 3rem) !important;
+  line-height: 1 !important;
+}
+
+.tm3-app--compact .tm3-admin-header > div:last-child {
+  padding: 13px !important;
+}
+
+.tm3-app--compact .tm3-admin-header > div:last-child > div:first-child {
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+}
+
+.tm3-app--compact .tm-admin-header-actions {
+  grid-template-columns: 1fr !important;
+}
+
+.tm3-app--compact .tm3-admin-overview {
+  margin-top: 14px !important;
+}
+
+.tm3-app--compact .tm3-admin-overview > div:first-child {
+  padding: 22px !important;
+}
+
+.tm3-app--compact .tm3-admin-overview h2 {
+  font-size: 1.85rem !important;
+}
+
+.tm3-app--compact .tm3-admin-overview > div:nth-child(2) {
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+}
+
+.tm3-app--compact .tm3-admin-overview > div:nth-child(2) > div {
+  padding: 17px !important;
+}
+
+.tm3-app--compact .tm3-admin-workspace table {
+  min-width: 720px;
+}
+
+.tm3-app--compact .tm3-admin-workspace table,
+.tm3-app--compact .tm3-admin-workspace th,
+.tm3-app--compact .tm3-admin-workspace td {
+  font-size: 13px !important;
+}
+
+.tm3-app--compact .tm3-admin-workspace input,
+.tm3-app--compact .tm3-admin-workspace textarea,
+.tm3-app--compact .tm3-admin-workspace select,
+.tm3-app--compact .tm3-admin-workspace button {
+  min-height: 46px;
+}
+
+.tm3-app--compact .tm-admin-compact-grid,
+.tm3-app--compact .tm-admin-upload-grid--three,
+.tm3-app--compact .tm-admin-upload-grid--two,
+.tm3-app--compact .tm-admin-header-actions {
+  grid-template-columns: 1fr !important;
+}
+
+.tm3-app--compact .tm-admin-upload-card {
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  min-height: 94px !important;
+  padding: 13px !important;
+}
+
+.tm3-app--compact .tm-admin-sticky-actions {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 4 !important;
+  margin: 10px -4px -4px !important;
+  padding: 12px 4px 4px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  background: linear-gradient(to top, var(--tm3-surface) 78%, transparent) !important;
+}
+
+.tm3-app--compact .tm-admin-sticky-actions button {
+  width: 100% !important;
+}
+
+.tm3-app--compact .tm3-admin-modal-backdrop {
+  padding: 0 !important;
+  align-items: flex-end !important;
+}
+
+.tm3-app--compact .tm3-admin-modal,
+.tm3-app--compact .tm3-admin-message-modal {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: 92dvh !important;
+  margin: 0 !important;
+  padding: 12px !important;
+  overflow-y: auto !important;
+  border-radius: 24px 24px 0 0 !important;
+}
+
+.tm3-app--compact .tm3-admin-modal > button:first-child,
+.tm3-app--compact .tm3-admin-message-modal > button:first-child {
+  width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+}
+
+.tm3-app--compact .tm3-workspace-theme {
+  top: 10px;
+  right: 10px;
+}
+
+@media (max-width: 440px) {
+  .tm3-app--compact .tm3-admin-mobile-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .tm3-app--compact .tm3-admin-overview > div:nth-child(2) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tm3-app--compact .tm3-hero__proof {
+    grid-template-columns: 1fr;
+  }
+}

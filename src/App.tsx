@@ -49,6 +49,11 @@ function AppRoutes() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [compactUi, setCompactUi] = useState(() => {
+    const shortSide = Math.min(window.screen?.width || window.innerWidth, window.screen?.height || window.innerHeight);
+    const mobileAgent = /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return mobileAgent || window.matchMedia("(max-width: 900px)").matches || (navigator.maxTouchPoints > 0 && shortSide <= 900);
+  });
   const [bootState, setBootState] = useState<"loading" | "ready" | "warning">("loading");
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem("terramatrix_theme");
@@ -68,6 +73,29 @@ function AppRoutes() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("terramatrix_theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    const updateCompactUi = () => {
+      const shortSide = Math.min(window.screen?.width || window.innerWidth, window.screen?.height || window.innerHeight);
+      const mobileAgent = /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setCompactUi(mobileAgent || window.matchMedia("(max-width: 900px)").matches || (navigator.maxTouchPoints > 0 && shortSide <= 900));
+    };
+
+    updateCompactUi();
+    window.addEventListener("resize", updateCompactUi);
+    window.addEventListener("orientationchange", updateCompactUi);
+    return () => {
+      window.removeEventListener("resize", updateCompactUi);
+      window.removeEventListener("orientationchange", updateCompactUi);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!compactUi || !mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [compactUi, mobileOpen]);
 
   useEffect(() => {
     closeMenus();
@@ -97,18 +125,16 @@ function AppRoutes() {
   }, []);
 
   useEffect(() => {
-    const outside = (event: MouseEvent | TouchEvent) => {
+    const outside = (event: PointerEvent) => {
       const target = event.target as Node;
       if (exploreRef.current && !exploreRef.current.contains(target)) setExploreOpen(false);
       if (loginRef.current && !loginRef.current.contains(target)) setLoginOpen(false);
     };
     const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") closeMenus(); };
-    document.addEventListener("mousedown", outside);
-    document.addEventListener("touchstart", outside);
+    document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", keydown);
     return () => {
-      document.removeEventListener("mousedown", outside);
-      document.removeEventListener("touchstart", outside);
+      document.removeEventListener("pointerdown", outside);
       document.removeEventListener("keydown", keydown);
     };
   }, []);
@@ -129,7 +155,7 @@ function AppRoutes() {
   const workspace = isWorkspacePath(location.pathname);
 
   return (
-    <div className={`tm3-app ${workspace ? "tm3-app--workspace" : ""}`}>
+    <div className={`tm3-app ${workspace ? "tm3-app--workspace" : ""} ${compactUi ? "tm3-app--compact" : ""}`}>
       <a className="tm3-skip" href="#tm-main-content">Skip to main content</a>
 
       {!workspace && (
@@ -150,15 +176,15 @@ function AppRoutes() {
                 </span>
               </Link>
 
-              <nav className={`tm3-nav ${mobileOpen ? "is-open" : ""}`} aria-label="Primary navigation">
+              <nav id="tm3-primary-navigation" className={`tm3-nav ${mobileOpen ? "is-open" : ""}`} aria-label="Primary navigation">
                 <NavLink end to="/" className={({ isActive }) => isActive ? "is-active" : ""}>Academy</NavLink>
 
                 <div className="tm3-nav-dropdown" ref={exploreRef}>
-                  <button type="button" onClick={() => { setExploreOpen((value) => !value); setLoginOpen(false); }} aria-expanded={exploreOpen}>
+                  <button type="button" onClick={() => { setExploreOpen((value) => !value); setLoginOpen(false); }} aria-expanded={exploreOpen} aria-controls="tm3-explore-menu">
                     Explore <ChevronDown size={15} />
                   </button>
                   {exploreOpen && (
-                    <div className="tm3-mega-menu">
+                    <div className="tm3-mega-menu" id="tm3-explore-menu">
                       <Link to="/student" onClick={closeMenus}>
                         <span className="tm3-menu-icon"><GraduationCap size={20} /></span>
                         <span><strong>Courses & programmes</strong><small>Structured pathways for students and professionals</small></span>
@@ -183,11 +209,11 @@ function AppRoutes() {
                 <NavLink to="/student" className={({ isActive }) => isActive ? "is-active" : ""}>Catalogue</NavLink>
 
                 <div className="tm3-nav-dropdown tm3-nav-dropdown--right" ref={loginRef}>
-                  <button className="tm3-login-trigger" type="button" onClick={() => { setLoginOpen((value) => !value); setExploreOpen(false); }} aria-expanded={loginOpen}>
+                  <button className="tm3-login-trigger" type="button" onClick={() => { setLoginOpen((value) => !value); setExploreOpen(false); }} aria-expanded={loginOpen} aria-controls="tm3-login-menu">
                     <LogIn size={16} /> Sign in <ChevronDown size={15} />
                   </button>
                   {loginOpen && (
-                    <div className="tm3-login-menu">
+                    <div className="tm3-login-menu" id="tm3-login-menu">
                       <Link to="/student-login" onClick={closeMenus}><GraduationCap size={18} /><span><strong>Learner</strong><small>My learning and classroom</small></span></Link>
                       <Link to="/instructor-login" onClick={closeMenus}><UserRound size={18} /><span><strong>Instructor</strong><small>Courses, classes and learners</small></span></Link>
                       <Link to="/admin-login" onClick={closeMenus}><BookOpen size={18} /><span><strong>Admin</strong><small>Academy operations</small></span></Link>
@@ -201,12 +227,20 @@ function AppRoutes() {
                 <button className="tm3-theme" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
                   {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
-                <button className="tm3-menu-button" type="button" onClick={() => setMobileOpen((value) => !value)} aria-expanded={mobileOpen} aria-label={mobileOpen ? "Close menu" : "Open menu"}>
+                <button className="tm3-menu-button" type="button" onClick={() => setMobileOpen((value) => !value)} aria-expanded={mobileOpen} aria-controls="tm3-primary-navigation" aria-label={mobileOpen ? "Close menu" : "Open menu"}>
                   {mobileOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
               </div>
             </div>
           </header>
+          {compactUi && mobileOpen && (
+            <button
+              className="tm3-mobile-nav-scrim"
+              type="button"
+              aria-label="Close navigation"
+              onClick={closeMenus}
+            />
+          )}
         </>
       )}
 
