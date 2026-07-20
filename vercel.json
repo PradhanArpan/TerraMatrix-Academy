@@ -1,27 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    }
-  ],
   "redirects": [
     {
       "source": "/",
-      "destination": "https://script.google.com/macros/s/AKfycbyEQRHMViD0pTdeQqVziBhkYMgL0kd_LHGW9bvnV8BGjWJAn3qZTl1V41FUy2jGD9qW/exec",
-      "permanent": false
-    },
-    {
-      "source": "/index.html",
-      "destination": "https://script.google.com/macros/s/AKfycbyEQRHMViD0pTdeQqVziBhkYMgL0kd_LHGW9bvnV8BGjWJAn3qZTl1V41FUy2jGD9qW/exec",
+      "destination": "https://script.google.com/macros/s/AKfycbxmHWse_nHGf2Qs2ZjsVJipcjA9q1fz-Kub7ER2V_ztaGkcR4eystgj3gUEAYMF16-q/exec",
       "permanent": false
     }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
