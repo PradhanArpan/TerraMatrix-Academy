@@ -1,10 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "redirects": [
+  "rewrites": [
     {
-      "source": "/",
-      "destination": "https://script.google.com/macros/s/AKfycbxmHWse_nHGf2Qs2ZjsVJipcjA9q1fz-Kub7ER2V_ztaGkcR4eystgj3gUEAYMF16-q/exec",
-      "permanent": false
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

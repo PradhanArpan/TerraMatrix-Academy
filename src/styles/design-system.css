@@ -2,26 +2,26 @@
 :root {
   --tm3-font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --tm3-display: "Segoe UI Variable Display", Inter, ui-sans-serif, system-ui, sans-serif;
-  --tm3-ink: #10251f;
-  --tm3-muted: #63726d;
-  --tm3-subtle: #87918d;
-  --tm3-canvas: #f5f6f2;
+  --tm3-ink: #0e241e;
+  --tm3-muted: #455851;
+  --tm3-subtle: #5f7069;
+  --tm3-canvas: #f6f8f5;
   --tm3-surface: #ffffff;
-  --tm3-soft: #eef3ef;
-  --tm3-soft-2: #e5eee9;
-  --tm3-line: #dce3de;
-  --tm3-line-strong: #cbd7d0;
-  --tm3-green-950: #061f1a;
-  --tm3-green-900: #082f27;
-  --tm3-green-800: #0b4337;
-  --tm3-green-700: #135a49;
-  --tm3-green-600: #1f725e;
-  --tm3-green-100: #dcece5;
+  --tm3-soft: #edf3ef;
+  --tm3-soft-2: #e3ede7;
+  --tm3-line: #dbe3de;
+  --tm3-line-strong: #c8d5cd;
+  --tm3-green-950: #051e18;
+  --tm3-green-900: #072e25;
+  --tm3-green-800: #0a4336;
+  --tm3-green-700: #125948;
+  --tm3-green-600: #1e715d;
+  --tm3-green-100: #dbebe3;
   --tm3-green-50: #eff7f3;
-  --tm3-lime: #d6f56d;
-  --tm3-lime-soft: #efffc0;
-  --tm3-gold: #c89a3d;
-  --tm3-gold-dark: #87601a;
+  --tm3-lime: #c9eb52;
+  --tm3-lime-soft: #edf9c4;
+  --tm3-gold: #c49535;
+  --tm3-gold-dark: #88631c;
   --tm3-danger: #b42318;
   --tm3-danger-soft: #fff1f0;
   --tm3-blue: #2d66d5;
@@ -670,3 +670,207 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   text-decoration: none;
 }
 .tm3-auth-back:hover { color: var(--tm3-green-950); }
+
+/* DPDP Act 2023 & GDPR Consent Banner */
+.tm3-consent-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  max-width: 680px;
+  margin: 0 auto;
+  z-index: 10500;
+  background: var(--tm3-surface);
+  border: 1px solid var(--tm3-border-strong);
+  border-radius: var(--tm3-radius-md);
+  padding: 18px 22px;
+  box-shadow: var(--tm3-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  backdrop-filter: blur(16px);
+  animation: tm3FadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes tm3FadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tm3-consent-banner__content {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.tm3-consent-banner__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--tm3-green-50);
+  color: var(--tm3-green-800);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+:root[data-theme="dark"] .tm3-consent-banner__icon {
+  background: var(--tm3-green-100);
+  color: var(--tm3-lime);
+}
+.tm3-consent-banner__text h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--tm3-text);
+  letter-spacing: -0.01em;
+}
+.tm3-consent-banner__text p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--tm3-text-soft);
+}
+.tm3-consent-banner__text a {
+  color: var(--tm3-green-700);
+  text-decoration: underline;
+  font-weight: 600;
+}
+:root[data-theme="dark"] .tm3-consent-banner__text a {
+  color: var(--tm3-lime);
+}
+.tm3-consent-banner__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tm3-consent-btn {
+  padding: 8px 15px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: 9px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--tm3-transition);
+}
+.tm3-consent-btn--accept {
+  background: var(--tm3-primary);
+  color: #ffffff;
+}
+.tm3-consent-btn--accept:hover {
+  background: var(--tm3-green-800);
+}
+.tm3-consent-btn--minimal {
+  background: var(--tm3-surface-muted);
+  color: var(--tm3-text);
+  border-color: var(--tm3-border);
+}
+.tm3-consent-btn--minimal:hover {
+  background: var(--tm3-line);
+}
+.tm3-consent-btn--link {
+  background: transparent;
+  color: var(--tm3-text-soft);
+  text-decoration: underline;
+}
+.tm3-consent-btn--link:hover {
+  color: var(--tm3-text);
+}
+
+/* Legal Documents & Policies Layout */
+.tm3-legal-container {
+  width: min(940px, calc(100% - 40px));
+  margin: 48px auto 90px;
+  background: var(--tm3-surface);
+  border: 1px solid var(--tm3-border);
+  border-radius: var(--tm3-radius-lg);
+  padding: 48px;
+  box-shadow: var(--tm3-shadow-sm);
+}
+@media (max-width: 680px) {
+  .tm3-legal-container {
+    padding: 24px 18px;
+    margin: 24px auto 60px;
+  }
+}
+.tm3-legal-header {
+  border-bottom: 1px solid var(--tm3-border);
+  padding-bottom: 28px;
+  margin-bottom: 32px;
+}
+.tm3-legal-header h1 {
+  font-family: var(--tm3-font-display);
+  font-size: 32px;
+  letter-spacing: -0.03em;
+  color: var(--tm3-primary);
+  margin: 12px 0 8px;
+}
+:root[data-theme="dark"] .tm3-legal-header h1 {
+  color: #ffffff;
+}
+.tm3-legal-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--tm3-text-soft);
+  font-weight: 600;
+}
+.tm3-legal-body {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--tm3-text);
+}
+.tm3-legal-body h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--tm3-primary);
+  margin: 36px 0 14px;
+  letter-spacing: -0.02em;
+  border-left: 3px solid var(--tm3-gold);
+  padding-left: 12px;
+}
+:root[data-theme="dark"] .tm3-legal-body h2 {
+  color: #dcece5;
+}
+.tm3-legal-body h3 {
+  font-size: 16px;
+  font-weight: 750;
+  margin: 22px 0 10px;
+  color: var(--tm3-text);
+}
+.tm3-legal-body p, .tm3-legal-body ul, .tm3-legal-body ol {
+  margin-bottom: 16px;
+  color: var(--tm3-text-soft);
+}
+.tm3-legal-body strong {
+  color: var(--tm3-text);
+}
+.tm3-legal-body ul {
+  padding-left: 20px;
+}
+.tm3-legal-body li {
+  margin-bottom: 8px;
+}
+.tm3-legal-highlight {
+  background: var(--tm3-surface-muted);
+  border: 1px solid var(--tm3-border);
+  border-left: 4px solid var(--tm3-green-700);
+  border-radius: var(--tm3-radius-sm);
+  padding: 16px 20px;
+  margin: 24px 0;
+}
+.tm3-legal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 13.5px;
+}
+.tm3-legal-table th, .tm3-legal-table td {
+  padding: 12px 14px;
+  border: 1px solid var(--tm3-border);
+  text-align: left;
+}
+.tm3-legal-table th {
+  background: var(--tm3-surface-muted);
+  font-weight: 750;
+  color: var(--tm3-text);
+}

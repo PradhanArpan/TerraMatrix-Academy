@@ -31,6 +31,9 @@ import InstructorLogin from "./pages/InstructorLogin";
 import InstructorPortal from "./pages/InstructorPortal";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import ConsentBanner from "./components/ConsentBanner";
 import logo from "./assets/terramatrix-logo.png";
 import { cachePublicBootstrap, hasAppsScriptRuntime, loadPublicBootstrap } from "./lib/appsScriptApi";
 import "./styles/design-system.css";
@@ -270,6 +273,8 @@ function AppRoutes() {
           <Route path="/instructor-portal" element={<InstructorPortal />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
         </Routes>
       </div>
 
@@ -293,9 +298,23 @@ function AppRoutes() {
               <p>Connecting education, practice, research, innovation and professional growth in one engineering ecosystem.</p>
             </div>
           </div>
-          <div className="tm3-footer__bottom"><span>© {new Date().getFullYear()} TerraMatrix Academy</span><span>Accessible · Responsive · Practice-led</span></div>
+          <div className="tm3-footer__bottom">
+            <span>
+              © {new Date().getFullYear()} TerraMatrix Academy ·{" "}
+              <Link to="/privacy" style={{ color: "inherit", textDecoration: "underline" }}>
+                Privacy Notice (DPDP Act 2023)
+              </Link>{" "}
+              ·{" "}
+              <Link to="/terms" style={{ color: "inherit", textDecoration: "underline" }}>
+                Terms & Grievance
+              </Link>
+            </span>
+            <span>Accessible · Responsive · Practice-led</span>
+          </div>
         </footer>
       )}
+
+      <ConsentBanner />
     </div>
   );
 }
