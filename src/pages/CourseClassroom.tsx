@@ -32,6 +32,7 @@ import {
   Sparkles,
   UsersRound,
   Video,
+  X,
 } from "lucide-react";
 import logo from "../assets/terramatrix-logo.png";
 import heroImage from "../assets/hero-dam.jpg";
@@ -134,6 +135,14 @@ function openUrl(value: string) {
   return match?.[1] ? `https://drive.google.com/file/d/${match[1]}/view` : clean;
 }
 
+function extractYouTubeId(url?: string): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  if (match) return match[1];
+  if (/^[\w-]{11}$/.test(url.trim())) return url.trim();
+  return null;
+}
+
 export default function CourseClassroom() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -151,6 +160,9 @@ export default function CourseClassroom() {
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [expandedModules, setExpandedModules] = useState<Record<number, boolean>>({ 1: true, 2: true, 3: true, 4: true });
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [customVideoInput, setCustomVideoInput] = useState("");
+  const [videoOverrides, setVideoOverrides] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const raw = localStorage.getItem("terramatrix_student_login") || sessionStorage.getItem("terramatrix_student_login");
@@ -415,6 +427,40 @@ export default function CourseClassroom() {
     }
     return modules[0]?.lessons[0] || null;
   }, [modules, selectedLessonId]);
+
+  const activeVideoId = useMemo(() => {
+    if (!currentLesson) return "30bZ_NqYv9k";
+    if (videoOverrides[currentLesson.id]) {
+      const id = extractYouTubeId(videoOverrides[currentLesson.id]);
+      if (id) return id;
+    }
+    if (currentLesson.link) {
+      const id = extractYouTubeId(currentLesson.link);
+      if (id) return id;
+    }
+    if (course?.recordingLink) {
+      const id = extractYouTubeId(course.recordingLink);
+      if (id) return id;
+    }
+    return "30bZ_NqYv9k";
+  }, [currentLesson, videoOverrides, course]);
+
+  const saveCustomVideoLink = () => {
+    if (!currentLesson || !course) return;
+    const extracted = extractYouTubeId(customVideoInput);
+    if (!extracted && customVideoInput.trim()) {
+      setNotice("Please enter a valid YouTube video URL (e.g., https://youtu.be/xyz or watch?v=xyz)");
+      return;
+    }
+    const updated = {
+      ...videoOverrides,
+      [currentLesson.id]: customVideoInput.trim(),
+    };
+    setVideoOverrides(updated);
+    localStorage.setItem(`tm_lesson_videos_${course.id}`, JSON.stringify(updated));
+    setVideoModalOpen(false);
+    setNotice("Unlisted YouTube lecture successfully linked to this module!");
+  };
 
   // Flattened lesson list for prev/next
   const allLessons = useMemo(() => modules.flatMap((m) => m.lessons), [modules]);
@@ -699,16 +745,63 @@ export default function CourseClassroom() {
                     {/* Lesson Content Viewer */}
                     {currentLesson.type === "video" && (
                       <div>
-                        <div className="tm3-video-player-wrap">
-                          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "linear-gradient(135deg, rgba(6,31,26,.88), rgba(6,31,26,.65)), url('" + courseImage + "') center/cover" }}>
-                            <div style={{ textAlign: "center", color: "white", padding: 20 }}>
-                              <PlayCircle size={64} style={{ color: "var(--tm3-lime)", marginBottom: 12, cursor: "pointer" }} />
-                              <h3 style={{ margin: 0, fontSize: 18 }}>{currentLesson.title}</h3>
-                              <p style={{ margin: "6px 0 0", color: "#c5d9d1", fontSize: 13 }}>Standard definition lecture player · Duration {currentLesson.duration}</p>
-                            </div>
-                          </div>
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            paddingBottom: "56.25%",
+                            height: 0,
+                            overflow: "hidden",
+                            borderRadius: 18,
+                            background: "#061f1a",
+                            boxShadow: "var(--tm3-shadow-md)",
+                          }}
+                        >
+                          <iframe
+                            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                            src={`https://www.youtube-nocookie.com/embed/${activeVideoId}?rel=0&modestbranding=1`}
+                            title={currentLesson.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
                         </div>
-                        <div className="tm3-reading-content">
+
+                        {/* Video Source Action Bar */}
+                        <div
+                          style={{
+                            marginTop: 12,
+                            padding: "10px 16px",
+                            borderRadius: 12,
+                            background: "var(--tm3-surface)",
+                            border: "1px solid var(--tm3-border)",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 10,
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.8rem", color: "var(--tm3-text-soft)" }}>
+                            <MonitorPlay size={16} style={{ color: "var(--tm3-primary)" }} />
+                            <span>
+                              <strong>Stream Source:</strong> Unlisted YouTube (Video ID:{" "}
+                              <code style={{ color: "var(--tm3-primary)", fontWeight: 700 }}>{activeVideoId}</code>)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomVideoInput(videoOverrides[currentLesson.id] || "");
+                              setVideoModalOpen(true);
+                            }}
+                            className="tm3-button tm3-button--outline"
+                            style={{ fontSize: "0.76rem", padding: "4px 10px", minHeight: 28 }}
+                          >
+                            <Link2 size={13} /> Pitch / Link YouTube Video
+                          </button>
+                        </div>
+
+                        <div className="tm3-reading-content" style={{ marginTop: 18 }}>
                           <h3>Lecture Summary & Core Insights</h3>
                           <p>{currentLesson.summary}</p>
                           {currentLesson.codeSnippet && (
@@ -1231,6 +1324,48 @@ export default function CourseClassroom() {
           )}
         </div>
       </section>
+
+      {/* Video Streaming & Pitching Modal */}
+      {videoModalOpen && currentLesson && (
+        <div className="tm3-modal-backdrop" style={{ zIndex: 1200 }} role="presentation">
+          <div className="tm3-modal" style={{ maxWidth: 520 }} role="dialog" aria-modal="true">
+            <div className="tm3-modal__head">
+              <div>
+                <span className="tm3-eyebrow">Video Streaming & Pitching</span>
+                <h2>Attach Unlisted YouTube Lecture</h2>
+              </div>
+              <button type="button" onClick={() => setVideoModalOpen(false)} aria-label="Close">
+                <X size={20} />
+              </button>
+            </div>
+            <p style={{ margin: "0 0 16px", fontSize: "0.82rem", color: "var(--tm3-text-soft)", lineHeight: 1.5 }}>
+              Instructors can host lecture videos as <strong>Unlisted on YouTube</strong> (ensuring zero platform storage bandwidth costs) and pitch them into this classroom module by pasting the video link below.
+            </p>
+            <div className="tm3-form-grid">
+              <label className="tm3-field tm3-field--full">
+                <span>YouTube Video Link or Video ID</span>
+                <input
+                  type="text"
+                  placeholder="e.g. https://youtu.be/30bZ_NqYv9k or watch?v=..."
+                  value={customVideoInput}
+                  onChange={(e) => setCustomVideoInput(e.target.value)}
+                />
+                <small style={{ color: "var(--tm3-text-soft)", fontSize: "0.72rem", marginTop: 4, display: "block" }}>
+                  Extracted ID: <code>{extractYouTubeId(customVideoInput) || "Awaiting valid link..."}</code>
+                </small>
+              </label>
+            </div>
+            <div className="tm3-modal__actions">
+              <button className="tm3-button tm3-button--outline" type="button" onClick={() => setVideoModalOpen(false)}>
+                Cancel
+              </button>
+              <button className="tm3-button tm3-button--gold" type="button" onClick={saveCustomVideoLink}>
+                Save & Embed Video
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

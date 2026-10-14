@@ -237,11 +237,11 @@ function AppRoutes() {
                         </Link>
                         <Link to="/exam-prep" onClick={closeMenus}>
                           <span className="tm3-menu-icon"><FileQuestion size={20} /></span>
-                          <span><strong>Exam prep & model questions</strong><small>GATE, ESE, State AE/JE & Campus Placement</small></span>
+                          <span><strong>Model Papers & CBT Simulator</strong><small>Standardized examination simulator & detailed solutions</small></span>
                         </Link>
                         <Link to="/learner-hub" onClick={closeMenus}>
                           <span className="tm3-menu-icon"><Zap size={20} /></span>
-                          <span><strong>Learner hub & concept reels</strong><small>Interactive physics, exam calendars, internships & calculators</small></span>
+                          <span><strong>TMA Shorts & Knowledge Hub</strong><small>Visual engineering simulations, TMA Shorts & technical handbooks</small></span>
                         </Link>
                         <Link to="/webinars" onClick={closeMenus}>
                           <span className="tm3-menu-icon"><UsersRound size={20} /></span>
