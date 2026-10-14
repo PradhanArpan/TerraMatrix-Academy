@@ -11,6 +11,7 @@ import {
   saveAdminMediaRecord,
   saveAdminRecord,
 } from "../lib/appsScriptApi";
+import { DEFAULT_COURSES, DEFAULT_INSTRUCTORS } from "../lib/catalogData";
 
 type EnquiryStatus =
   | "New Enquiry"
@@ -640,21 +641,7 @@ const emptyAcademyEventForm: AcademyEventForm = {
   status: "Upcoming",
 };
 
-const sampleInstructors: Instructor[] = [
-  {
-    id: 1,
-    name: "TerraMatrix Instructor",
-    designation: "Course Instructor",
-    company: "TerraMatrix Academy",
-    expertise: "Engineering Training, GIS, Applied Learning",
-    email: "",
-    phone: "",
-    bio: "Instructor profile will be updated by the admin.",
-    photoUrl: defaultImage,
-    cvName: "",
-    cvData: "",
-  },
-];
+const sampleInstructors: Instructor[] = DEFAULT_INSTRUCTORS as unknown as Instructor[];
 
 const emptyCourseForm: CourseForm = {
   title: "",
@@ -689,42 +676,7 @@ const emptyCourseForm: CourseForm = {
   assignmentInstructions: "",
 };
 
-const sampleCourses: Course[] = [
-  {
-    id: 1,
-    title: "GIS Applications for Engineers",
-    shortTitle: "GIS Applications",
-    category: "Engineering Tools",
-    theme: "GIS and Mapping",
-    duration: "30 Hours",
-    level: "Foundation",
-    mode: "Offline",
-    imageUrl: defaultImage,
-    instructorName: "TerraMatrix Instructor",
-    instructorDesignation: "Course Instructor",
-    instructorIds: [1],
-    startDate: "To be announced",
-    fee: "To be announced",
-    certificate: "Completion Certificate",
-    description:
-      "Hands-on training in mapping, spatial analysis and applied GIS workflows for engineering applications.",
-    outcomes:
-      "Prepare basic maps; understand spatial layers; perform simple analysis; present GIS outputs clearly.",
-    brochureName: "",
-    brochureData: "",
-    status: "Published",
-    onlineSessionLink: "",
-    onlineSessionDate: "",
-    onlineSessionTime: "",
-    recordingLink: "",
-    materialTitle: "Course Reading Material",
-    materialDescription: "Reading material will be shared with enrolled learners.",
-    materialFileName: "",
-    materialFileData: "",
-    assignmentTitle: "Assignment",
-    assignmentInstructions: "Assignment instructions will be updated by the admin.",
-  },
-];
+const sampleCourses: Course[] = DEFAULT_COURSES as unknown as Course[];
 
 function normalizePublicAssetPath(value: string) {
   let clean = String(value || "").trim();

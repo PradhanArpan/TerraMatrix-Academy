@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
   CalendarDays,
@@ -26,10 +26,11 @@ function unique(values: string[]) {
 }
 
 export default function StudentDashboard() {
+  const [searchParams] = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [category, setCategory] = useState(searchParams.get("category") || "All");
   const [level, setLevel] = useState("All");
   const [mode, setMode] = useState("All");
 
@@ -37,6 +38,13 @@ export default function StudentDashboard() {
     setCourses(loadCourses());
     setInstructors(loadInstructors());
   }, []);
+
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat) setCategory(cat);
+    const q = searchParams.get("q");
+    if (q) setSearch(q);
+  }, [searchParams]);
 
   const categories = useMemo(() => ["All", ...unique(courses.map((course) => course.category))], [courses]);
   const levels = useMemo(() => ["All", ...unique(courses.map((course) => course.level))], [courses]);

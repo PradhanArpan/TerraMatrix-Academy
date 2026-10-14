@@ -62,10 +62,57 @@ const pillars = [
 ];
 
 const domains = [
-  { title: "Civil & Infrastructure", description: "Water, structures, transportation, construction and environmental systems.", icon: Building2 },
-  { title: "Geospatial Intelligence", description: "GIS, remote sensing, field mapping and spatial decision support.", icon: Map },
-  { title: "Computational Engineering", description: "MATLAB, Python, numerical methods, modelling and data analysis.", icon: Layers3 },
-  { title: "AI for Engineers", description: "Responsible AI workflows for learning, research and engineering productivity.", icon: BrainCircuit },
+  {
+    title: "Civil & Infrastructure",
+    description: "Water resources, bridge & structural engineering, BIM detailing and hydraulic modeling.",
+    image: "/domain-civil.jpg",
+    logo: "/logos/structural-analysis.png",
+    tools: ["AutoCAD", "Revit & BIM", "SAP2000", "HEC-RAS"],
+    to: "/student?category=Engineering%20Tools",
+    badge: "Core Engineering",
+  },
+  {
+    title: "Geospatial Intelligence",
+    description: "GIS, multispectral satellite remote sensing, terrain modeling and spatial decision systems.",
+    image: "/domain-geospatial.jpg",
+    logo: "/logos/gis.png",
+    tools: ["QGIS", "ArcGIS", "GEE", "Remote Sensing"],
+    to: "/student?category=Geospatial%20Tools",
+    badge: "Spatial Analytics",
+  },
+  {
+    title: "Computational Engineering",
+    description: "Applied Python, finite element modeling, numerical methods and engineering data analytics.",
+    image: "/domain-computational.jpg",
+    logo: "/logos/programming.png",
+    tools: ["Python", "MATLAB", "FEA Solver", "Data Analysis"],
+    to: "/student?category=Computational%20Tools",
+    badge: "Scientific Computing",
+  },
+  {
+    title: "AI for Engineers",
+    description: "Digital twins, infrastructure telemetry, automated workflows and generative engineering tools.",
+    image: "/domain-ai.jpg",
+    logo: "/logos/api.png",
+    tools: ["Digital Twins", "Sensor AI", "Automation", "Engineering APIs"],
+    to: "/student",
+    badge: "Intelligent Systems",
+  },
+];
+
+const appliedSkills = [
+  { name: "BIM Coordination", subtitle: "Revit & Navisworks", logo: "/logos/bim.png", to: "/student" },
+  { name: "CAD Drafting", subtitle: "AutoCAD & Detailing", logo: "/logos/cad.png", to: "/student" },
+  { name: "GIS & Spatial Data", subtitle: "QGIS & ArcGIS Pro", logo: "/logos/gis.png", to: "/student" },
+  { name: "Structural Design", subtitle: "Codes & Concrete", logo: "/logos/structural-design.png", to: "/student" },
+  { name: "Structural Analysis", subtitle: "SAP2000 & ETABS", logo: "/logos/structural-analysis.png", to: "/student" },
+  { name: "Hydrologic Modeling", subtitle: "HEC-HMS Catchment", logo: "/logos/hydrologic-modeling.png", to: "/student" },
+  { name: "River Hydraulics", subtitle: "HEC-RAS 1D/2D", logo: "/logos/river-analysis.png", to: "/student" },
+  { name: "Engineering Data", subtitle: "Statistics & Insights", logo: "/logos/data-analysis.png", to: "/student" },
+  { name: "Field & GNSS Survey", subtitle: "GPS & Drone Mapping", logo: "/logos/field-survey.png", to: "/student" },
+  { name: "Remote Sensing", subtitle: "Multispectral Satellites", logo: "/logos/remote-sensing.png", to: "/student" },
+  { name: "Scientific Python", subtitle: "NumPy, Pandas, SciPy", logo: "/logos/programming.png", to: "/student" },
+  { name: "Engineering APIs", subtitle: "AI & Automations", logo: "/logos/api.png", to: "/student" },
 ];
 
 const journey = [
@@ -140,7 +187,23 @@ export default function Home() {
           </div>
 
           <aside className="tm3-hero-card" aria-label="TerraMatrix learning ecosystem">
-            <div className="tm3-hero-card__top"><span>{courses.length || "New"} programmes · {eventCount} live events · {instructors.length || "Expert"} instructors</span><i /></div>
+            <div className="tm3-hero-card__top">
+              <span style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <img src="/logos/courses.png" alt="" style={{ width: 17, height: 17, objectFit: "contain" }} />
+                  <strong>{courses.length || "5"}</strong> programmes
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <img src="/logos/instructors.png" alt="" style={{ width: 17, height: 17, objectFit: "contain" }} />
+                  <strong>{instructors.length || "5"}</strong> instructors
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <img src="/logos/webinars.png" alt="" style={{ width: 17, height: 17, objectFit: "contain" }} />
+                  <strong>{eventCount || "3"}</strong> events
+                </span>
+              </span>
+              <i />
+            </div>
             <div className="tm3-hero-card__body">
               {pillars.map(({ title, description, icon: Icon, to }) => (
                 <Link className="tm3-pillar-link" to={to} key={title}>
@@ -238,11 +301,58 @@ export default function Home() {
             description="The academy begins with civil engineering and expands through computational, geospatial and AI-enabled professional practice."
           />
           <div className="tm3-domain-grid">
-            {domains.map(({ title, description, icon: Icon }) => (
-              <article className="tm3-domain-card" key={title}>
-                <span><Icon size={21} /></span>
-                <div><h3>{title}</h3><p>{description}</p></div>
-              </article>
+            {domains.map((domain) => (
+              <Link
+                to={domain.to}
+                className="tm3-domain-card"
+                key={domain.title}
+                style={{ backgroundImage: `url('${domain.image}')` }}
+              >
+                <div className="tm3-domain-card__overlay" />
+                <div className="tm3-domain-card__content">
+                  <div>
+                    <div className="tm3-domain-card__header">
+                      <div className="tm3-domain-card__badge-logo">
+                        <img src={domain.logo} alt={domain.title} />
+                      </div>
+                      <Badge tone="gold">{domain.badge}</Badge>
+                    </div>
+                    <h3>{domain.title}</h3>
+                    <p>{domain.description}</p>
+                    <div className="tm3-domain-card__tools">
+                      {domain.tools.map((tool) => (
+                        <span key={tool} className="tm3-domain-card__tool-pill">{tool}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="tm3-domain-card__cta">
+                    <span>Explore domain</span>
+                    <ArrowRight size={15} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="tm3-tools-section">
+        <div className="tm3-shell">
+          <SectionHeading
+            eyebrow="Applied toolset"
+            title="Master the industry-standard engineering platforms."
+            description="Hands-on capability building using authentic engineering software, numerical solvers, spatial engines and APIs."
+            align="center"
+          />
+          <div className="tm3-tools-grid">
+            {appliedSkills.map((tool) => (
+              <Link to={tool.to} className="tm3-tool-item" key={tool.name}>
+                <div className="tm3-tool-item__logo">
+                  <img src={tool.logo} alt={tool.name} />
+                </div>
+                <strong>{tool.name}</strong>
+                <small>{tool.subtitle}</small>
+              </Link>
             ))}
           </div>
         </div>

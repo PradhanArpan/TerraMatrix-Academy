@@ -32,6 +32,8 @@
   .tm3-journey__visual { min-height: 420px; }
   .tm3-cta { grid-template-columns: 1fr; padding: 45px; }
   .tm3-cta__actions { justify-self: start; }
+  .tm3-domain-grid { grid-template-columns: repeat(2, 1fr); }
+  .tm3-tools-grid { grid-template-columns: repeat(4, 1fr); }
   .tm3-filter-shell { grid-template-columns: 1fr 1fr; }
   .tm3-search-field { grid-column: 1 / -1; }
   .tm3-course-hero__inner, .tm3-course-body { grid-template-columns: 1fr; }
@@ -74,6 +76,8 @@
   .tm3-brand-strip__item { border-right: 0; border-top: 1px solid var(--tm3-line); min-height: 80px; padding-inline: 22px; }
   .tm3-brand-strip__item:first-child { border-top: 0; }
   .tm3-card-grid, .tm3-catalogue-grid, .tm3-pillar-grid, .tm3-domain-grid { grid-template-columns: 1fr; }
+  .tm3-domain-card { min-height: 340px; padding: 20px; }
+  .tm3-tools-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .tm3-programme-card__image { height: 190px; }
   .tm3-pillar-card { min-height: auto; }
   .tm3-journey__visual { min-height: 330px; }
