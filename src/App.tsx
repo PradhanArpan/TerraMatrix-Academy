@@ -208,7 +208,7 @@ function AppRoutes() {
                   )}
                 </div>
 
-                <NavLink to="/instructors" className={({ isActive }) => isActive ? "is-active" : ""}>Faculty</NavLink>
+                <NavLink to="/instructors" className={({ isActive }) => isActive ? "is-active" : ""}>Instructors</NavLink>
                 <NavLink to="/student" className={({ isActive }) => isActive ? "is-active" : ""}>Catalogue</NavLink>
 
                 <div className="tm3-nav-dropdown tm3-nav-dropdown--right" ref={loginRef}>
@@ -291,7 +291,7 @@ function AppRoutes() {
             </div>
             <div>
               <h3>Academy</h3>
-              <Link to="/instructors">Faculty</Link><Link to="/student-login">Learner login</Link><Link to="/instructor-login">Instructor login</Link>
+              <Link to="/instructors">Instructors</Link><Link to="/student-login">Learner login</Link><Link to="/instructor-login">Instructor login</Link>
             </div>
             <div className="tm3-footer__statement">
               <h3>Built for applied learning</h3>

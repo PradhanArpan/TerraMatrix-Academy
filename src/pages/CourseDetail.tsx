@@ -75,7 +75,7 @@ export default function CourseDetail() {
     );
   }
 
-  const faculty = getCourseInstructors(course, instructors);
+  const courseInstructors = getCourseInstructors(course, instructors);
   const outcomes = parseOutcomes(course.outcomes);
 
   const submit = async () => {
@@ -170,10 +170,10 @@ export default function CourseDetail() {
           </article>
 
           <article className="tm3-panel">
-            <Eyebrow>Faculty</Eyebrow>
+            <Eyebrow>Instructors</Eyebrow>
             <h2>Learn with academic and practice expertise</h2>
             <div className="tm3-instructor-stack">
-              {faculty.map((instructor) => (
+              {courseInstructors.map((instructor) => (
                 <div className="tm3-instructor-row" key={instructor.id}>
                   <img src={instructor.photoUrl} alt={instructor.name} />
                   <div><h3>{instructor.name}</h3><p style={{ color: "var(--tm3-green-700)", fontWeight: 800 }}>{instructor.designation}</p><p>{instructor.company}</p>{instructor.expertise && <p>{instructor.expertise}</p>}</div>

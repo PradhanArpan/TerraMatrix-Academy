@@ -156,7 +156,7 @@ export async function loadPublicBootstrap(): Promise<PublicBootstrapData> {
           level: c.level || "Intermediate",
           mode: c.mode || "Online",
           imageUrl: c.image_url || "/hero-dam.jpg",
-          instructorName: c.instructor_name || "TerraMatrix Faculty",
+          instructorName: c.instructor_name || "TerraMatrix Instructor",
           instructorDesignation: c.instructor_designation || "Course Instructor",
           instructorIds: c.instructor_ids || [],
           startDate: c.start_date || "To be announced",

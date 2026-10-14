@@ -23,15 +23,15 @@ export default function InstructorPage() {
   return (
     <main>
       <PageIntro
-        eyebrow="Faculty and practitioners"
+        eyebrow="Instructors and practitioners"
         title="Expertise that connects theory, tools and real practice."
         description="TerraMatrix instructors bring together academic depth, applied engineering experience, research capability and a commitment to learner-centred professional growth."
-        aside={<Metric value={instructors.length} label="Active instructors" helper="Shared faculty directory" />}
+        aside={<Metric value={instructors.length} label="Active instructors" helper="Shared instructor directory" />}
       />
 
       <section className="tm3-catalogue">
         {instructors.length === 0 ? (
-          <EmptyState icon="spark" title="The faculty directory is being prepared" description="Instructor profiles added by the academy will appear here automatically." />
+          <EmptyState icon="spark" title="The instructor directory is being prepared" description="Instructor profiles added by the academy will appear here automatically." />
         ) : (
           <div className="tm3-catalogue-grid">
             {instructors.map((instructor) => (
@@ -46,7 +46,7 @@ export default function InstructorPage() {
                   <div className="tm3-badge-row">{expertiseItems(instructor.expertise).map((item) => <Badge key={item}>{item}</Badge>)}</div>
                   <p>{instructor.bio || "Profile details will be updated by the academy."}</p>
                   <div className="tm3-content-card__footer">
-                    <span style={{ color: "var(--tm3-muted)", fontSize: 12 }}>Faculty profile</span>
+                    <span style={{ color: "var(--tm3-muted)", fontSize: 12 }}>Instructor profile</span>
                     <button className="tm3-button tm3-button--ghost" type="button" onClick={() => setSelected(instructor)}>View profile <UserRound size={16} /></button>
                   </div>
                 </div>

@@ -57,7 +57,7 @@ const pillars = [
   { title: "Learn", description: "Structured courses, live classes and intelligent learning resources.", icon: BookOpen, to: "/student" },
   { title: "Practice", description: "Simulations, tools, cases and applied engineering challenges.", icon: FlaskConical, to: "/student" },
   { title: "Research", description: "Research methods, data workflows and publication support.", icon: SearchCheck, to: "/learning-videos" },
-  { title: "Collaborate", description: "Faculty communities, industry mentors and project networks.", icon: Network, to: "/instructors" },
+  { title: "Collaborate", description: "Instructor communities, industry mentors and project networks.", icon: Network, to: "/instructors" },
   { title: "Certify", description: "Verified evidence of learning, competence and professional growth.", icon: BadgeCheck, to: "/student-login" },
 ];
 
@@ -140,7 +140,7 @@ export default function Home() {
           </div>
 
           <aside className="tm3-hero-card" aria-label="TerraMatrix learning ecosystem">
-            <div className="tm3-hero-card__top"><span>{courses.length || "New"} programmes · {eventCount} live events · {instructors.length || "Expert"} faculty</span><i /></div>
+            <div className="tm3-hero-card__top"><span>{courses.length || "New"} programmes · {eventCount} live events · {instructors.length || "Expert"} instructors</span><i /></div>
             <div className="tm3-hero-card__body">
               {pillars.map(({ title, description, icon: Icon, to }) => (
                 <Link className="tm3-pillar-link" to={to} key={title}>
@@ -159,7 +159,7 @@ export default function Home() {
           <div className="tm3-brand-strip__item"><span><GraduationCap size={19} /></span><div><strong>Structured learning</strong><small>Clear pathways and outcomes</small></div></div>
           <div className="tm3-brand-strip__item"><span><BriefcaseBusiness size={19} /></span><div><strong>Industry relevance</strong><small>Practice-led capability building</small></div></div>
           <div className="tm3-brand-strip__item"><span><FlaskConical size={19} /></span><div><strong>Research connection</strong><small>Evidence, methods and inquiry</small></div></div>
-          <div className="tm3-brand-strip__item"><span><UsersRound size={19} /></span><div><strong>Expert community</strong><small>Faculty and practitioner guidance</small></div></div>
+          <div className="tm3-brand-strip__item"><span><UsersRound size={19} /></span><div><strong>Expert community</strong><small>Instructor and practitioner guidance</small></div></div>
           <div className="tm3-brand-strip__item"><span><ShieldCheck size={19} /></span><div><strong>Meaningful recognition</strong><small>Learning records and certificates</small></div></div>
         </div>
       </section>
@@ -183,7 +183,7 @@ export default function Home() {
           ) : (
             <div className="tm3-card-grid">
               {featuredCourses.map((course) => {
-                const faculty = getCourseInstructors(course, instructors);
+                const courseInstructors = getCourseInstructors(course, instructors);
                 return (
                   <article className="tm3-programme-card" key={course.id}>
                     <div className="tm3-programme-card__image" style={{ backgroundImage: `url('${course.imageUrl}')` }}>
@@ -196,7 +196,7 @@ export default function Home() {
                       <div className="tm3-programme-card__meta">
                         <span><CalendarDays size={14} /> {formatDate(course.startDate)}</span>
                         <span><BookOpen size={14} /> {course.duration} hrs</span>
-                        <span><UsersRound size={14} /> {faculty[0]?.name}</span>
+                        <span><UsersRound size={14} /> {courseInstructors[0]?.name}</span>
                       </div>
                       <div className="tm3-programme-card__footer">
                         <strong>{formatFee(course.fee)}</strong>
@@ -279,12 +279,12 @@ export default function Home() {
           <Eyebrow tone="light">Start a conversation</Eyebrow>
           <h2>Build the next capability pathway with TerraMatrix.</h2>
           <p>
-            For students, faculty, institutions and industry teams seeking focused training, collaborative learning or a customised engineering programme.
+            For students, instructors, institutions and industry teams seeking focused training, collaborative learning or a customised engineering programme.
           </p>
         </div>
         <div className="tm3-cta__actions">
           <button className="tm3-button tm3-button--lime" onClick={() => setShowEnquiry(true)}>Enquire now <ArrowRight size={17} /></button>
-          <Link className="tm3-button tm3-button--outline" to="/instructors" style={{ color: "white", borderColor: "rgba(255,255,255,.3)" }}>Meet the faculty</Link>
+          <Link className="tm3-button tm3-button--outline" to="/instructors" style={{ color: "white", borderColor: "rgba(255,255,255,.3)" }}>Meet the instructors</Link>
         </div>
       </section>
 

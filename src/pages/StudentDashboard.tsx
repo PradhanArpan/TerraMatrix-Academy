@@ -45,8 +45,8 @@ export default function StudentDashboard() {
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return courses.filter((course) => {
-      const faculty = getCourseInstructors(course, instructors).map((item) => item.name).join(" ");
-      const haystack = [course.title, course.shortTitle, course.category, course.theme, course.description, course.level, course.mode, faculty].join(" ").toLowerCase();
+      const instructorNames = getCourseInstructors(course, instructors).map((item) => item.name).join(" ");
+      const haystack = [course.title, course.shortTitle, course.category, course.theme, course.description, course.level, course.mode, instructorNames].join(" ").toLowerCase();
       return (!query || haystack.includes(query)) && (category === "All" || course.category === category) && (level === "All" || course.level === level) && (mode === "All" || course.mode === mode);
     });
   }, [courses, instructors, search, category, level, mode]);
@@ -70,7 +70,7 @@ export default function StudentDashboard() {
       <section className="tm3-filter-shell" aria-label="Course filters">
         <label className="tm3-search-field">
           <Search size={18} />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search programmes, tools, topics or faculty" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search programmes, tools, topics or instructors" />
         </label>
         <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter by category">
           {categories.map((item) => <option key={item}>{item === "All" ? "All learning areas" : item}</option>)}
@@ -104,7 +104,7 @@ export default function StudentDashboard() {
         ) : (
           <div className="tm3-catalogue-grid">
             {filtered.map((course) => {
-              const faculty = getCourseInstructors(course, instructors);
+              const courseInstructors = getCourseInstructors(course, instructors);
               return (
                 <article className="tm3-programme-card" key={course.id}>
                   <div className="tm3-programme-card__image" style={{ backgroundImage: `url('${course.imageUrl}')` }}>
@@ -121,7 +121,7 @@ export default function StudentDashboard() {
                     <div className="tm3-programme-card__meta">
                       <span><Clock3 size={14} /> {course.duration} hrs</span>
                       <span><CalendarDays size={14} /> {formatDate(course.startDate)}</span>
-                      <span><UsersRound size={14} /> {faculty[0]?.name}</span>
+                      <span><UsersRound size={14} /> {courseInstructors[0]?.name}</span>
                       <span><MonitorPlay size={14} /> {course.mode}</span>
                     </div>
                     <div className="tm3-programme-card__footer">

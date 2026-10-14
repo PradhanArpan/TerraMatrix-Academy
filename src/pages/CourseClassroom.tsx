@@ -224,7 +224,7 @@ export default function CourseClassroom() {
 
       <section className="tm3-workspace__main">
         <header className="tm3-workspace-topbar">
-          <div><span className="tm3-workspace-kicker">{course.category}</span><h1>{deriveShortTitle(course)}</h1><p>{course.instructorName || "TerraMatrix Faculty"}</p></div>
+          <div><span className="tm3-workspace-kicker">{course.category}</span><h1>{deriveShortTitle(course)}</h1><p>{course.instructorName || "TerraMatrix Instructor"}</p></div>
           <div className="tm3-workspace-topbar__actions">
             {course.onlineSessionLink && <a className="tm3-button tm3-button--gold" href={course.onlineSessionLink} target="_blank" rel="noreferrer"><Video size={16} /> Join live class</a>}
           </div>

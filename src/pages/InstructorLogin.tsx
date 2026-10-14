@@ -17,7 +17,7 @@ export default function InstructorLogin() {
     const cleanEmail = email.trim().toLowerCase(); const cleanPhone = validPhone(phone);
     if (!cleanEmail || !cleanPhone) { setError("Enter the instructor email and valid mobile number."); return; }
     const instructor = loadInstructors().find((item) => item.email.trim().toLowerCase() === cleanEmail && validPhone(item.phone) === cleanPhone);
-    if (!instructor) { setError("No matching instructor profile was found. Ask the admin to check your faculty record."); return; }
+    if (!instructor) { setError("No matching instructor profile was found. Ask the admin to check your instructor record."); return; }
     const data = JSON.stringify({ id: instructor.id, email: cleanEmail, phone: cleanPhone, name: instructor.name });
     localStorage.setItem("terramatrix_instructor_login", data); sessionStorage.setItem("terramatrix_instructor_login", data); navigate("/instructor-portal");
   };
@@ -36,7 +36,7 @@ export default function InstructorLogin() {
           <label className="tm3-field">Instructor phone<span style={{ position: "relative" }}><Phone size={18} style={{ position: "absolute", left: 14, top: 15, color: "var(--tm3-subtle)" }} /><input value={phone} onChange={(event) => { setPhone(event.target.value); setError(""); }} onKeyDown={(event) => { if (event.key === "Enter") login(); }} style={{ paddingLeft: 43 }} /></span></label>
           {error && <div className="tm3-error" style={{ padding: 12, borderRadius: 12, background: "var(--tm3-danger-soft)" }}>{error}</div>}
           <button className="tm3-button tm3-button--dark" type="button" onClick={login}><UserRound size={18} /> Open Instructor Workspace <ArrowRight size={17} /></button>
-          <div className="tm3-auth-note">Instructor access is limited to courses linked to the faculty profile.</div>
+          <div className="tm3-auth-note">Instructor access is limited to courses linked to the instructor profile.</div>
         </div>
       </section>
     </main>

@@ -262,7 +262,7 @@ const taxonomyThemeDefaults: Record<string, string[]> = {
     "Teaching and Assessment",
   ],
   "Institutional / Custom Training": [
-    "Faculty Development",
+    "Instructor Development",
     "Student Skill Training",
     "Government / Department Training",
     "Industry-oriented Training",
@@ -643,7 +643,7 @@ const emptyAcademyEventForm: AcademyEventForm = {
 const sampleInstructors: Instructor[] = [
   {
     id: 1,
-    name: "TerraMatrix Faculty",
+    name: "TerraMatrix Instructor",
     designation: "Course Instructor",
     company: "TerraMatrix Academy",
     expertise: "Engineering Training, GIS, Applied Learning",
@@ -700,7 +700,7 @@ const sampleCourses: Course[] = [
     level: "Foundation",
     mode: "Offline",
     imageUrl: defaultImage,
-    instructorName: "TerraMatrix Faculty",
+    instructorName: "TerraMatrix Instructor",
     instructorDesignation: "Course Instructor",
     instructorIds: [1],
     startDate: "To be announced",
@@ -913,7 +913,7 @@ function normalizeCourse(course: Partial<Course>): Course {
     level: course.level || "Open",
     mode: course.mode || "Offline",
     imageUrl: normalizePublicAssetPath(course.imageUrl || "") || defaultImage,
-    instructorName: course.instructorName || "TerraMatrix Faculty",
+    instructorName: course.instructorName || "TerraMatrix Instructor",
     instructorDesignation: course.instructorDesignation || "Course Instructor",
     instructorIds: Array.isArray(course.instructorIds) ? course.instructorIds : [],
     startDate: course.startDate || "To be announced",
@@ -1512,7 +1512,7 @@ export default function AdminDashboard() {
       imageUrl: normalizePublicAssetPath(courseForm.imageUrl || "") || defaultImage,
       instructorName:
         linkedInstructors.map((instructor) => instructor.name).join(", ") ||
-        "TerraMatrix Faculty",
+        "TerraMatrix Instructor",
       instructorDesignation:
         linkedInstructors
           .map((instructor) => instructor.designation)
@@ -2203,7 +2203,7 @@ export default function AdminDashboard() {
                 <div>
                   <div style={eyebrow}>INSTRUCTOR MANAGEMENT</div>
                   <h2 style={compactPanelTitle}>{instructorEditId ? "Edit instructor" : "Add instructor"}</h2>
-                  <p style={compactPanelNote}>Create the faculty profile and upload the photo and CV directly. Files are organised automatically in TerraMatrix Drive folders.</p>
+                  <p style={compactPanelNote}>Create the instructor profile and upload the photo and CV directly. Files are organised automatically in cloud storage.</p>
                 </div>
               </div>
 
@@ -3120,7 +3120,7 @@ function normalizeEvent(item: Partial<AcademyEvent> & { imageFileId?: string }, 
     date: item.date || "",
     time: item.time || "",
     mode: item.mode || "Online",
-    resourcePerson: item.resourcePerson || "TerraMatrix Faculty",
+    resourcePerson: item.resourcePerson || "TerraMatrix Instructor",
     instructorIds: Array.isArray(item.instructorIds) ? item.instructorIds : [],
     fee: item.fee || "Free",
     certification: "Participation Certificate",
@@ -3170,7 +3170,7 @@ function getSampleEventItems(kind: string): AcademyEvent[] {
           date: "2026-07-20",
           time: "18:00",
           mode: "Online",
-          resourcePerson: "TerraMatrix Faculty",
+          resourcePerson: "TerraMatrix Instructor",
           instructorIds: [1],
           fee: "Free",
           certification: "Participation Certificate",
@@ -3188,7 +3188,7 @@ function getSampleEventItems(kind: string): AcademyEvent[] {
           date: "2026-07-27",
           time: "10:00",
           mode: "Online",
-          resourcePerson: "TerraMatrix Faculty",
+          resourcePerson: "TerraMatrix Instructor",
           instructorIds: [1],
           fee: "To be announced",
           certification: "Participation Certificate",
@@ -3789,7 +3789,7 @@ function AcademyEventAdminPanel({
         title: form.title.trim(),
         theme: form.theme || form.category,
         resourcePerson:
-          linkedInstructorNames.join(", ") || form.resourcePerson || "TerraMatrix Faculty",
+          linkedInstructorNames.join(", ") || form.resourcePerson || "TerraMatrix Instructor",
       },
       kind
     );
@@ -4414,7 +4414,7 @@ function EventItemList({
                   {item.recordingLink ? " · Recording added" : ""}
                 </p>
                 <p style={contentItemText}>
-                  Instructor(s): {item.resourcePerson || "TerraMatrix Faculty"}
+                  Instructor(s): {item.resourcePerson || "TerraMatrix Instructor"}
                 </p>
               </div>
 
