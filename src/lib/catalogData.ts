@@ -9,13 +9,17 @@ export type Instructor = {
   company: string;
   affiliation?: string;
   expertise: string;
+  pendingExpertise?: string;
   email: string;
   phone: string;
   bio: string;
+  pendingBio?: string;
   photoUrl: string;
   cvName?: string;
   cvData?: string;
   status?: string;
+  moderationStatus?: "Approved" | "Pending Review" | "Changes Requested";
+  adminFeedback?: string;
   displayOrder?: number;
 };
 
@@ -40,6 +44,9 @@ export type Course = {
   brochureName: string;
   brochureData: string;
   status: "Draft" | "Published";
+  moderationStatus?: "Approved" | "Pending Review" | "Changes Requested" | "Draft";
+  adminReviewComment?: string;
+  proposalType?: "course" | "workshop" | "webinar" | "recorded_lesson";
   onlineSessionLink: string;
   onlineSessionDate: string;
   onlineSessionTime: string;
@@ -68,6 +75,8 @@ export type AcademyEvent = {
   recordingLink: string;
   imageUrl: string;
   status: "Draft" | "Published" | "Upcoming" | "Completed";
+  moderationStatus?: "Approved" | "Pending Review" | "Changes Requested";
+  adminReviewComment?: string;
 };
 
 export type LearningVideo = {
@@ -75,11 +84,20 @@ export type LearningVideo = {
   title: string;
   category: string;
   theme: string;
+  topic?: string;
+  creatorName?: string;
+  creatorChannel?: string;
+  creatorEmail?: string;
   description: string;
+  terraMatrixInsight?: string;
   youtubeUrl: string;
   thumbnailUrl: string;
   level: string;
+  duration?: string;
   status: "Draft" | "Published";
+  moderationStatus?: "Approved" | "Pending Review" | "Changes Requested" | "Draft";
+  adminReviewComment?: string;
+  submittedAt?: string;
 };
 
 export function readStoredArray<T>(key: string): T[] {
@@ -155,13 +173,17 @@ export function normalizeInstructor(value: Partial<Instructor>): Instructor {
     company: String(value.company || value.affiliation || "TerraMatrix Academy"),
     affiliation: String(value.affiliation || value.company || "TerraMatrix Academy"),
     expertise: String(value.expertise || "Engineering Education"),
+    pendingExpertise: value.pendingExpertise ? String(value.pendingExpertise) : undefined,
     email: String(value.email || ""),
     phone: String(value.phone || ""),
     bio: String(value.bio || ""),
+    pendingBio: value.pendingBio ? String(value.pendingBio) : undefined,
     photoUrl: normalizePublicAssetPath(value.photoUrl, heroImage),
     cvName: String(value.cvName || ""),
     cvData: normalizePublicAssetPath(value.cvData),
     status: String(value.status || "Active"),
+    moderationStatus: value.moderationStatus || "Approved",
+    adminFeedback: String(value.adminFeedback || ""),
     displayOrder: Number(value.displayOrder || 0),
   };
 }
@@ -186,6 +208,8 @@ export function normalizeEvent(value: Partial<AcademyEvent> & { imageFileId?: st
       value.status === "Draft" || value.status === "Completed" || value.status === "Upcoming"
         ? value.status
         : "Published",
+    moderationStatus: value.moderationStatus || "Approved",
+    adminReviewComment: String(value.adminReviewComment || ""),
   };
 }
 
@@ -195,11 +219,23 @@ export function normalizeVideo(value: Partial<LearningVideo> & { thumbnailFileId
     title: String(value.title || "Learning video"),
     category: String(value.category || "Engineering Learning"),
     theme: String(value.theme || "Applied Engineering"),
+    topic: String(value.topic || value.theme || "General"),
+    creatorName: String(value.creatorName || "Curated YouTube Creator"),
+    creatorChannel: String(value.creatorChannel || ""),
+    creatorEmail: String(value.creatorEmail || ""),
     description: String(value.description || "Video details will be published shortly."),
+    terraMatrixInsight: String(
+      value.terraMatrixInsight ||
+      "Curated by TerraMatrix Academy for applied engineering clarity. Recommended for understanding theoretical formulations and industrial solver workflows."
+    ),
     youtubeUrl: String(value.youtubeUrl || ""),
     thumbnailUrl: normalizePublicAssetPath(value.thumbnailUrl || value.thumbnailFileId, heroImage),
     level: String(value.level || "Open to All"),
+    duration: String(value.duration || "15 mins"),
     status: value.status === "Draft" ? "Draft" : "Published",
+    moderationStatus: value.moderationStatus || (value.status === "Draft" ? "Draft" : "Approved"),
+    adminReviewComment: String(value.adminReviewComment || ""),
+    submittedAt: String(value.submittedAt || ""),
   };
 }
 
@@ -246,6 +282,9 @@ export const DEFAULT_INSTRUCTORS: Instructor[] = [
     email: "",
     phone: "",
     bio: "Expert in earth observation, multispectral satellite data processing, digital elevation modeling, and applied geographic information systems.",
+    pendingExpertise: "Remote Sensing, QGIS, Satellite Image Processing, Geomorphology, Google Earth Engine, UAV LiDAR",
+    pendingBio: "Senior researcher & consultant specializing in earth observation, radar interferometry, multispectral satellite data processing, digital elevation modeling, and UAV-based photogrammetric terrain surveys.",
+    moderationStatus: "Pending Review",
     photoUrl: "/uploads/instructors/asit.jpg",
     cvName: "Asit.pdf",
     cvData: "/uploads/instructors/Asit.pdf",
@@ -479,6 +518,40 @@ export const DEFAULT_COURSES: Course[] = [
     assignmentTitle: "Final Scientific Research Mini-Project",
     assignmentInstructions: "Complete an end-to-end statistical analysis on a research dataset from your engineering discipline and submit the report.",
   },
+  {
+    id: 7,
+    title: "Advanced Hydrodynamic & 2D River Basin Modeling with HEC-RAS",
+    shortTitle: "Hydrodynamic 2D Modeling",
+    category: "Water & Environmental Systems",
+    theme: "River Hydraulics",
+    duration: "40 Hours",
+    level: "Advanced",
+    mode: "Online",
+    imageUrl: "/course-hydrology.jpg",
+    instructorName: "Dr. Sovan Sankalp",
+    instructorDesignation: "Geospatial & Environmental Engineer",
+    instructorIds: [5],
+    startDate: "2026-10-01",
+    fee: "₹3,999",
+    certificate: "Completion Certificate",
+    description: "Multi-dimensional hydrodynamic flood wave modeling, mesh refinement around hydraulic bridges and weirs, dam-break wave propagation, and coastal-fluvial coupling.",
+    outcomes: "Build adaptive computational meshes in HEC-RAS 2D;\nConfigure complex bridge piers and dam spillway boundary equations;\nSimulate unsteady supercritical flood waves and sediment transport;\nExport flood hazard polygons for disaster management agencies.",
+    brochureName: "HECRAS_2D_Syllabus.pdf",
+    brochureData: "",
+    status: "Draft",
+    moderationStatus: "Pending Review",
+    adminReviewComment: "",
+    onlineSessionLink: "",
+    onlineSessionDate: "",
+    onlineSessionTime: "",
+    recordingLink: "",
+    materialTitle: "Hydrodynamic Mesh Grids & Bathymetric Soundings",
+    materialDescription: "LiDAR DEMs, cross-sectional survey points, and inflow hydrograph time-series.",
+    materialFileName: "",
+    materialFileData: "",
+    assignmentTitle: "2D River Inundation & Dam Breach Project",
+    assignmentInstructions: "Run 2D hydrodynamic simulation and map depth-velocity hazard vectors.",
+  },
 ];
 
 export const DEFAULT_WEBINARS: AcademyEvent[] = [
@@ -561,33 +634,87 @@ export const DEFAULT_VIDEOS: LearningVideo[] = [
     title: "Introduction to QGIS: Interface, Projections and Layer Types",
     category: "Geospatial Tools",
     theme: "QGIS",
+    topic: "GIS & Coordinate Systems",
+    creatorName: "GeoSpatial World & Open Source Lab",
+    creatorChannel: "YouTube / OpenGIS Foundation",
     description: "A clear primer on understanding vector layers, raster datasets, and setting correct UTM coordinate reference systems.",
+    terraMatrixInsight: "Essential foundation for civil engineers transitioning from CAD to GIS. Pay particular attention to the difference between Project CRS (UTM 43N/45N) and Layer CRS (EPSG:4326 WGS84) to avoid spatial distortion in slope calculations.",
     youtubeUrl: "https://www.youtube.com/watch?v=kCmNVtg3D3A",
     thumbnailUrl: "/domain-geospatial.jpg",
     level: "Foundation",
+    duration: "24 mins",
     status: "Published",
+    moderationStatus: "Approved",
   },
   {
     id: 302,
     title: "3D Frame Modeling & Load Assignment in SAP2000",
     category: "Structural Engineering",
     theme: "SAP2000",
+    topic: "Finite Element & Structural Mechanics",
+    creatorName: "StructureFree / CSI Structural Tutorials",
+    creatorChannel: "YouTube / StructureFree",
     description: "Step-by-step guide on creating grid lines, defining beam/column sections, and applying gravity and lateral load cases.",
+    terraMatrixInsight: "Highlights the significance of rigid diaphragm constraints for floor slabs and how P-Delta geometric nonlinearity alters column design moments under lateral wind loads.",
     youtubeUrl: "https://www.youtube.com/watch?v=uU3VqgZgI0U",
     thumbnailUrl: "/domain-civil.jpg",
     level: "Intermediate",
+    duration: "38 mins",
     status: "Published",
+    moderationStatus: "Approved",
   },
   {
     id: 303,
     title: "HEC-RAS 2D Hydrodynamic Flood Simulation Walkthrough",
     category: "Water Resources",
     theme: "HEC-RAS",
+    topic: "River Hydraulics & Dam Breach",
+    creatorName: "Australian Water School & USACE Experts",
+    creatorChannel: "YouTube / AWS Channel",
     description: "Learn how to import terrain surfaces, draw 2D flow computation areas, and view dynamic depth velocity animations.",
+    terraMatrixInsight: "Focuses on 2D Shallow Water Equations (SWE). The key takeaway is how mesh cell size along the channel thalweg governs hydrodynamic stability without requiring excessive computational timestep reductions.",
     youtubeUrl: "https://www.youtube.com/watch?v=Vl8q4lVjU_Q",
     thumbnailUrl: "/course-hydrology.jpg",
     level: "Intermediate",
+    duration: "45 mins",
     status: "Published",
+    moderationStatus: "Approved",
+  },
+  {
+    id: 304,
+    title: "Scientific Python for Civil Engineers: NumPy, Pandas & Matplotlib",
+    category: "Computational Tools",
+    theme: "Python",
+    topic: "Engineering Data Science",
+    creatorName: "Corey Schafer & Applied Computing",
+    creatorChannel: "YouTube / Python Engineering",
+    description: "How to parse borehole CSV data, calculate soil stress profiles, and plot automated Mohr's circles with Python scripts.",
+    terraMatrixInsight: "Replaces manual Excel macros with reproducible Python scripts. Critical takeaway is vectorization over row iteration for processing multi-sensor telemetry data.",
+    youtubeUrl: "https://www.youtube.com/watch?v=LHBE6Q9XlzI",
+    thumbnailUrl: "/domain-computational.jpg",
+    level: "Foundation",
+    duration: "32 mins",
+    status: "Published",
+    moderationStatus: "Approved",
+  },
+  {
+    id: 305,
+    title: "HEC-HMS Hydrologic Modeling: Unit Hydrograph & Soil Moisture Routing",
+    category: "Water Resources",
+    theme: "HEC-HMS",
+    topic: "Catchment Hydrology",
+    creatorName: "Water Resources Engineering Hub",
+    creatorChannel: "YouTube / Civil Hydraulics",
+    creatorEmail: "creator.hydrology@engineer.org",
+    description: "Step-by-step setup of SCS-CN loss method and Clark unit hydrograph routing for ungauged mountainous basins.",
+    terraMatrixInsight: "Essential primer for watershed discretization. Shows accurate parameter estimation for Curve Numbers under varying antecedent moisture conditions.",
+    youtubeUrl: "https://www.youtube.com/watch?v=kCmNWMTux44",
+    thumbnailUrl: "/course-hydrology.jpg",
+    level: "Intermediate",
+    duration: "28 mins",
+    status: "Draft",
+    moderationStatus: "Pending Review",
+    submittedAt: "2026-10-14",
   },
 ];
 
@@ -618,11 +745,15 @@ export function loadEvents(kind: "webinars" | "workshops"): AcademyEvent[] {
     .filter((item) => item.status !== "Draft");
 }
 
-export function loadVideos(): LearningVideo[] {
+export function loadVideos(onlyPublished = true): LearningVideo[] {
   const stored = readStoredArray<Partial<LearningVideo>>("terramatrix_learning_videos");
-  return (stored.length ? stored : DEFAULT_VIDEOS)
-    .map(normalizeVideo)
-    .filter((item) => item.status === "Published");
+  const existingIds = new Set(stored.map((v) => Number(v.id)));
+  const merged = [
+    ...stored,
+    ...DEFAULT_VIDEOS.filter((v) => !existingIds.has(v.id)),
+  ];
+  const data = merged.map(normalizeVideo);
+  return onlyPublished ? data.filter((item) => item.status === "Published" && item.moderationStatus !== "Draft") : data;
 }
 
 export function normalizeCertification(value: string): string {

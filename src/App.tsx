@@ -5,6 +5,7 @@ import {
   BookOpen,
   BriefcaseBusiness,
   ChevronDown,
+  FileQuestion,
   GraduationCap,
   LogIn,
   Menu,
@@ -20,6 +21,7 @@ import {
 import Home from "./pages/Home";
 import StudentDashboard from "./pages/StudentDashboard";
 import LearningVideos from "./pages/LearningVideos";
+import ExamPractice from "./pages/ExamPractice";
 import Webinars from "./pages/Webinars";
 import Workshops from "./pages/Workshops";
 import CourseDetail from "./pages/CourseDetail";
@@ -231,6 +233,10 @@ function AppRoutes() {
                           <span className="tm3-menu-icon"><PlayCircle size={20} /></span>
                           <span><strong>Learning library</strong><small>Recorded lessons, demonstrations and explainers</small></span>
                         </Link>
+                        <Link to="/exam-prep" onClick={closeMenus}>
+                          <span className="tm3-menu-icon"><FileQuestion size={20} /></span>
+                          <span><strong>Exam prep & model questions</strong><small>GATE, ESE, State AE/JE & Campus Placement</small></span>
+                        </Link>
                         <Link to="/webinars" onClick={closeMenus}>
                           <span className="tm3-menu-icon"><UsersRound size={20} /></span>
                           <span><strong>Webinars</strong><small>Expert conversations and knowledge sessions</small></span>
@@ -311,6 +317,7 @@ function AppRoutes() {
           <Route path="/" element={<Home />} />
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/learning-videos" element={<LearningVideos />} />
+          <Route path="/exam-prep" element={<ExamPractice />} />
           <Route path="/webinars" element={<Webinars />} />
           <Route path="/workshops" element={<Workshops />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
@@ -336,7 +343,11 @@ function AppRoutes() {
             </div>
             <div>
               <h3>Explore</h3>
-              <Link to="/student">Courses</Link><Link to="/learning-videos">Learning library</Link><Link to="/webinars">Webinars</Link><Link to="/workshops">Workshops</Link>
+              <Link to="/student">Courses</Link>
+              <Link to="/learning-videos">Learning library</Link>
+              <Link to="/exam-prep">Exam prep</Link>
+              <Link to="/webinars">Webinars</Link>
+              <Link to="/workshops">Workshops</Link>
             </div>
             <div>
               <h3>Academy</h3>

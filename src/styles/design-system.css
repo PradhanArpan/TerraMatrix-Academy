@@ -170,9 +170,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 /* Home */
 .tm3-hero { position: relative; overflow: hidden; background: var(--tm3-green-950); color: white; }
-.tm3-hero:before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 12% 8%, rgba(214,245,109,.18), transparent 24rem), linear-gradient(120deg, rgba(6,31,26,.98) 10%, rgba(8,47,39,.88) 50%, rgba(8,47,39,.54)); z-index: 1; }
-.tm3-hero:after { content: ""; position: absolute; inset: 0; opacity: .24; background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 44px 44px; mask-image: linear-gradient(to right, transparent 12%, black); z-index: 1; }
-.tm3-hero__image { position: absolute; inset: 0 0 0 43%; background-image: linear-gradient(135deg,#0b4337,#061f1a); background-size: cover; background-position: center; filter: saturate(.75) contrast(1.05); }
+.tm3-hero:before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 10% 10%, rgba(214,245,109,.16), transparent 30rem), linear-gradient(90deg, rgba(5,28,23,.94) 0%, rgba(5,28,23,.78) 46%, rgba(5,28,23,.28) 100%); z-index: 1; pointer-events: none; }
+.tm3-hero:after { content: ""; position: absolute; inset: 0; opacity: .16; background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 44px 44px; mask-image: linear-gradient(to right, transparent 10%, black 80%); z-index: 1; pointer-events: none; }
+.tm3-hero__image { position: absolute; inset: 0; background-size: cover; background-position: center right; filter: saturate(1.12) contrast(1.06); }
 .tm3-hero__inner { position: relative; z-index: 2; width: min(var(--tm3-content), calc(100% - 44px)); min-height: 690px; margin: auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .62fr); gap: 70px; align-items: center; padding: 86px 0 100px; }
 .tm3-hero__copy { max-width: 770px; display: grid; gap: 24px; }
 .tm3-hero h1 { margin: 0; font-family: var(--tm3-display); font-size: clamp(55px, 6.4vw, 96px); line-height: .92; letter-spacing: -5px; }

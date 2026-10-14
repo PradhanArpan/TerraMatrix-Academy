@@ -30,7 +30,7 @@ import {
   Waves,
   X,
 } from "lucide-react";
-import heroImage from "../assets/hero-dam.jpg";
+import heroImage from "../assets/hero-academy-cover.jpg";
 import { submitPublicEnquiry } from "../lib/appsScriptApi";
 import { Badge, EmptyState, Eyebrow, SectionHeading } from "../components/Ui";
 import {

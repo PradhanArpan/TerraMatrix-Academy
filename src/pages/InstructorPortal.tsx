@@ -86,6 +86,9 @@ export default function InstructorPortal() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [newSchedule, setNewSchedule] = useState({ date: "", time: "", note: "" });
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [proposedExpertise, setProposedExpertise] = useState("");
+  const [proposedBio, setProposedBio] = useState("");
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -123,6 +126,55 @@ export default function InstructorPortal() {
   const goHome = () => { setSelectedId(null); setView("home"); };
   const goCalendar = () => { setSelectedId(null); setView("calendar"); };
 
+  const submitCourseForReview = (courseId: number) => {
+    const allCourses = loadCourses(false);
+    const updated = allCourses.map((c) => {
+      if (c.id === courseId) {
+        return {
+          ...c,
+          moderationStatus: "Pending Review" as const,
+        };
+      }
+      return c;
+    });
+    localStorage.setItem("terramatrix_courses", JSON.stringify(updated));
+    setCourses(updated.filter((c) => {
+      if (instructor && c.instructorIds.includes(instructor.id)) return true;
+      const name = `${c.instructorName}`.toLowerCase();
+      return login && (name.includes(login.name.toLowerCase()) || login.name.toLowerCase().includes(name));
+    }));
+    setNotice("Course curriculum specification submitted to TerraMatrix Academy Admin for accreditation & approval!");
+  };
+
+  const submitProfileUpdateRequest = () => {
+    if (!instructor) return;
+    const allInstructors = loadInstructors();
+    const updated = allInstructors.map((item) => {
+      if (item.id === instructor.id) {
+        return {
+          ...item,
+          pendingExpertise: proposedExpertise.trim(),
+          pendingBio: proposedBio.trim(),
+          moderationStatus: "Pending Review" as const,
+        };
+      }
+      return item;
+    });
+    localStorage.setItem("terramatrix_instructors", JSON.stringify(updated));
+    setInstructor((prev) =>
+      prev
+        ? {
+            ...prev,
+            pendingExpertise: proposedExpertise.trim(),
+            pendingBio: proposedBio.trim(),
+            moderationStatus: "Pending Review",
+          }
+        : null
+    );
+    setProfileModalOpen(false);
+    setNotice("Profile & expertise update request submitted to Admin for moderation.");
+  };
+
   const uploadDraft = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]; if (!file) return;
     if (file.size > 12 * 1024 * 1024) { setNotice("Please use a file below 12 MB or add a Drive link."); return; }
@@ -154,7 +206,48 @@ export default function InstructorPortal() {
     <main className="tm3-workspace tm3-instructor-workspace">
       <aside className="tm3-workspace__sidebar">
         <Link className="tm3-workspace__brand" to="/"><img src={logo} alt="" /><span><strong>TerraMatrix</strong><small>Instructor workspace</small></span></Link>
-        <div className="tm3-workspace__profile"><span>Instructor</span><strong>{login?.name || "Instructor"}</strong><small>{instructor?.designation || login?.email}</small></div>
+        <div className="tm3-workspace__profile">
+          <span>Instructor</span>
+          <strong>{login?.name || "Instructor"}</strong>
+          <small>{instructor?.designation || login?.email}</small>
+          <button
+            type="button"
+            onClick={() => {
+              setProposedExpertise(instructor?.pendingExpertise || instructor?.expertise || "");
+              setProposedBio(instructor?.pendingBio || instructor?.bio || "");
+              setProfileModalOpen(true);
+            }}
+            style={{
+              marginTop: 10,
+              padding: "6px 12px",
+              fontSize: "0.72rem",
+              fontWeight: 700,
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              color: "#cce4d8",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              width: "100%",
+              justifyContent: "center",
+            }}
+          >
+            <Settings2 size={13} />
+            <span>Request Profile Update</span>
+          </button>
+          {instructor?.moderationStatus === "Pending Review" && (
+            <span style={{ marginTop: 6, fontSize: "0.68rem", color: "#fef08a", fontWeight: 700 }}>
+              ● Profile changes under review
+            </span>
+          )}
+          {instructor?.moderationStatus === "Changes Requested" && (
+            <span style={{ marginTop: 6, fontSize: "0.68rem", color: "#fca5a5", fontWeight: 700 }}>
+              ● Admin: {instructor.adminFeedback || "Revisions needed"}
+            </span>
+          )}
+        </div>
         <nav className="tm3-workspace-nav" aria-label="Instructor workspace">
           <button type="button" className={view === "home" ? "is-active" : ""} onClick={goHome}><LayoutDashboard size={18} /><span>Overview</span></button>
           <button type="button" className={view === "calendar" ? "is-active" : ""} onClick={goCalendar}><CalendarDays size={18} /><span>Calendar</span></button>
@@ -210,7 +303,12 @@ export default function InstructorPortal() {
                   </button>
                 ))}
               </div>
-              {tab === "curriculum" && <CourseCurriculumStudio course={selectedCourse} />}
+              {tab === "curriculum" && (
+                <CourseCurriculumStudio
+                  course={selectedCourse}
+                  onSubmitForReview={submitCourseForReview}
+                />
+              )}
               {tab === "stream" && <CourseStream items={courseItems.filter((item) => item.type === "announcement" || item.type === "recording")} schedules={courseSchedules} course={selectedCourse} onCreate={() => setComposerOpen(true)} onDelete={deleteItem} />}
               {tab === "classwork" && <CourseClasswork items={courseItems.filter((item) => item.type !== "announcement")} submissions={courseSubmissions} onCreate={() => setComposerOpen(true)} onDelete={deleteItem} />}
               {tab === "people" && <CoursePeople students={courseStudents} attendance={courseAttendance} />}
@@ -222,6 +320,16 @@ export default function InstructorPortal() {
 
       {composerOpen && selectedCourse && <ComposerModal draft={draft} setDraft={setDraft} onUpload={uploadDraft} onClose={() => { setComposerOpen(false); setDraft(emptyDraft); }} onPublish={publishItem} />}
       {scheduleOpen && selectedCourse && <ScheduleModal value={newSchedule} setValue={setNewSchedule} onClose={() => setScheduleOpen(false)} onSave={addSchedule} />}
+      {profileModalOpen && (
+        <ProfileEditModal
+          expertise={proposedExpertise}
+          setExpertise={setProposedExpertise}
+          bio={proposedBio}
+          setBio={setProposedBio}
+          onClose={() => setProfileModalOpen(false)}
+          onSubmit={submitProfileUpdateRequest}
+        />
+      )}
     </main>
   );
 }
@@ -269,7 +377,78 @@ function ScheduleModal({ value, setValue, onClose, onSave }: { value: { date: st
   return <div className="tm3-modal-backdrop"><div className="tm3-modal" role="dialog" aria-modal="true"><div className="tm3-modal__head"><div><span className="tm3-eyebrow">Live learning</span><h2>Schedule a class</h2></div><button type="button" onClick={onClose}><X size={20} /></button></div><div className="tm3-form-grid"><label className="tm3-field"><span>Date</span><input type="date" value={value.date} onChange={(event) => setValue((current) => ({ ...current, date: event.target.value }))} /></label><label className="tm3-field"><span>Time</span><input type="time" value={value.time} onChange={(event) => setValue((current) => ({ ...current, time: event.target.value }))} /></label><label className="tm3-field tm3-field--full"><span>Session title / note</span><input value={value.note} onChange={(event) => setValue((current) => ({ ...current, note: event.target.value }))} placeholder="e.g. Live problem-solving studio" /></label></div><div className="tm3-modal__actions"><button className="tm3-button tm3-button--outline" type="button" onClick={onClose}>Cancel</button><button className="tm3-button tm3-button--dark" type="button" onClick={onSave}><CalendarDays size={16} /> Add to schedule</button></div></div></div>;
 }
 
-function CourseCurriculumStudio({ course }: { course: Course }) {
+function ProfileEditModal({
+  expertise,
+  setExpertise,
+  bio,
+  setBio,
+  onClose,
+  onSubmit,
+}: {
+  expertise: string;
+  setExpertise: Dispatch<SetStateAction<string>>;
+  bio: string;
+  setBio: Dispatch<SetStateAction<string>>;
+  onClose: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <div className="tm3-modal-backdrop" role="presentation">
+      <div className="tm3-modal" role="dialog" aria-modal="true">
+        <div className="tm3-modal__head">
+          <div>
+            <span className="tm3-eyebrow">Instructor Profile Governance</span>
+            <h2>Request Profile & Expertise Update</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close">
+            <X size={20} />
+          </button>
+        </div>
+        <p style={{ margin: "0 0 16px", color: "var(--tm3-text-soft)", fontSize: "0.82rem", lineHeight: 1.5 }}>
+          In accordance with TerraMatrix Academy quality standards, all changes to instructor technical expertise tags and official biographies are verified by the Academy Administration before being reflected on the public instructors page.
+        </p>
+        <div className="tm3-form-grid">
+          <label className="tm3-field tm3-field--full">
+            <span>Specialized Tool Expertise (comma-separated, max 3-5 key tools)</span>
+            <input
+              value={expertise}
+              onChange={(e) => setExpertise(e.target.value)}
+              placeholder="e.g. Remote Sensing, QGIS, Satellite Image Processing, Google Earth Engine"
+            />
+            <small style={{ color: "var(--tm3-text-soft)", fontSize: "0.72rem" }}>
+              Public instructor cards will display the top 3 badges cleanly with a count badge for additional tags.
+            </small>
+          </label>
+          <label className="tm3-field tm3-field--full">
+            <span>Professional Biography / Research Summary</span>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Outline your engineering background, consulting engagements, and key technical capabilities..."
+              rows={4}
+            />
+          </label>
+        </div>
+        <div className="tm3-modal__actions">
+          <button className="tm3-button tm3-button--outline" type="button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="tm3-button tm3-button--gold" type="button" onClick={onSubmit}>
+            <Send size={16} /> Submit Request for Approval
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CourseCurriculumStudio({
+  course,
+  onSubmitForReview,
+}: {
+  course: Course;
+  onSubmitForReview?: (id: number) => void;
+}) {
   const [expandedModules, setExpandedModules] = useState<Record<number, boolean>>({
     1: true,
     2: true,
@@ -383,6 +562,77 @@ function CourseCurriculumStudio({ course }: { course: Course }) {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
+      {/* Moderation & Accreditation Status Alert */}
+      {course.moderationStatus === "Pending Review" && (
+        <div style={{ padding: "16px 20px", borderRadius: 14, background: "rgba(234, 179, 8, 0.12)", border: "1px solid rgba(234, 179, 8, 0.35)", color: "#fef08a", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Clock3 size={22} style={{ color: "#facc15", flexShrink: 0 }} />
+            <div>
+              <strong style={{ fontSize: "0.92rem", display: "block" }}>Under Academy Moderation & Quality Review</strong>
+              <p style={{ margin: "2px 0 0", fontSize: "0.8rem", color: "#fef9c3" }}>
+                This course curriculum and specification has been submitted to the TerraMatrix Admin for accreditation against the 7-Point Quality Standards.
+              </p>
+            </div>
+          </div>
+          <span className="tm3-badge tm3-badge--gold">Pending Review</span>
+        </div>
+      )}
+
+      {course.moderationStatus === "Changes Requested" && (
+        <div style={{ padding: "16px 20px", borderRadius: 14, background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.35)", color: "#fca5a5", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <AlertCircle size={22} style={{ color: "#ef4444", flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <strong style={{ fontSize: "0.92rem", display: "block", color: "#fee2e2" }}>Revisions Requested by Academy Admin</strong>
+              <p style={{ margin: "4px 0 0", fontSize: "0.82rem", color: "#fecaca", lineHeight: 1.5 }}>
+                Admin Feedback: <em>"{course.adminReviewComment || "Please update syllabus to meet the 10 contact hours requirement and include reproducible computational notebooks."}"</em>
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="tm3-button tm3-button--gold"
+            onClick={() => onSubmitForReview?.(course.id)}
+            style={{ padding: "8px 16px", fontSize: "0.8rem", whiteSpace: "nowrap" }}
+          >
+            <Send size={15} /> Resubmit with Revisions
+          </button>
+        </div>
+      )}
+
+      {(course.moderationStatus === "Approved" || (!course.moderationStatus && course.status === "Published")) && (
+        <div style={{ padding: "14px 20px", borderRadius: 14, background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#a7f3d0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <CheckCircle2 size={22} style={{ color: "var(--tm3-lime)", flexShrink: 0 }} />
+            <div>
+              <strong style={{ fontSize: "0.9rem" }}>Accredited & Published on TerraMatrix Academy</strong>
+              <p style={{ margin: "2px 0 0", fontSize: "0.78rem", color: "#d1fae5" }}>
+                Course meets TerraMatrix MOOC quality criteria and is live on the public course catalogue.
+              </p>
+            </div>
+          </div>
+          <span className="tm3-badge tm3-badge--green">Accredited</span>
+        </div>
+      )}
+
+      {(!course.moderationStatus || course.moderationStatus === "Draft") && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14, padding: "16px 20px", borderRadius: 14, background: "var(--tm3-surface)", border: "1px solid var(--tm3-border)" }}>
+          <div>
+            <strong style={{ fontSize: "0.92rem", display: "block" }}>Ready for Academic Rollout?</strong>
+            <p style={{ margin: "3px 0 0", fontSize: "0.8rem", color: "var(--tm3-text-soft)" }}>
+              Submit this course specification to the TerraMatrix Quality Review Committee for admin verification & accreditation.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="tm3-button tm3-button--gold"
+            onClick={() => onSubmitForReview?.(course.id)}
+          >
+            <ShieldCheck size={16} /> Submit Course for Approval
+          </button>
+        </div>
+      )}
+
       {/* 1. Quality Assurance Scorecard & Acceptance Status */}
       <section className="tm3-qa-card">
         <div className="tm3-qa-head">

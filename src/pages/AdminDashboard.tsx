@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { CSSProperties, ReactNode } from "react";
 import {
   Award,
   BookOpen,
   CalendarDays,
+  CheckSquare,
   CreditCard,
   FileText,
   GraduationCap,
@@ -16,6 +17,7 @@ import {
   MessageSquareText,
   PlayCircle,
   Settings2,
+  ShieldCheck,
   Sparkles,
   UploadCloud,
   UsersRound,
@@ -31,7 +33,18 @@ import {
   saveAdminMediaRecord,
   saveAdminRecord,
 } from "../lib/appsScriptApi";
-import { DEFAULT_COURSES, DEFAULT_INSTRUCTORS } from "../lib/catalogData";
+import {
+  DEFAULT_COURSES,
+  DEFAULT_INSTRUCTORS,
+  DEFAULT_VIDEOS,
+  DEFAULT_WEBINARS,
+  DEFAULT_WORKSHOPS,
+} from "../lib/catalogData";
+import {
+  AdminExamBankPanel,
+  AdminModerationPanel,
+  AdminProgrammesRolloutPanel,
+} from "../components/AdminModerationPanels";
 
 type EnquiryStatus =
   | "New Enquiry"
@@ -976,6 +989,9 @@ function csvEscape(value: string | number) {
 
 type AdminTab =
   | "overview"
+  | "moderation"
+  | "programmes"
+  | "exambank"
   | "levels"
   | "categories"
   | "themes"
@@ -992,6 +1008,9 @@ type AdminTab =
 
 const adminTabLabels: Record<AdminTab, string> = {
   overview: "Overview",
+  moderation: "Approvals & Moderation",
+  programmes: "Rollout & Offerings",
+  exambank: "Exam Prep Question Bank",
   levels: "Levels",
   categories: "Categories",
   themes: "Themes",
@@ -1034,6 +1053,48 @@ export default function AdminDashboard() {
   const [learningTools, setLearningTools] = useState<LearningTool[]>([]);
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [learningVideos, setLearningVideos] = useState<LearningVideo[]>(() => {
+    try {
+      const saved = localStorage.getItem("terramatrix_learning_videos");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch {}
+    return DEFAULT_VIDEOS as unknown as LearningVideo[];
+  });
+
+  const [webinars, setWebinars] = useState<AcademyEvent[]>(() => {
+    try {
+      const saved = localStorage.getItem("terramatrix_webinars");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch {}
+    return DEFAULT_WEBINARS as unknown as AcademyEvent[];
+  });
+
+  const [workshops, setWorkshops] = useState<AcademyEvent[]>(() => {
+    try {
+      const saved = localStorage.getItem("terramatrix_workshops");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch {}
+    return DEFAULT_WORKSHOPS as unknown as AcademyEvent[];
+  });
+
+  const pendingModerationCount = useMemo(() => {
+    const coursePending = courses.filter((c) => (c as unknown as Record<string, unknown>).moderationStatus === "Pending Review").length;
+    const videoPending = learningVideos.filter((v) => (v as unknown as Record<string, unknown>).moderationStatus === "Pending Review").length;
+    const instructorPending = instructors.filter(
+      (ins) => (ins as unknown as Record<string, unknown>).moderationStatus === "Pending Review" || (ins as unknown as Record<string, unknown>).pendingExpertise
+    ).length;
+    return coursePending + videoPending + instructorPending;
+  }, [courses, learningVideos, instructors]);
+
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("overview");
   const [adminLearningMenuOpen, setAdminLearningMenuOpen] = useState(false);
@@ -1743,6 +1804,47 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="tm3-workspace-nav" aria-label="Admin workspace navigation">
+          <div className="tm3-sidebar-group-title">Governance & Rollout</div>
+          <button
+            type="button"
+            className={activeAdminTab === "moderation" ? "is-active" : ""}
+            onClick={() => setActiveAdminTab("moderation")}
+          >
+            <ShieldCheck size={18} />
+            <span>Approvals & Moderation</span>
+            {pendingModerationCount > 0 && (
+              <span
+                style={{
+                  marginLeft: "auto",
+                  padding: "2px 7px",
+                  borderRadius: 99,
+                  background: "var(--tm3-gold)",
+                  color: "#1c1917",
+                  fontSize: "0.68rem",
+                  fontWeight: 800,
+                }}
+              >
+                {pendingModerationCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={activeAdminTab === "programmes" ? "is-active" : ""}
+            onClick={() => setActiveAdminTab("programmes")}
+          >
+            <Layers size={18} />
+            <span>Rollout & Offerings</span>
+          </button>
+          <button
+            type="button"
+            className={activeAdminTab === "exambank" ? "is-active" : ""}
+            onClick={() => setActiveAdminTab("exambank")}
+          >
+            <CheckSquare size={18} />
+            <span>Exam Prep Question Bank</span>
+          </button>
+
           <div className="tm3-sidebar-group-title">Analytics</div>
           <button type="button" className={activeAdminTab === "overview" ? "is-active" : ""} onClick={() => setActiveAdminTab("overview")}>
             <LayoutDashboard size={18} />
@@ -1840,6 +1942,45 @@ export default function AdminDashboard() {
         </header>
 
         <div className="tm3-workspace-content" style={{ padding: "24px 28px" }}>
+
+      {activeAdminTab === "moderation" && (
+        <AdminModerationPanel
+          courses={courses as unknown as Course[]}
+          onUpdateCourses={(updated) => setCourses(updated as unknown as Course[])}
+          instructors={instructors as unknown as Instructor[]}
+          onUpdateInstructors={(updated) => setInstructors(updated as unknown as Instructor[])}
+          videos={learningVideos as unknown as LearningVideo[]}
+          onUpdateVideos={(updated) => setLearningVideos(updated as unknown as LearningVideo[])}
+          onSelectTab={(tab) => {
+            if (tab === "courses") setActiveAdminTab("courses");
+            if (tab === "videos") setActiveAdminTab("videos");
+            if (tab === "instructors") setActiveAdminTab("instructors");
+          }}
+        />
+      )}
+
+      {activeAdminTab === "programmes" && (
+        <AdminProgrammesRolloutPanel
+          courses={courses as unknown as Course[]}
+          onUpdateCourses={(updated) => setCourses(updated as unknown as Course[])}
+          workshops={workshops as unknown as AcademyEvent[]}
+          onUpdateWorkshops={(updated) => setWorkshops(updated as unknown as AcademyEvent[])}
+          webinars={webinars as unknown as AcademyEvent[]}
+          onUpdateWebinars={(updated) => setWebinars(updated as unknown as AcademyEvent[])}
+          videos={learningVideos as unknown as LearningVideo[]}
+          onUpdateVideos={(updated) => setLearningVideos(updated as unknown as LearningVideo[])}
+          onSelectTab={(tab) => {
+            if (tab === "courses") setActiveAdminTab("courses");
+            if (tab === "workshops") setActiveAdminTab("workshops");
+            if (tab === "webinars") setActiveAdminTab("webinars");
+            if (tab === "videos") setActiveAdminTab("videos");
+          }}
+        />
+      )}
+
+      {activeAdminTab === "exambank" && (
+        <AdminExamBankPanel />
+      )}
 
       {activeAdminTab === "overview" && (
       <section className="tm3-admin-overview" style={overviewSection}>
