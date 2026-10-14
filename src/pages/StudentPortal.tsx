@@ -213,6 +213,9 @@ export default function StudentPortal() {
                                 <span style={{ fontSize: 11, color: "var(--tm3-muted)", fontWeight: 700 }}>{course?.level || "Professional"}</span>
                               </div>
                               <h3 style={{ margin: "4px 0 2px" }}>{course ? deriveShortTitle(course) : enrollment.courseTitle}</h3>
+                              {course?.title && course.title !== deriveShortTitle(course) && (
+                                <div className="tm3-course-card__full-title" style={{ margin: "0 0 6px" }}>{course.title}</div>
+                              )}
                               <p>{course?.instructorName || "TerraMatrix Instructor"} · {course?.duration || "Duration TBA"} hrs</p>
                               <div className="tm3-learning-item__progress">
                                 <span style={{ width: `${progress}%` }} />
@@ -270,7 +273,7 @@ export default function StudentPortal() {
                 <div className="tm3-learning-list">
                   {enrollments.map((enrollment: Enrollment) => {
                     const course = courseFor(enrollment); const progress = progressFor(enrollment.status);
-                    return <article className="tm3-learning-item" key={enrollment.id}><div className="tm3-learning-item__image" style={{ backgroundImage: `url('${course?.imageUrl || heroImage}')` }} /><div><Badge tone={enrollment.status === "Enrolled" ? "green" : "gold"}>{enrollment.status}</Badge><h3>{course ? deriveShortTitle(course) : enrollment.courseTitle}</h3><p>{course?.category || "Programme"} · {course?.mode || "Mode TBA"} · {course?.duration || "Duration TBA"} hrs</p><div className="tm3-learning-item__progress"><span style={{ width: `${progress}%` }} /></div></div><Link className="tm3-button tm3-button--dark" to={`/student-classroom/${course?.id || enrollment.courseId}`}>Open classroom <ChevronRight size={15} /></Link></article>;
+                    return <article className="tm3-learning-item" key={enrollment.id}><div className="tm3-learning-item__image" style={{ backgroundImage: `url('${course?.imageUrl || heroImage}')` }} /><div><Badge tone={enrollment.status === "Enrolled" ? "green" : "gold"}>{enrollment.status}</Badge><h3>{course ? deriveShortTitle(course) : enrollment.courseTitle}</h3>{course?.title && course.title !== deriveShortTitle(course) && <div className="tm3-course-card__full-title" style={{ margin: "0 0 6px" }}>{course.title}</div>}<p>{course?.category || "Programme"} · {course?.mode || "Mode TBA"} · {course?.duration || "Duration TBA"} hrs</p><div className="tm3-learning-item__progress"><span style={{ width: `${progress}%` }} /></div></div><Link className="tm3-button tm3-button--dark" to={`/student-classroom/${course?.id || enrollment.courseId}`}>Open classroom <ChevronRight size={15} /></Link></article>;
                   })}
                 </div>
               )}

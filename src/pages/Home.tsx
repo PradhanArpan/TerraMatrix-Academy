@@ -361,6 +361,9 @@ export default function Home() {
                     <div className="tm3-programme-card__body">
                       <div className="tm3-badge-row"><Badge tone="green">{course.level}</Badge><Badge>{course.mode}</Badge></div>
                       <h3>{deriveShortTitle(course)}</h3>
+                      {course.title && course.title !== deriveShortTitle(course) && (
+                        <div className="tm3-course-card__full-title">{course.title}</div>
+                      )}
                       <p>{course.description}</p>
                       <div className="tm3-programme-card__meta">
                         <span><CalendarDays size={14} /> {formatDate(course.startDate)}</span>

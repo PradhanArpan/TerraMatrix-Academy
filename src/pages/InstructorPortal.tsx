@@ -2,14 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
+  AlertCircle,
   BarChart3,
   BookOpen,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
   ClipboardCheck,
   Clock3,
+  Code,
+  Download,
   FileText,
+  Layers,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -19,14 +24,23 @@ import {
   Plus,
   Send,
   Settings2,
+  ShieldCheck,
+  Sparkles,
   Users,
   Video,
   X,
+  XCircle,
 } from "lucide-react";
 import logo from "../assets/terramatrix-logo.png";
 import heroImage from "../assets/hero-dam.jpg";
 import { Badge, EmptyState } from "../components/Ui";
 import { deriveShortTitle, formatDate, loadCourses, loadInstructors, normalizePublicAssetPath, type Course, type Instructor } from "../lib/catalogData";
+import {
+  STATISTICS_MOOC_CURRICULUM,
+  auditCourseEligibility,
+  type MoocModule,
+  type CourseQaAudit,
+} from "../lib/moocCurriculum";
 
 type InstructorLogin = { id?: number; name: string; email: string; phone?: string };
 type Enrollment = { id: number; courseId: number; courseTitle: string; name: string; email: string; phone: string; organisation: string; enrolledAt: string; status: string };
@@ -36,7 +50,7 @@ type Submission = { id: number; courseId: number; itemId: number; email: string;
 type Attendance = { id: number; courseId: number; email: string; phone: string; markedAt: string };
 type Schedule = { id: number; courseId: number; date: string; time: string; note: string };
 type ViewKey = "home" | "calendar" | "course";
-type CourseTab = "stream" | "classwork" | "people" | "analytics";
+type CourseTab = "curriculum" | "stream" | "classwork" | "people" | "analytics";
 
 type Draft = { type: ClassworkType; title: string; instructions: string; link: string; dueDate: string; fileName: string; fileData: string };
 const emptyDraft: Draft = { type: "announcement", title: "", instructions: "", link: "", dueDate: "", fileName: "", fileData: "" };
@@ -62,7 +76,7 @@ export default function InstructorPortal() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [view, setView] = useState<ViewKey>("home");
-  const [tab, setTab] = useState<CourseTab>("stream");
+  const [tab, setTab] = useState<CourseTab>("curriculum");
   const [items, setItems] = useState<ClassworkItem[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -105,7 +119,7 @@ export default function InstructorPortal() {
   const assignmentCount = courseItems.filter((item) => item.type === "assignment").length;
   const completionRate = courseStudents.length ? Math.round((courseStudents.filter((item) => /completed|certificate/i.test(item.status)).length / courseStudents.length) * 100) : 0;
 
-  const openCourse = (id: number) => { setSelectedId(id); setView("course"); setTab("stream"); };
+  const openCourse = (id: number) => { setSelectedId(id); setView("course"); setTab("curriculum"); };
   const goHome = () => { setSelectedId(null); setView("home"); };
   const goCalendar = () => { setSelectedId(null); setView("calendar"); };
 
@@ -170,8 +184,33 @@ export default function InstructorPortal() {
                 <div><Badge tone="gold">{selectedCourse.status}</Badge><h2>{selectedCourse.title}</h2><p>{selectedCourse.description}</p><div className="tm3-hero__proof"><span><Users size={16} /> {courseStudents.length} learners</span><span><ClipboardCheck size={16} /> {assignmentCount} assignments</span><span><CalendarDays size={16} /> {courseSchedules.length} scheduled classes</span></div></div>
               </section>
               <div className="tm3-course-tabs" role="tablist">
-                {(["stream", "classwork", "people", "analytics"] as CourseTab[]).map((key) => <button type="button" role="tab" aria-selected={tab === key} className={tab === key ? "is-active" : ""} key={key} onClick={() => setTab(key)}>{key === "stream" ? <Megaphone size={17} /> : key === "classwork" ? <BookOpen size={17} /> : key === "people" ? <Users size={17} /> : <BarChart3 size={17} />}{key.charAt(0).toUpperCase() + key.slice(1)}</button>)}
+                {(["curriculum", "stream", "classwork", "people", "analytics"] as CourseTab[]).map((key) => (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === key}
+                    className={tab === key ? "is-active" : ""}
+                    key={key}
+                    onClick={() => setTab(key)}
+                  >
+                    {key === "curriculum" ? (
+                      <Layers size={17} />
+                    ) : key === "stream" ? (
+                      <Megaphone size={17} />
+                    ) : key === "classwork" ? (
+                      <BookOpen size={17} />
+                    ) : key === "people" ? (
+                      <Users size={17} />
+                    ) : (
+                      <BarChart3 size={17} />
+                    )}
+                    {key === "curriculum"
+                      ? "Curriculum & QA"
+                      : key.charAt(0).toUpperCase() + key.slice(1)}
+                  </button>
+                ))}
               </div>
+              {tab === "curriculum" && <CourseCurriculumStudio course={selectedCourse} />}
               {tab === "stream" && <CourseStream items={courseItems.filter((item) => item.type === "announcement" || item.type === "recording")} schedules={courseSchedules} course={selectedCourse} onCreate={() => setComposerOpen(true)} onDelete={deleteItem} />}
               {tab === "classwork" && <CourseClasswork items={courseItems.filter((item) => item.type !== "announcement")} submissions={courseSubmissions} onCreate={() => setComposerOpen(true)} onDelete={deleteItem} />}
               {tab === "people" && <CoursePeople students={courseStudents} attendance={courseAttendance} />}
@@ -192,7 +231,7 @@ function InstructorHome({ courses, enrollments, submissions, totalStudents, onOp
   return <>
     <section className="tm3-dashboard-hero tm3-dashboard-hero--instructor"><div><div className="tm3-eyebrow tm3-eyebrow--light">Teaching intelligence</div><h2>Shape learning. Track progress. Build capability.</h2><p>Manage every class, resource, assignment and learner interaction from one focused workspace.</p></div><div className="tm3-instructor-today"><CalendarDays size={22} /><span>Today</span><strong>{today}</strong></div></section>
     <div className="tm3-stat-grid"><div className="tm3-stat-card"><span>Assigned programmes</span><strong>{courses.length}</strong></div><div className="tm3-stat-card"><span>Unique learners</span><strong>{totalStudents}</strong></div><div className="tm3-stat-card"><span>Submissions</span><strong>{submissions.length}</strong></div><div className="tm3-stat-card"><span>Active enrolments</span><strong>{enrollments.filter((item) => item.status === "Enrolled").length}</strong></div></div>
-    <section className="tm3-dashboard-section tm3-dashboard-section--wide"><div className="tm3-dashboard-section__head"><div><span className="tm3-eyebrow">My programmes</span><h2>Teaching portfolio</h2></div></div>{courses.length ? <div className="tm3-instructor-course-grid">{courses.map((course) => { const count = enrollments.filter((item) => item.courseId === course.id).length; return <article key={course.id}><div className="tm3-instructor-course-card__image" style={{ backgroundImage: `linear-gradient(to top,rgba(5,35,29,.82),transparent),url('${normalizePublicAssetPath(course.imageUrl, heroImage) || heroImage}')` }}><Badge tone="gold">{course.status}</Badge><h3>{deriveShortTitle(course)}</h3></div><div><span>{course.category}</span><strong>{count} learner{count === 1 ? "" : "s"}</strong><button type="button" onClick={() => onOpen(course.id)}>Open classroom <ChevronRight size={17} /></button></div></article>; })}</div> : <EmptyState title="No assigned programmes" description="The academy administrator can assign courses to your instructor profile." />}</section>
+    <section className="tm3-dashboard-section tm3-dashboard-section--wide"><div className="tm3-dashboard-section__head"><div><span className="tm3-eyebrow">My programmes</span><h2>Teaching portfolio</h2></div></div>{courses.length ? <div className="tm3-instructor-course-grid">{courses.map((course) => { const count = enrollments.filter((item) => item.courseId === course.id).length; return <article key={course.id}><div className="tm3-instructor-course-card__image" style={{ backgroundImage: `linear-gradient(to top,rgba(5,35,29,.82),transparent),url('${normalizePublicAssetPath(course.imageUrl, heroImage) || heroImage}')` }}><Badge tone="gold">{course.status}</Badge><h3>{deriveShortTitle(course)}</h3>{course.title && course.title !== deriveShortTitle(course) && <div className="tm3-course-card__full-title" style={{ color: "#c5d9d1", margin: "2px 0 0" }}>{course.title}</div>}</div><div><span>{course.category}</span><strong>{count} learner{count === 1 ? "" : "s"}</strong><button type="button" onClick={() => onOpen(course.id)}>Open classroom <ChevronRight size={17} /></button></div></article>; })}</div> : <EmptyState title="No assigned programmes" description="The academy administrator can assign courses to your instructor profile." />}</section>
   </>;
 }
 
@@ -228,4 +267,364 @@ function ComposerModal({ draft, setDraft, onUpload, onClose, onPublish }: { draf
 
 function ScheduleModal({ value, setValue, onClose, onSave }: { value: { date: string; time: string; note: string }; setValue: Dispatch<SetStateAction<{ date: string; time: string; note: string }>>; onClose: () => void; onSave: () => void }) {
   return <div className="tm3-modal-backdrop"><div className="tm3-modal" role="dialog" aria-modal="true"><div className="tm3-modal__head"><div><span className="tm3-eyebrow">Live learning</span><h2>Schedule a class</h2></div><button type="button" onClick={onClose}><X size={20} /></button></div><div className="tm3-form-grid"><label className="tm3-field"><span>Date</span><input type="date" value={value.date} onChange={(event) => setValue((current) => ({ ...current, date: event.target.value }))} /></label><label className="tm3-field"><span>Time</span><input type="time" value={value.time} onChange={(event) => setValue((current) => ({ ...current, time: event.target.value }))} /></label><label className="tm3-field tm3-field--full"><span>Session title / note</span><input value={value.note} onChange={(event) => setValue((current) => ({ ...current, note: event.target.value }))} placeholder="e.g. Live problem-solving studio" /></label></div><div className="tm3-modal__actions"><button className="tm3-button tm3-button--outline" type="button" onClick={onClose}>Cancel</button><button className="tm3-button tm3-button--dark" type="button" onClick={onSave}><CalendarDays size={16} /> Add to schedule</button></div></div></div>;
+}
+
+function CourseCurriculumStudio({ course }: { course: Course }) {
+  const [expandedModules, setExpandedModules] = useState<Record<number, boolean>>({
+    1: true,
+    2: true,
+    3: false,
+    4: false,
+    5: false,
+    6: false,
+    7: false,
+    8: false,
+  });
+  const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
+  const [downloadNotice, setDownloadNotice] = useState(false);
+
+  const modules: MoocModule[] = useMemo(() => {
+    if (course.id === 6 || /statistics/i.test(course.title)) {
+      return STATISTICS_MOOC_CURRICULUM;
+    }
+    const outcomesList = (course.outcomes || "")
+      .split(/[;\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    return [
+      {
+        id: 1,
+        number: "01",
+        title: "Foundations, Theoretical Mechanics & Formulations",
+        summary: outcomesList[0] || "Governing mathematical models, standard codes and initial assumptions.",
+        topics: [
+          {
+            id: "t1-1",
+            title: "Foundational Theory & Mechanics",
+            summary: "Overview of physical behavior and governing equations.",
+            units: [
+              { id: "u1-1", title: "Introduction & Theoretical Framework", type: "video", durationMinutes: 35, durationLabel: "35 min", summary: `Core mechanics and theoretical derivation for ${course.title}.` },
+              { id: "u1-2", title: "Formulations & Code Reference Notes", type: "reading", durationMinutes: 25, durationLabel: "25 min", summary: "Design standard limits, load combinations, and safety factors." },
+              { id: "u1-3", title: "Foundations Diagnostic Quiz", type: "quiz", durationMinutes: 20, durationLabel: "20 min", summary: "Formative evaluation on fundamentals and standard code provisions." },
+            ],
+          },
+        ],
+      },
+      {
+        id: 2,
+        number: "02",
+        title: "Computational Modeling & Solver Discretization",
+        summary: outcomesList[1] || "Discretization, grid generation, boundary conditions and numerical convergence.",
+        topics: [
+          {
+            id: "t2-1",
+            title: "Model Setup & Grid Mechanics",
+            summary: "Translating engineering problem into simulation software.",
+            units: [
+              { id: "u2-1", title: "Software Workspace & Boundary Initialization", type: "video", durationMinutes: 45, durationLabel: "45 min", summary: "Hands-on walkthrough configuring solver parameters." },
+              { id: "u2-2", title: course.materialTitle || "Applied Software Lab & Scripts", type: "lab", durationMinutes: 50, durationLabel: "50 min", summary: course.materialDescription || "Convergence inspection and sanity checks.", fileName: course.materialFileName || "Lab_Files.zip" },
+              { id: "u2-3", title: "Computational Problem Set #1", type: "assignment", durationMinutes: 60, durationLabel: "60 min", summary: "Submit discretization results and verification notes." },
+            ],
+          },
+        ],
+      },
+      {
+        id: 3,
+        number: "03",
+        title: "Compliance Checking, Optimization & Detailing",
+        summary: outcomesList[2] || "Serviceability limits, safety factors, and failure mode mitigation.",
+        topics: [
+          {
+            id: "t3-1",
+            title: "Design Compliance & Optimization",
+            summary: "Interpreting output matrices against standard engineering codes.",
+            units: [
+              { id: "u3-1", title: "Design Code Compliance & Detailing Rules", type: "reading", durationMinutes: 40, durationLabel: "40 min", summary: "Code-mandated safety margins and reinforcement/geometry detailing." },
+              { id: "u3-2", title: "Advanced Problem Formulation & Lab", type: "lab", durationMinutes: 55, durationLabel: "55 min", summary: "Iterative optimization and sensitivity analysis." },
+              { id: "u3-3", title: "Mid-Term Technical Evaluation Quiz", type: "quiz", durationMinutes: 25, durationLabel: "25 min", summary: "Assessment on design criteria and code limits." },
+            ],
+          },
+        ],
+      },
+      {
+        id: 4,
+        number: "04",
+        title: "Capstone Deliverable & Portfolio Project",
+        summary: outcomesList[3] || "Comprehensive engineering report, calculations, and drawing deliverables.",
+        topics: [
+          {
+            id: "t4-1",
+            title: "Real-World Engineering Capstone",
+            summary: "End-to-end design project submitted for peer and instructor review.",
+            units: [
+              { id: "u4-1", title: "Capstone Project Brief & Industry Specifications", type: "reading", durationMinutes: 30, durationLabel: "30 min", summary: course.assignmentInstructions || "Detailed project requirements, input parameters, and deliverables." },
+              { id: "u4-2", title: course.assignmentTitle || "Capstone Submission & Verification Report", type: "assignment", durationMinutes: 120, durationLabel: "120 min", summary: "Submit engineering calculations, drawings, and executive summary." },
+            ],
+          },
+        ],
+      },
+    ];
+  }, [course]);
+
+  const audit: CourseQaAudit = useMemo(() => auditCourseEligibility(modules), [modules]);
+
+  const downloadSyllabusJson = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ courseTitle: course.title, audit, modules }, null, 2));
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `${deriveShortTitle(course).replace(/\s+/g, "_")}_Curriculum_Spec.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    setDownloadNotice(true);
+    setTimeout(() => setDownloadNotice(false), 3500);
+  };
+
+  return (
+    <div style={{ display: "grid", gap: 24 }}>
+      {/* 1. Quality Assurance Scorecard & Acceptance Status */}
+      <section className="tm3-qa-card">
+        <div className="tm3-qa-head">
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ display: "grid", placeItems: "center", width: 44, height: 44, borderRadius: 14, background: "rgba(214,245,109,.15)", color: "var(--tm3-lime)" }}>
+              <ShieldCheck size={26} />
+            </span>
+            <div>
+              <span className="tm3-eyebrow tm3-eyebrow--light" style={{ margin: 0 }}>
+                TerraMatrix Academy · Accreditation & Acceptance Standards
+              </span>
+              <h3>Course Quality Assurance (QA) Engine</h3>
+            </div>
+          </div>
+          <div className="tm3-qa-score-badge">
+            <Sparkles size={16} />
+            <span>{audit.score}% QA Compliance · {audit.status}</span>
+          </div>
+        </div>
+
+        {/* Metric Pills */}
+        <div className="tm3-qa-metrics">
+          <div className="tm3-qa-metric-pill">
+            <span>Academic Contact</span>
+            <strong>{audit.totalHours} hrs</strong>
+            <small style={{ color: "#a4c4b8", fontSize: "0.68rem" }}>{audit.totalDurationMinutes} mins</small>
+          </div>
+          <div className="tm3-qa-metric-pill">
+            <span>Structure</span>
+            <strong>{audit.moduleCount} Modules</strong>
+            <small style={{ color: "#a4c4b8", fontSize: "0.68rem" }}>{audit.topicCount} Topics</small>
+          </div>
+          <div className="tm3-qa-metric-pill">
+            <span>Content Units</span>
+            <strong>{audit.unitCount} Units</strong>
+            <small style={{ color: "#a4c4b8", fontSize: "0.68rem" }}>Structured delivery</small>
+          </div>
+          <div className="tm3-qa-metric-pill">
+            <span>Video Lectures</span>
+            <strong>{audit.videoCount} Videos</strong>
+            <small style={{ color: "#a4c4b8", fontSize: "0.68rem" }}>High-def recorded</small>
+          </div>
+          <div className="tm3-qa-metric-pill">
+            <span>Handouts / Notes</span>
+            <strong>{audit.readingCount} Notes</strong>
+            <small style={{ color: "#a4c4b8", fontSize: "0.68rem" }}>Scientific readings</small>
+          </div>
+          <div className="tm3-qa-metric-pill">
+            <span>Concept Quizzes</span>
+            <strong>{audit.quizCount} Quizzes</strong>
+            <small style={{ color: "#a4c4b8", fontSize: "0.68rem" }}>Formative checks</small>
+          </div>
+          <div className="tm3-qa-metric-pill">
+            <span>Assignments / Labs</span>
+            <strong>{audit.assignmentCount} Labs</strong>
+            <small style={{ color: "#a4c4b8", fontSize: "0.68rem" }}>Hands-on problem sets</small>
+          </div>
+        </div>
+
+        {/* 7-Point Compliance Matrix */}
+        <div className="tm3-qa-checklist-grid">
+          {audit.checklist.map((item) => (
+            <div className={`tm3-qa-check-item is-${item.status}`} key={item.id}>
+              <span className="tm3-qa-check-icon">
+                {item.status === "pass" ? (
+                  <CheckCircle2 size={16} />
+                ) : item.status === "warn" ? (
+                  <AlertCircle size={16} />
+                ) : (
+                  <XCircle size={16} />
+                )}
+              </span>
+              <div className="tm3-qa-check-body">
+                <strong>{item.criterion}</strong>
+                <p>{item.description}</p>
+                <small>Requirement: {item.required} · Found: {item.found}</small>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 2. Actions & Guidance Bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800 }}>Course Curriculum & Pedagogical Map</h3>
+          <p style={{ margin: "4px 0 0", color: "var(--tm3-text-soft)", fontSize: "0.82rem" }}>
+            Review every module, topic, and learning unit scheduled for delivery to learners.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          {downloadNotice && <span style={{ color: "var(--tm3-success)", fontSize: 13, fontWeight: 700 }}>Specification downloaded!</span>}
+          <button type="button" className="tm3-button tm3-button--outline" onClick={downloadSyllabusJson}>
+            <Download size={16} /> Export Syllabus JSON
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Modular Curriculum Tree */}
+      <div className="tm3-curriculum-builder">
+        {modules.map((mod) => {
+          const isOpen = expandedModules[mod.id] ?? false;
+          const totalModUnits = mod.topics.reduce((acc, t) => acc + t.units.length, 0);
+          const totalModDuration = mod.topics.reduce((acc, t) => acc + t.units.reduce((uacc, u) => uacc + u.durationMinutes, 0), 0);
+
+          return (
+            <div className="tm3-mooc-module-card" key={mod.id}>
+              <div className="tm3-mooc-module-head" onClick={() => setExpandedModules((prev) => ({ ...prev, [mod.id]: !isOpen }))}>
+                <div className="tm3-mooc-module-head-left">
+                  <div className="tm3-mooc-module-number">{mod.number}</div>
+                  <div className="tm3-mooc-module-info">
+                    <h4>{mod.title}</h4>
+                    <p>{mod.summary}</p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: "0.78rem", color: "var(--tm3-text-soft)", fontWeight: 700 }}>
+                    {totalModUnits} units · {totalModDuration} mins
+                  </span>
+                  <ChevronDown size={18} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+                </div>
+              </div>
+
+              {isOpen && (
+                <div className="tm3-mooc-module-body">
+                  {mod.topics.map((topic) => (
+                    <div className="tm3-mooc-topic-block" key={topic.id}>
+                      <div className="tm3-mooc-topic-title">
+                        <h5>{topic.title}</h5>
+                        <small style={{ color: "var(--tm3-text-soft)", fontSize: "0.74rem" }}>{topic.units.length} learning units</small>
+                      </div>
+                      <div className="tm3-mooc-units-list">
+                        {topic.units.map((unit) => {
+                          const isUnitActive = activeUnitId === unit.id;
+                          return (
+                            <div key={unit.id} style={{ display: "grid", gap: 6 }}>
+                              <div
+                                className="tm3-mooc-unit-row"
+                                style={{ cursor: "pointer", border: isUnitActive ? "1px solid var(--tm3-primary)" : undefined }}
+                                onClick={() => setActiveUnitId(isUnitActive ? null : unit.id)}
+                              >
+                                <div className="tm3-mooc-unit-row-left">
+                                  <span className={`tm3-unit-type-pill tm3-unit-type-pill--${unit.type === "ref_video" ? "video" : unit.type}`}>
+                                    {unit.type}
+                                  </span>
+                                  <span>{unit.title}</span>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  <span className="tm3-unit-duration-pill">
+                                    <Clock3 size={12} style={{ verticalAlign: -1, marginRight: 4 }} />
+                                    {unit.durationLabel}
+                                  </span>
+                                  <ChevronRight size={15} style={{ transform: isUnitActive ? "rotate(90deg)" : "none", transition: "transform .2s" }} />
+                                </div>
+                              </div>
+
+                              {/* Unit Details & Code Snippet Drawer */}
+                              {isUnitActive && (
+                                <div style={{ padding: "14px 18px", borderRadius: 12, background: "var(--tm3-surface)", border: "1px solid var(--tm3-border)", fontSize: "0.82rem" }}>
+                                  <p style={{ margin: "0 0 10px", color: "var(--tm3-text)", lineHeight: 1.5 }}>{unit.summary}</p>
+                                  {unit.fileName && (
+                                    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 8, background: "var(--tm3-surface-muted)", color: "var(--tm3-primary)", fontWeight: 700, fontSize: "0.76rem", marginBottom: 10 }}>
+                                      <FileText size={14} /> {unit.fileName}
+                                    </div>
+                                  )}
+                                  {unit.contentSnippet && (
+                                    <div style={{ marginTop: 8 }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--tm3-text-soft)", fontSize: "0.72rem", fontWeight: 800, marginBottom: 4, textTransform: "uppercase" }}>
+                                        <Code size={13} /> Code / Analytical Script
+                                      </div>
+                                      <pre className="tm3-code-snippet" style={{ margin: 0, maxHeight: 180, overflow: "auto" }}>
+                                        <code>{unit.contentSnippet}</code>
+                                      </pre>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 4. TerraMatrix Academy Course Acceptance Criteria Guide */}
+      <section className="tm3-dashboard-section tm3-dashboard-section--wide" style={{ marginTop: 12 }}>
+        <div className="tm3-dashboard-section__head">
+          <div>
+            <span className="tm3-eyebrow">Academic Quality & Acceptance Policy</span>
+            <h2>Rules & Requirements for Course Acceptance on TerraMatrix Academy</h2>
+          </div>
+          <Badge tone="green">Accredited Technical Education</Badge>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          <div style={{ padding: 18, borderRadius: 16, background: "var(--tm3-surface)", border: "1px solid var(--tm3-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: 10, background: "var(--tm3-primary-soft)", color: "var(--tm3-primary)", fontWeight: 800 }}>1</span>
+              <strong style={{ fontSize: "0.92rem" }}>Academic Depth & Hours</strong>
+            </div>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--tm3-text-soft)", lineHeight: 1.55 }}>
+              Courses must feature a minimum of 10 contact hours (900+ minutes) across at least 4 progressive modules. Trivial crash courses under 5 hours are not eligible for certificate issuance.
+            </p>
+          </div>
+
+          <div style={{ padding: 18, borderRadius: 16, background: "var(--tm3-surface)", border: "1px solid var(--tm3-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: 10, background: "var(--tm3-primary-soft)", color: "var(--tm3-primary)", fontWeight: 800 }}>2</span>
+              <strong style={{ fontSize: "0.92rem" }}>Codes & Standards Grounding</strong>
+            </div>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--tm3-text-soft)", lineHeight: 1.55 }}>
+              All structural, geotechnical, hydraulic, and data courses must reference standard engineering codes (e.g., IS 456, IS 1893, Eurocodes, IRC, ASTM, or published peer-reviewed literature).
+            </p>
+          </div>
+
+          <div style={{ padding: 18, borderRadius: 16, background: "var(--tm3-surface)", border: "1px solid var(--tm3-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: 10, background: "var(--tm3-primary-soft)", color: "var(--tm3-primary)", fontWeight: 800 }}>3</span>
+              <strong style={{ fontSize: "0.92rem" }}>Reproducible Computational Labs</strong>
+            </div>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--tm3-text-soft)", lineHeight: 1.55 }}>
+              Theory alone is insufficient. Each module must provide verified code notebooks (Python/R), modeling project files (SAP2000, ETABS, HEC-RAS, Revit), or GIS layers with datasets.
+            </p>
+          </div>
+
+          <div style={{ padding: 18, borderRadius: 16, background: "var(--tm3-surface)", border: "1px solid var(--tm3-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: 10, background: "var(--tm3-primary-soft)", color: "var(--tm3-primary)", fontWeight: 800 }}>4</span>
+              <strong style={{ fontSize: "0.92rem" }}>Verified Capstone Deliverable</strong>
+            </div>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--tm3-text-soft)", lineHeight: 1.55 }}>
+              Learners must submit a comprehensive final project deliverable evaluated against a clear rubric. Only passing submissions unlock the blockchain-verifiable TerraMatrix Certificate.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }

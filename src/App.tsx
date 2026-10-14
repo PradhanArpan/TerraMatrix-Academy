@@ -199,7 +199,7 @@ function AppRoutes() {
         <>
           <div className="tm3-topline">
             <span>Engineering Intelligence Platform</span>
-            <span className="tm3-topline__message">Learn · Practice · Research · Collaborate · Certify</span>
+            <span className="tm3-topline__message">Learn · Practice · Certify</span>
             <Link to="/student">Explore programmes <ArrowUpRight size={14} /></Link>
           </div>
 

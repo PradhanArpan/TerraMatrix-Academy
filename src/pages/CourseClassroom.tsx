@@ -37,6 +37,7 @@ import logo from "../assets/terramatrix-logo.png";
 import heroImage from "../assets/hero-dam.jpg";
 import { Badge, EmptyState } from "../components/Ui";
 import { deriveShortTitle, formatDate, loadCourses, normalizePublicAssetPath, type Course } from "../lib/catalogData";
+import { STATISTICS_MOOC_CURRICULUM } from "../lib/moocCurriculum";
 
 type EnrollmentStatus = "Enrolled" | "Course Completed" | "Certificate Issued";
 type Enrollment = {
@@ -202,6 +203,51 @@ export default function CourseClassroom() {
   // Build the curriculum modules dynamically
   const modules: Module[] = useMemo(() => {
     if (!course) return [];
+
+    if (course.id === 6 || /statistics/i.test(course.title)) {
+      return STATISTICS_MOOC_CURRICULUM.map((mod) => {
+        const lessons: Lesson[] = [];
+        mod.topics.forEach((topic) => {
+          topic.units.forEach((u) => {
+            const mappedType: LessonType =
+              u.type === "video" || u.type === "ref_video"
+                ? "video"
+                : u.type === "reading"
+                ? "reading"
+                : u.type === "lab"
+                ? "lab"
+                : u.type === "assignment" || u.type === "quiz"
+                ? "assignment"
+                : "reading";
+
+            // If there's an assignment item matching or for module 8 capstone
+            const matchingAssignment = assignments.find((a) => a.title.toLowerCase().includes(u.title.toLowerCase())) || assignments[0];
+
+            lessons.push({
+              id: u.id,
+              moduleId: mod.id,
+              title: `${topic.title !== mod.title ? `[${topic.title}] ` : ""}${u.title}`,
+              type: mappedType,
+              duration: u.durationLabel,
+              summary: u.summary,
+              codeSnippet: u.contentSnippet,
+              link: u.resourceLink,
+              fileName: u.fileName,
+              assignmentItem: mappedType === "assignment" ? matchingAssignment : undefined,
+            });
+          });
+        });
+
+        return {
+          id: mod.id,
+          number: mod.number,
+          title: mod.title,
+          description: mod.summary,
+          lessons,
+        };
+      });
+    }
+
     const outcomesList = (course.outcomes || "")
       .split(/[;\n]/)
       .map((s) => s.trim())

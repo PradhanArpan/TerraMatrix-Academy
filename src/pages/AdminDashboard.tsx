@@ -1,7 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { CSSProperties, ReactNode } from "react";
-import { FileText, Home, ImagePlus, UploadCloud } from "lucide-react";
+import {
+  Award,
+  BookOpen,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  GraduationCap,
+  Home,
+  ImagePlus,
+  Layers,
+  LayoutDashboard,
+  LogOut,
+  MessageSquareText,
+  PlayCircle,
+  Settings2,
+  Sparkles,
+  UploadCloud,
+  UsersRound,
+  Video,
+} from "lucide-react";
+import logo from "../assets/terramatrix-logo.png";
 import {
   clearAdminSession,
   deleteAdminMediaRecord,
@@ -1706,170 +1726,120 @@ export default function AdminDashboard() {
     learningTools.filter((tool) => tool.area === area).length;
 
   return (
-    <main className="tm3-admin-workspace">
-      <section className="tm3-admin-header" style={headerSection}>
-        <div>
-          <div style={eyebrow}>ADMIN PANEL</div>
-          <h1 style={pageTitle}>Academy Management</h1>
-          <p style={pageText}>
-            
-          </p>
+    <main className="tm3-workspace tm3-admin-workspace">
+      <aside className="tm3-workspace__sidebar">
+        <Link className="tm3-workspace__brand" to="/" title="TerraMatrix Home">
+          <img src={logo} alt="TerraMatrix" />
+          <span>
+            <strong>TerraMatrix</strong>
+            <small>Operations Studio</small>
+          </span>
+        </Link>
+
+        <div className="tm3-workspace__profile">
+          <span>Administrator</span>
+          <strong>Operations Console</strong>
+          <small>Database & Management</small>
         </div>
 
-        <div style={adminSidePanel}>
-          <div style={summaryPanel}>
-            <SummaryBox label="Courses" value={courses.length} />
-            <SummaryBox label="Instructors" value={instructors.length} />
-            <SummaryBox label="Enquiries" value={enquiries.length} />
-            <SummaryBox label="Enrolled" value={enrollments.length} />
-          </div>
-          <div className="tm-admin-header-actions" style={adminHeaderActionRow}>
-            <button onClick={() => navigate("/")} style={homeButton}>
-              <Home size={16} /> Academy home
-            </button>
-            <button onClick={logoutAdmin} style={logoutButton}>Logout</button>
-          </div>
-        </div>
-      </section>
-
-      <section className="tm3-admin-mobile-nav" aria-label="Admin workspace navigation">
-        <label htmlFor="tm3-admin-section">Manage academy</label>
-        <select
-          id="tm3-admin-section"
-          value={activeAdminTab}
-          onChange={(event) => {
-            setActiveAdminTab(event.target.value as AdminTab);
-            setAdminLearningMenuOpen(false);
-            setAdminSetupMenuOpen(false);
-          }}
-        >
-          <option value="overview">Overview</option>
-          <optgroup label="Learning setup">
-            {adminSetupTabs.map((tab) => <option key={tab} value={tab}>{adminTabLabels[tab]}</option>)}
-            <option value="tools">{adminTabLabels.tools}</option>
-          </optgroup>
-          <optgroup label="Learning hub">
-            {adminLearningHubTabs.map((tab) => <option key={tab} value={tab}>{adminTabLabels[tab]}</option>)}
-          </optgroup>
-          <optgroup label="Operations">
-            {adminDirectTabs.filter((tab) => tab !== "overview").map((tab) => (
-              <option key={tab} value={tab}>{adminTabLabels[tab]}</option>
-            ))}
-          </optgroup>
-        </select>
-      </section>
-
-      <section className="tm3-admin-tabs" style={adminTabs}>
-        <button
-          onClick={() => {
-            setActiveAdminTab("overview");
-            setAdminLearningMenuOpen(false);
-            setAdminSetupMenuOpen(false);
-          }}
-          style={activeAdminTab === "overview" ? activeAdminTabButton : adminTabButton}
-        >
-          Overview
-        </button>
-
-        <div style={adminLearningDropdownWrap} ref={adminSetupDropdownRef}>
-          <button
-            type="button"
-            onClick={() => {
-              setAdminSetupMenuOpen((current) => !current);
-              setAdminLearningMenuOpen(false);
-            }}
-            style={
-              adminSetupTabs.includes(activeAdminTab)
-                ? activeAdminDropdownButton
-                : adminDropdownButton
-            }
-            aria-expanded={adminSetupMenuOpen}
-            aria-controls="tm3-admin-setup-menu"
-          >
-            Learning Setup ▾
+        <nav className="tm3-workspace-nav" aria-label="Admin workspace navigation">
+          <div className="tm3-sidebar-group-title">Analytics</div>
+          <button type="button" className={activeAdminTab === "overview" ? "is-active" : ""} onClick={() => setActiveAdminTab("overview")}>
+            <LayoutDashboard size={18} />
+            <span>Overview</span>
           </button>
 
-          {adminSetupMenuOpen && (
-            <div id="tm3-admin-setup-menu" style={adminLearningDropdownMenu}>
-              {adminSetupTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => {
-                    setActiveAdminTab(tab);
-                    setAdminSetupMenuOpen(false);
-                    setAdminLearningMenuOpen(false);
-                  }}
-                  style={
-                    activeAdminTab === tab
-                      ? activeAdminDropdownItem
-                      : adminDropdownItem
-                  }
-                >
-                  {adminTabLabels[tab]}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div style={adminLearningDropdownWrap} ref={adminLearningDropdownRef}>
-          <button
-            type="button"
-            onClick={() => {
-              setAdminLearningMenuOpen((current) => !current);
-              setAdminSetupMenuOpen(false);
-            }}
-            style={
-              adminLearningHubTabs.includes(activeAdminTab)
-                ? activeAdminDropdownButton
-                : adminDropdownButton
-            }
-            aria-expanded={adminLearningMenuOpen}
-            aria-controls="tm3-admin-learning-menu"
-          >
-            Learning Hub ▾
+          <div className="tm3-sidebar-group-title">Curriculum & Media</div>
+          <button type="button" className={activeAdminTab === "courses" ? "is-active" : ""} onClick={() => setActiveAdminTab("courses")}>
+            <BookOpen size={18} />
+            <span>Courses ({courses.length})</span>
+          </button>
+          <button type="button" className={activeAdminTab === "instructors" ? "is-active" : ""} onClick={() => setActiveAdminTab("instructors")}>
+            <UsersRound size={18} />
+            <span>Instructors ({instructors.length})</span>
+          </button>
+          <button type="button" className={activeAdminTab === "videos" ? "is-active" : ""} onClick={() => setActiveAdminTab("videos")}>
+            <PlayCircle size={18} />
+            <span>Learning Videos</span>
+          </button>
+          <button type="button" className={activeAdminTab === "webinars" ? "is-active" : ""} onClick={() => setActiveAdminTab("webinars")}>
+            <Video size={18} />
+            <span>Webinars</span>
+          </button>
+          <button type="button" className={activeAdminTab === "workshops" ? "is-active" : ""} onClick={() => setActiveAdminTab("workshops")}>
+            <Sparkles size={18} />
+            <span>Workshops</span>
+          </button>
+          <button type="button" className={activeAdminTab === "tools" ? "is-active" : ""} onClick={() => setActiveAdminTab("tools")}>
+            <Layers size={18} />
+            <span>Home Tools</span>
           </button>
 
-          {adminLearningMenuOpen && (
-            <div id="tm3-admin-learning-menu" style={adminLearningDropdownMenu}>
-              {adminLearningHubTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => {
-                    setActiveAdminTab(tab);
-                    setAdminLearningMenuOpen(false);
-                  }}
-                  style={
-                    activeAdminTab === tab
-                      ? activeAdminDropdownItem
-                      : adminDropdownItem
-                  }
-                >
-                  {adminTabLabels[tab]}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          <div className="tm3-sidebar-group-title">Learners & Operations</div>
+          <button type="button" className={activeAdminTab === "enquiries" ? "is-active" : ""} onClick={() => setActiveAdminTab("enquiries")}>
+            <MessageSquareText size={18} />
+            <span>Enquiries ({enquiries.length})</span>
+          </button>
+          <button type="button" className={activeAdminTab === "enrollments" ? "is-active" : ""} onClick={() => setActiveAdminTab("enrollments")}>
+            <GraduationCap size={18} />
+            <span>Enrollments ({enrollments.length})</span>
+          </button>
+          <button type="button" className={activeAdminTab === "payments" ? "is-active" : ""} onClick={() => setActiveAdminTab("payments")}>
+            <CreditCard size={18} />
+            <span>Payments</span>
+          </button>
+          <button type="button" className={activeAdminTab === "registrations" ? "is-active" : ""} onClick={() => setActiveAdminTab("registrations")}>
+            <CalendarDays size={18} />
+            <span>Registrations</span>
+          </button>
 
-        {adminDirectTabs
-          .filter((tab) => tab !== "overview")
-          .map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveAdminTab(tab);
-                setAdminLearningMenuOpen(false);
-                setAdminSetupMenuOpen(false);
-              }}
-              style={activeAdminTab === tab ? activeAdminTabButton : adminTabButton}
-            >
-              {adminTabLabels[tab]}
+          <div className="tm3-sidebar-group-title">Taxonomies</div>
+          <button type="button" className={activeAdminTab === "categories" ? "is-active" : ""} onClick={() => setActiveAdminTab("categories")}>
+            <Settings2 size={18} />
+            <span>Categories</span>
+          </button>
+          <button type="button" className={activeAdminTab === "themes" ? "is-active" : ""} onClick={() => setActiveAdminTab("themes")}>
+            <FileText size={18} />
+            <span>Themes</span>
+          </button>
+          <button type="button" className={activeAdminTab === "levels" ? "is-active" : ""} onClick={() => setActiveAdminTab("levels")}>
+            <Award size={18} />
+            <span>Levels</span>
+          </button>
+        </nav>
+
+        <div className="tm3-workspace__sidebar-footer">
+          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.05)", color: "#c9d9d2", fontSize: 12.5, fontWeight: 700, textDecoration: "none" }}>
+            <Home size={17} style={{ color: "var(--tm3-lime)" }} />
+            <span>Academy Home</span>
+          </Link>
+          <button type="button" onClick={logoutAdmin}>
+            <LogOut size={17} />
+            <span>Sign out</span>
+          </button>
+        </div>
+      </aside>
+
+      <section className="tm3-workspace__main">
+        <header className="tm3-workspace-topbar">
+          <div>
+            <span className="tm3-workspace-kicker">Operations Studio</span>
+            <h1>{adminTabLabels[activeAdminTab]}</h1>
+            <p>Administering live catalogue, registrations, and academic database</p>
+          </div>
+          <div className="tm3-workspace-topbar__actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <span className="tm3-badge tm3-badge--green">{courses.length} Programmes</span>
+              <span className="tm3-badge tm3-badge--gold">{instructors.length} Instructors</span>
+              <span className="tm3-badge tm3-badge--blue">{enquiries.length} Enquiries</span>
+            </div>
+            <button className="tm3-button tm3-button--outline" type="button" onClick={() => navigate("/")}>
+              <Home size={15} /> Site
             </button>
-          ))}
-      </section>
+          </div>
+        </header>
+
+        <div className="tm3-workspace-content" style={{ padding: "24px 28px" }}>
 
       {activeAdminTab === "overview" && (
       <section className="tm3-admin-overview" style={overviewSection}>
@@ -3022,6 +2992,9 @@ export default function AdminDashboard() {
         )}
       </section>
       )}
+
+        </div>
+      </section>
 
       {selectedEnquiry && (
         <div className="tm3-admin-modal-backdrop" style={modalBackdrop}>

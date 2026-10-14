@@ -150,6 +150,9 @@ export default function StudentDashboard() {
                       {course.theme && <Badge>{course.theme}</Badge>}
                     </div>
                     <h3>{deriveShortTitle(course)}</h3>
+                    {course.title && course.title !== deriveShortTitle(course) && (
+                      <div className="tm3-course-card__full-title">{course.title}</div>
+                    )}
                     <p>{course.description}</p>
                     <div className="tm3-programme-card__meta">
                       <span><Clock3 size={14} /> {course.duration} hrs</span>

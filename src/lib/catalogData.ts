@@ -447,6 +447,38 @@ export const DEFAULT_COURSES: Course[] = [
     assignmentTitle: "Automated Hydrologic Data Pipeline",
     assignmentInstructions: "Write a Python script to ingest rainfall data, calculate intensity-duration curves, and plot results.",
   },
+  {
+    id: 6,
+    title: "Applied Statistics & Experimental Design for Scientific & Engineering Research",
+    shortTitle: "Statistics for Scientific Research",
+    category: "Computational Tools",
+    theme: "Scientific Statistics & Modeling",
+    duration: "16.5 Hours (MOOC)",
+    level: "Foundation to Advanced",
+    mode: "Online (Self-Paced)",
+    imageUrl: "/domain-computational.jpg",
+    instructorName: "Dr. Arpan Pradhan",
+    instructorDesignation: "Founder & Principal Consultant",
+    instructorIds: [1],
+    startDate: "2026-09-01",
+    fee: "₹2,499",
+    certificate: "Verified MOOC Certificate",
+    description: "An intensive 8-module MOOC covering research design, sampling methods, descriptive analytics, probability, hypothesis testing, ANOVA, linear and multiple regression, with a hands-on research mini-project.",
+    outcomes: "Master measurement scales and scientific research design;\nFormulate probability and stratified sampling strategies to eliminate experimental bias;\nExecute hypothesis testing, p-value evaluation, parametric and non-parametric tests;\nFit OLS linear and multiple regression models and deliver a scientific mini-project.",
+    brochureName: "Statistics_MOOC_Brochure.pdf",
+    brochureData: "",
+    status: "Published",
+    onlineSessionLink: "",
+    onlineSessionDate: "2026-09-15",
+    onlineSessionTime: "18:00 IST",
+    recordingLink: "",
+    materialTitle: "Statistics Lecture Notes & Data Summary Sheets",
+    materialDescription: "Structured 8-module lecture summaries, formula sheets, G*Power tutorials, and sample engineering datasets.",
+    materialFileName: "TM_Statistics_Module1_Notes.pdf",
+    materialFileData: "",
+    assignmentTitle: "Final Scientific Research Mini-Project",
+    assignmentInstructions: "Complete an end-to-end statistical analysis on a research dataset from your engineering discipline and submit the report.",
+  },
 ];
 
 export const DEFAULT_WEBINARS: AcademyEvent[] = [
@@ -561,7 +593,12 @@ export const DEFAULT_VIDEOS: LearningVideo[] = [
 
 export function loadCourses(onlyPublished = true): Course[] {
   const stored = readStoredArray<Partial<Course>>("terramatrix_courses");
-  const data = (stored.length ? stored : DEFAULT_COURSES).map(normalizeCourse);
+  const existingIds = new Set(stored.map((c) => Number(c.id)));
+  const merged = [
+    ...stored,
+    ...DEFAULT_COURSES.filter((c) => !existingIds.has(c.id)),
+  ];
+  const data = merged.map(normalizeCourse);
   return onlyPublished ? data.filter((course) => course.status === "Published") : data;
 }
 
