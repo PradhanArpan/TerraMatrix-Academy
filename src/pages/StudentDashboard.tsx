@@ -4,6 +4,7 @@ import {
   ArrowRight,
   CalendarDays,
   Clock3,
+  GraduationCap,
   MonitorPlay,
   Search,
   SlidersHorizontal,
@@ -33,10 +34,18 @@ export default function StudentDashboard() {
   const [category, setCategory] = useState(searchParams.get("category") || "All");
   const [level, setLevel] = useState("All");
   const [mode, setMode] = useState("All");
+  const [loggedInStudent, setLoggedInStudent] = useState<string | null>(null);
 
   useEffect(() => {
     setCourses(loadCourses());
     setInstructors(loadInstructors());
+    try {
+      const raw = localStorage.getItem("terramatrix_student_login") || sessionStorage.getItem("terramatrix_student_login");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setLoggedInStudent(parsed?.email || null);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -46,14 +55,14 @@ export default function StudentDashboard() {
     if (q) setSearch(q);
   }, [searchParams]);
 
-  const categories = useMemo(() => ["All", ...unique(courses.map((course) => course.category))], [courses]);
-  const levels = useMemo(() => ["All", ...unique(courses.map((course) => course.level))], [courses]);
-  const modes = useMemo(() => ["All", ...unique(courses.map((course) => course.mode))], [courses]);
+  const categories = useMemo(() => ["All", ...unique(courses.map((course: Course) => course.category))], [courses]);
+  const levels = useMemo(() => ["All", ...unique(courses.map((course: Course) => course.level))], [courses]);
+  const modes = useMemo(() => ["All", ...unique(courses.map((course: Course) => course.mode))], [courses]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return courses.filter((course) => {
-      const instructorNames = getCourseInstructors(course, instructors).map((item) => item.name).join(" ");
+    return courses.filter((course: Course) => {
+      const instructorNames = getCourseInstructors(course, instructors).map((item: Instructor) => item.name).join(" ");
       const haystack = [course.title, course.shortTitle, course.category, course.theme, course.description, course.level, course.mode, instructorNames].join(" ").toLowerCase();
       return (!query || haystack.includes(query)) && (category === "All" || course.category === category) && (level === "All" || course.level === level) && (mode === "All" || course.mode === mode);
     });
@@ -75,19 +84,35 @@ export default function StudentDashboard() {
         aside={<Metric value={courses.length} label="Published programmes" helper="Shared live catalogue" />}
       />
 
+      {loggedInStudent && (
+        <div style={{ width: "min(var(--tm3-content), calc(100% - 32px))", margin: "-16px auto 26px", padding: "14px 22px", borderRadius: 18, background: "var(--tm3-green-100)", border: "1px solid var(--tm3-line-strong)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", boxShadow: "var(--tm3-shadow-xs)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ display: "grid", placeItems: "center", width: 34, height: 34, borderRadius: 10, background: "var(--tm3-green-900)", color: "var(--tm3-lime)" }}>
+              <GraduationCap size={18} />
+            </span>
+            <span style={{ fontSize: 13.5, color: "var(--tm3-green-950)", fontWeight: 700 }}>
+              You are signed in as <strong>{loggedInStudent}</strong>. Exploring courses with your active learning session preserved.
+            </span>
+          </div>
+          <Link to="/student-portal" className="tm3-button tm3-button--dark" style={{ minHeight: 38, padding: "8px 16px", fontSize: 13, whiteSpace: "nowrap" }}>
+            Return to My Workspace <ArrowRight size={15} />
+          </Link>
+        </div>
+      )}
+
       <section className="tm3-filter-shell" aria-label="Course filters">
         <label className="tm3-search-field">
           <Search size={18} />
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search programmes, tools, topics or instructors" />
         </label>
         <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter by category">
-          {categories.map((item) => <option key={item}>{item === "All" ? "All learning areas" : item}</option>)}
+          {categories.map((item: string) => <option key={item}>{item === "All" ? "All learning areas" : item}</option>)}
         </select>
         <select value={level} onChange={(event) => setLevel(event.target.value)} aria-label="Filter by level">
-          {levels.map((item) => <option key={item}>{item === "All" ? "All levels" : item}</option>)}
+          {levels.map((item: string) => <option key={item}>{item === "All" ? "All levels" : item}</option>)}
         </select>
         <select value={mode} onChange={(event) => setMode(event.target.value)} aria-label="Filter by mode">
-          {modes.map((item) => <option key={item}>{item === "All" ? "All formats" : item}</option>)}
+          {modes.map((item: string) => <option key={item}>{item === "All" ? "All formats" : item}</option>)}
         </select>
       </section>
 
@@ -111,7 +136,7 @@ export default function StudentDashboard() {
           </div>
         ) : (
           <div className="tm3-catalogue-grid">
-            {filtered.map((course) => {
+            {filtered.map((course: Course) => {
               const courseInstructors = getCourseInstructors(course, instructors);
               return (
                 <article className="tm3-programme-card" key={course.id}>

@@ -1,23 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  Activity,
   ArrowRight,
   BadgeCheck,
   BookOpen,
+  Boxes,
   BrainCircuit,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
+  Compass,
+  Cpu,
+  Database,
+  FileCode,
   FlaskConical,
   GraduationCap,
-  Layers3,
+  Layers,
   Map,
+  Navigation,
   Network,
+  Satellite,
   SearchCheck,
   ShieldCheck,
+  Sparkles,
   UsersRound,
+  Waves,
   X,
 } from "lucide-react";
 import heroImage from "../assets/hero-dam.jpg";
@@ -66,7 +76,7 @@ const domains = [
     title: "Civil & Infrastructure",
     description: "Water resources, bridge & structural engineering, BIM detailing and hydraulic modeling.",
     image: "/domain-civil.jpg",
-    logo: "/logos/structural-analysis.png",
+    icon: Building2,
     tools: ["AutoCAD", "Revit & BIM", "SAP2000", "HEC-RAS"],
     to: "/student?category=Engineering%20Tools",
     badge: "Core Engineering",
@@ -75,8 +85,8 @@ const domains = [
     title: "Geospatial Intelligence",
     description: "GIS, multispectral satellite remote sensing, terrain modeling and spatial decision systems.",
     image: "/domain-geospatial.jpg",
-    logo: "/logos/gis.png",
-    tools: ["QGIS", "ArcGIS", "GEE", "Remote Sensing"],
+    icon: Map,
+    tools: ["QGIS", "ArcGIS Pro", "GEE", "Remote Sensing"],
     to: "/student?category=Geospatial%20Tools",
     badge: "Spatial Analytics",
   },
@@ -84,8 +94,8 @@ const domains = [
     title: "Computational Engineering",
     description: "Applied Python, finite element modeling, numerical methods and engineering data analytics.",
     image: "/domain-computational.jpg",
-    logo: "/logos/programming.png",
-    tools: ["Python", "MATLAB", "FEA Solver", "Data Analysis"],
+    icon: Cpu,
+    tools: ["Python", "NumPy & SciPy", "FEA Solvers", "Data Science"],
     to: "/student?category=Computational%20Tools",
     badge: "Scientific Computing",
   },
@@ -93,26 +103,122 @@ const domains = [
     title: "AI for Engineers",
     description: "Digital twins, infrastructure telemetry, automated workflows and generative engineering tools.",
     image: "/domain-ai.jpg",
-    logo: "/logos/api.png",
+    icon: BrainCircuit,
     tools: ["Digital Twins", "Sensor AI", "Automation", "Engineering APIs"],
     to: "/student",
     badge: "Intelligent Systems",
   },
 ];
 
-const appliedSkills = [
-  { name: "BIM Coordination", subtitle: "Revit & Navisworks", logo: "/logos/bim.png", to: "/student" },
-  { name: "CAD Drafting", subtitle: "AutoCAD & Detailing", logo: "/logos/cad.png", to: "/student" },
-  { name: "GIS & Spatial Data", subtitle: "QGIS & ArcGIS Pro", logo: "/logos/gis.png", to: "/student" },
-  { name: "Structural Design", subtitle: "Codes & Concrete", logo: "/logos/structural-design.png", to: "/student" },
-  { name: "Structural Analysis", subtitle: "SAP2000 & ETABS", logo: "/logos/structural-analysis.png", to: "/student" },
-  { name: "Hydrologic Modeling", subtitle: "HEC-HMS Catchment", logo: "/logos/hydrologic-modeling.png", to: "/student" },
-  { name: "River Hydraulics", subtitle: "HEC-RAS 1D/2D", logo: "/logos/river-analysis.png", to: "/student" },
-  { name: "Engineering Data", subtitle: "Statistics & Insights", logo: "/logos/data-analysis.png", to: "/student" },
-  { name: "Field & GNSS Survey", subtitle: "GPS & Drone Mapping", logo: "/logos/field-survey.png", to: "/student" },
-  { name: "Remote Sensing", subtitle: "Multispectral Satellites", logo: "/logos/remote-sensing.png", to: "/student" },
-  { name: "Scientific Python", subtitle: "NumPy, Pandas, SciPy", logo: "/logos/programming.png", to: "/student" },
-  { name: "Engineering APIs", subtitle: "AI & Automations", logo: "/logos/api.png", to: "/student" },
+const engineeringTopics = [
+  {
+    name: "BIM & Digital Coordination",
+    subtitle: "Parametric 3D & Detailing",
+    tools: "Revit · Navisworks · IFC",
+    code: "ISO 19650",
+    icon: Boxes,
+    to: "/student?category=Design%20%26%20Analysis",
+    tone: "gold",
+  },
+  {
+    name: "CAD & Structural Drafting",
+    subtitle: "Reinforcement & Detailing",
+    tools: "AutoCAD · Detailing · IS 456",
+    code: "IS 456 / SP 34",
+    icon: Compass,
+    to: "/student?category=Engineering%20Tools",
+    tone: "green",
+  },
+  {
+    name: "GIS & Spatial Intelligence",
+    subtitle: "Vector, Raster & Spatial SQL",
+    tools: "QGIS · ArcGIS Pro · PostGIS",
+    code: "OGC Standards",
+    icon: Map,
+    to: "/student?category=Geospatial%20Tools",
+    tone: "lime",
+  },
+  {
+    name: "Structural Design & Codes",
+    subtitle: "Concrete, Steel & Foundations",
+    tools: "IS Codes · Eurocodes · ACI",
+    code: "IS 1893 / EC 2",
+    icon: Building2,
+    to: "/student?category=Design%20%26%20Analysis",
+    tone: "green",
+  },
+  {
+    name: "Finite Element & Analysis",
+    subtitle: "Dynamic & Seismic Solvers",
+    tools: "SAP2000 · ETABS · Modal FEA",
+    code: "Nonlinear Solvers",
+    icon: Activity,
+    to: "/student?category=Design%20%26%20Analysis",
+    tone: "blue",
+  },
+  {
+    name: "Catchment & Hydrology",
+    subtitle: "Rainfall-Runoff Modeling",
+    tools: "HEC-HMS · Curve Number · IDF",
+    code: "CWC / SCS-CN",
+    icon: Waves,
+    to: "/student?category=Engineering%20Tools",
+    tone: "lime",
+  },
+  {
+    name: "2D River Hydraulics",
+    subtitle: "Dam Breach & Flood Hydrodynamics",
+    tools: "HEC-RAS 1D/2D · Hydrodynamic",
+    code: "Shallow Water Eqns",
+    icon: Layers,
+    to: "/student?category=Engineering%20Tools",
+    tone: "blue",
+  },
+  {
+    name: "Engineering Data Science",
+    subtitle: "Statistical Insights & Reliability",
+    tools: "Pandas · SciPy · Monte Carlo",
+    code: "Weibull / Gumbel",
+    icon: Database,
+    to: "/student?category=Computational%20Tools",
+    tone: "gold",
+  },
+  {
+    name: "Field Survey & GNSS",
+    subtitle: "Total Station & Drone Photogrammetry",
+    tools: "RTK GNSS · Pix4D · DTM Mesh",
+    code: "WGS84 / UTM",
+    icon: Navigation,
+    to: "/student?category=Geospatial%20Tools",
+    tone: "green",
+  },
+  {
+    name: "Satellite Remote Sensing",
+    subtitle: "Multispectral & Radar InSAR",
+    tools: "Sentinel · Landsat · GEE",
+    code: "Copernicus / ESA",
+    icon: Satellite,
+    to: "/student?category=Geospatial%20Tools",
+    tone: "lime",
+  },
+  {
+    name: "Scientific Python",
+    subtitle: "Numerical Modeling & Automation",
+    tools: "NumPy · SymPy · Matplotlib",
+    code: "PEP 8 Scientific",
+    icon: FileCode,
+    to: "/student?category=Computational%20Tools",
+    tone: "gold",
+  },
+  {
+    name: "AI & Telemetry Automations",
+    subtitle: "Digital Twins & Engineering APIs",
+    tools: "FastAPI · PyTorch · Sensor IoT",
+    code: "Digital Twin API",
+    icon: BrainCircuit,
+    to: "/student",
+    tone: "blue",
+  },
 ];
 
 const journey = [
@@ -190,15 +296,15 @@ export default function Home() {
             <div className="tm3-hero-card__top">
               <span style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <img src="/logos/courses.png" alt="" style={{ width: 17, height: 17, objectFit: "contain" }} />
+                  <GraduationCap size={16} style={{ color: "var(--tm3-lime)" }} />
                   <strong>{courses.length || "5"}</strong> programmes
                 </span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <img src="/logos/instructors.png" alt="" style={{ width: 17, height: 17, objectFit: "contain" }} />
+                  <UsersRound size={16} style={{ color: "var(--tm3-lime)" }} />
                   <strong>{instructors.length || "5"}</strong> instructors
                 </span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <img src="/logos/webinars.png" alt="" style={{ width: 17, height: 17, objectFit: "contain" }} />
+                  <CalendarDays size={16} style={{ color: "var(--tm3-lime)" }} />
                   <strong>{eventCount || "3"}</strong> events
                 </span>
               </span>
@@ -313,7 +419,7 @@ export default function Home() {
                   <div>
                     <div className="tm3-domain-card__header">
                       <div className="tm3-domain-card__badge-logo">
-                        <img src={domain.logo} alt={domain.title} />
+                        <domain.icon size={22} style={{ color: "var(--tm3-lime)" }} />
                       </div>
                       <Badge tone="gold">{domain.badge}</Badge>
                     </div>
@@ -339,21 +445,31 @@ export default function Home() {
       <section className="tm3-tools-section">
         <div className="tm3-shell">
           <SectionHeading
-            eyebrow="Applied toolset"
-            title="Master the industry-standard engineering platforms."
-            description="Hands-on capability building using authentic engineering software, numerical solvers, spatial engines and APIs."
+            eyebrow="Competency matrix"
+            title="Master authentic engineering tools and codes."
+            description="Hands-on capability building across structural analysis, hydrodynamics, spatial engines, and scientific computing."
             align="center"
           />
-          <div className="tm3-tools-grid">
-            {appliedSkills.map((tool) => (
-              <Link to={tool.to} className="tm3-tool-item" key={tool.name}>
-                <div className="tm3-tool-item__logo">
-                  <img src={tool.logo} alt={tool.name} />
-                </div>
-                <strong>{tool.name}</strong>
-                <small>{tool.subtitle}</small>
-              </Link>
-            ))}
+          <div className="tm3-topics-grid">
+            {engineeringTopics.map((topic) => {
+              const Icon = topic.icon;
+              return (
+                <Link to={topic.to} className="tm3-topic-card" key={topic.name}>
+                  <div className="tm3-topic-card__head">
+                    <div className={`tm3-topic-card__icon tm3-topic-card__icon--${topic.tone}`}>
+                      <Icon size={20} />
+                    </div>
+                    <span className="tm3-topic-card__code">{topic.code}</span>
+                  </div>
+                  <h3>{topic.name}</h3>
+                  <p>{topic.subtitle}</p>
+                  <div className="tm3-topic-card__footer">
+                    <span>{topic.tools}</span>
+                    <ArrowRight size={14} />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

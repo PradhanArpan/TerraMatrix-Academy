@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Mail, Phone, UserRound } from "lucide-react";
 import logo from "../assets/terramatrix-logo.png";
@@ -13,6 +13,21 @@ function validPhone(phone: string) {
 export default function InstructorLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState(""); const [phone, setPhone] = useState(""); const [error, setError] = useState("");
+
+  useEffect(() => {
+    const raw = localStorage.getItem("terramatrix_instructor_login") || sessionStorage.getItem("terramatrix_instructor_login");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed?.name) {
+          navigate("/instructor-portal", { replace: true });
+        }
+      } catch {
+        // ignore invalid json
+      }
+    }
+  }, [navigate]);
+
   const login = () => {
     const cleanEmail = email.trim().toLowerCase(); const cleanPhone = validPhone(phone);
     if (!cleanEmail || !cleanPhone) { setError("Enter the instructor email and valid mobile number."); return; }

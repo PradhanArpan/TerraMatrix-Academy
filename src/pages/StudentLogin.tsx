@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, GraduationCap, Mail, Phone } from "lucide-react";
 import logo from "../assets/terramatrix-logo.png";
@@ -18,6 +18,20 @@ export default function StudentLogin() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const raw = localStorage.getItem("terramatrix_student_login") || sessionStorage.getItem("terramatrix_student_login");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed?.email) {
+          navigate("/student-portal", { replace: true });
+        }
+      } catch {
+        // ignore invalid json
+      }
+    }
+  }, [navigate]);
 
   const login = () => {
     const cleanEmail = email.trim().toLowerCase();

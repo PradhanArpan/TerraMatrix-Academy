@@ -65,6 +65,40 @@ function AppRoutes() {
   });
   const exploreRef = useRef<HTMLDivElement | null>(null);
   const loginRef = useRef<HTMLDivElement | null>(null);
+  const [studentSession, setStudentSession] = useState<{ email: string; name?: string } | null>(null);
+  const [instructorSession, setInstructorSession] = useState<{ name: string } | null>(null);
+
+  useEffect(() => {
+    const checkSession = () => {
+      try {
+        const raw = localStorage.getItem("terramatrix_student_login") || sessionStorage.getItem("terramatrix_student_login");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setStudentSession(parsed?.email ? parsed : null);
+        } else {
+          setStudentSession(null);
+        }
+      } catch {
+        setStudentSession(null);
+      }
+
+      try {
+        const raw = localStorage.getItem("terramatrix_instructor_login") || sessionStorage.getItem("terramatrix_instructor_login");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setInstructorSession(parsed?.name ? parsed : null);
+        } else {
+          setInstructorSession(null);
+        }
+      } catch {
+        setInstructorSession(null);
+      }
+    };
+
+    checkSession();
+    window.addEventListener("storage", checkSession);
+    return () => window.removeEventListener("storage", checkSession);
+  }, [location.pathname]);
 
   const closeMenus = () => {
     setLoginOpen(false);
@@ -171,62 +205,77 @@ function AppRoutes() {
 
           <header className="tm3-header">
             <div className="tm3-header__inner">
-              <Link to="/" className="tm3-brand" onClick={closeMenus}>
-                <img src={logo} alt="TerraMatrix Academy" />
-                <span>
-                  <strong>TerraMatrix</strong>
-                  <small>Academy</small>
-                </span>
-              </Link>
+              <div className="tm3-header__left">
+                <Link to="/" className="tm3-brand" onClick={closeMenus}>
+                  <img src={logo} alt="TerraMatrix Academy" />
+                  <span>
+                    <strong>TerraMatrix</strong>
+                    <small>Academy</small>
+                  </span>
+                </Link>
 
-              <nav id="tm3-primary-navigation" className={`tm3-nav ${mobileOpen ? "is-open" : ""}`} aria-label="Primary navigation">
-                <NavLink end to="/" className={({ isActive }) => isActive ? "is-active" : ""}>Academy</NavLink>
+                <nav id="tm3-primary-navigation" className={`tm3-nav ${mobileOpen ? "is-open" : ""}`} aria-label="Primary navigation">
+                  <NavLink end to="/" className={({ isActive }) => isActive ? "is-active" : ""}>Academy</NavLink>
 
-                <div className="tm3-nav-dropdown" ref={exploreRef}>
-                  <button type="button" onClick={() => { setExploreOpen((value) => !value); setLoginOpen(false); }} aria-expanded={exploreOpen} aria-controls="tm3-explore-menu">
-                    Explore <ChevronDown size={15} />
-                  </button>
-                  {exploreOpen && (
-                    <div className="tm3-mega-menu" id="tm3-explore-menu">
-                      <Link to="/student" onClick={closeMenus}>
-                        <span className="tm3-menu-icon"><GraduationCap size={20} /></span>
-                        <span><strong>Courses & programmes</strong><small>Structured pathways for students and professionals</small></span>
-                      </Link>
-                      <Link to="/learning-videos" onClick={closeMenus}>
-                        <span className="tm3-menu-icon"><PlayCircle size={20} /></span>
-                        <span><strong>Learning library</strong><small>Recorded lessons, demonstrations and explainers</small></span>
-                      </Link>
-                      <Link to="/webinars" onClick={closeMenus}>
-                        <span className="tm3-menu-icon"><UsersRound size={20} /></span>
-                        <span><strong>Webinars</strong><small>Expert conversations and knowledge sessions</small></span>
-                      </Link>
-                      <Link to="/workshops" onClick={closeMenus}>
-                        <span className="tm3-menu-icon"><BriefcaseBusiness size={20} /></span>
-                        <span><strong>Workshops</strong><small>Practice-led, hands-on learning experiences</small></span>
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                  <div className="tm3-nav-dropdown" ref={exploreRef}>
+                    <button type="button" onClick={() => { setExploreOpen((value) => !value); setLoginOpen(false); }} aria-expanded={exploreOpen} aria-controls="tm3-explore-menu">
+                      Explore <ChevronDown size={15} />
+                    </button>
+                    {exploreOpen && (
+                      <div className="tm3-mega-menu" id="tm3-explore-menu">
+                        <Link to="/student" onClick={closeMenus}>
+                          <span className="tm3-menu-icon"><GraduationCap size={20} /></span>
+                          <span><strong>Courses & programmes</strong><small>Structured pathways for students and professionals</small></span>
+                        </Link>
+                        <Link to="/learning-videos" onClick={closeMenus}>
+                          <span className="tm3-menu-icon"><PlayCircle size={20} /></span>
+                          <span><strong>Learning library</strong><small>Recorded lessons, demonstrations and explainers</small></span>
+                        </Link>
+                        <Link to="/webinars" onClick={closeMenus}>
+                          <span className="tm3-menu-icon"><UsersRound size={20} /></span>
+                          <span><strong>Webinars</strong><small>Expert conversations and knowledge sessions</small></span>
+                        </Link>
+                        <Link to="/workshops" onClick={closeMenus}>
+                          <span className="tm3-menu-icon"><BriefcaseBusiness size={20} /></span>
+                          <span><strong>Workshops</strong><small>Practice-led, hands-on learning experiences</small></span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
 
-                <NavLink to="/instructors" className={({ isActive }) => isActive ? "is-active" : ""}>Instructors</NavLink>
-                <NavLink to="/student" className={({ isActive }) => isActive ? "is-active" : ""}>Catalogue</NavLink>
-
-                <div className="tm3-nav-dropdown tm3-nav-dropdown--right" ref={loginRef}>
-                  <button className="tm3-login-trigger" type="button" onClick={() => { setLoginOpen((value) => !value); setExploreOpen(false); }} aria-expanded={loginOpen} aria-controls="tm3-login-menu">
-                    <LogIn size={16} /> Sign in <ChevronDown size={15} />
-                  </button>
-                  {loginOpen && (
-                    <div className="tm3-login-menu" id="tm3-login-menu">
-                      <Link to="/student-login" onClick={closeMenus}><GraduationCap size={18} /><span><strong>Learner</strong><small>My learning and classroom</small></span></Link>
-                      <Link to="/instructor-login" onClick={closeMenus}><UserRound size={18} /><span><strong>Instructor</strong><small>Courses, classes and learners</small></span></Link>
-                      <Link to="/admin-login" onClick={closeMenus}><BookOpen size={18} /><span><strong>Admin</strong><small>Academy operations</small></span></Link>
-                    </div>
-                  )}
-                </div>
-              </nav>
+                  <NavLink to="/instructors" className={({ isActive }) => isActive ? "is-active" : ""}>Instructors</NavLink>
+                  <NavLink to="/student" className={({ isActive }) => isActive ? "is-active" : ""}>Catalogue</NavLink>
+                </nav>
+              </div>
 
               <div className="tm3-header-actions">
                 <Link className="tm3-search-link" to="/student" aria-label="Search programmes"><Search size={18} /></Link>
+
+                {studentSession ? (
+                  <Link to="/student-portal" className="tm3-header-portal-btn" title={`Signed in as ${studentSession.email}`}>
+                    <GraduationCap size={16} />
+                    <span>My Learning</span>
+                  </Link>
+                ) : instructorSession ? (
+                  <Link to="/instructor-portal" className="tm3-header-portal-btn" title={`Signed in as ${instructorSession.name}`}>
+                    <UserRound size={16} />
+                    <span>Instructor Hub</span>
+                  </Link>
+                ) : (
+                  <div className="tm3-nav-dropdown tm3-nav-dropdown--right" ref={loginRef}>
+                    <button className="tm3-login-trigger" type="button" onClick={() => { setLoginOpen((value) => !value); setExploreOpen(false); }} aria-expanded={loginOpen} aria-controls="tm3-login-menu">
+                      <LogIn size={16} /> Sign in <ChevronDown size={15} />
+                    </button>
+                    {loginOpen && (
+                      <div className="tm3-login-menu" id="tm3-login-menu">
+                        <Link to="/student-login" onClick={closeMenus}><GraduationCap size={18} /><span><strong>Learner</strong><small>My learning and classroom</small></span></Link>
+                        <Link to="/instructor-login" onClick={closeMenus}><UserRound size={18} /><span><strong>Instructor</strong><small>Courses, classes and learners</small></span></Link>
+                        <Link to="/admin-login" onClick={closeMenus}><BookOpen size={18} /><span><strong>Admin</strong><small>Academy operations</small></span></Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button className="tm3-theme" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
                   {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
