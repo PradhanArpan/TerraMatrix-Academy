@@ -9,6 +9,8 @@ import {
   CheckSquare,
   ChevronRight,
   Clock3,
+  Copy,
+  Download,
   ExternalLink,
   Eye,
   FileCode,
@@ -19,9 +21,11 @@ import {
   MessageSquareText,
   PlayCircle,
   Plus,
+  Printer,
   RefreshCw,
   Search,
   Send,
+  Share2,
   ShieldCheck,
   Sparkles,
   UsersRound,
@@ -874,6 +878,28 @@ export function AdminProgrammesRolloutPanel({
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [rolloutNotice, setRolloutNotice] = useState<string>("");
 
+  // Automated Webinar Brochure Studio State
+  const [brochureModalOpen, setBrochureModalOpen] = useState(false);
+  const [brochureState, setBrochureState] = useState({
+    title: "Advanced 2D River Hydrodynamics & Dam Breach Modeling with HEC-RAS",
+    category: "Water Resources & River Hydraulics",
+    seriesLabel: "TerraMatrix Bi-Weekly Technical Knowledge Webinar Series",
+    speaker: "Dr. Asit Kumar",
+    speakerRole: "Hydraulic Modeling & River Basin Specialist",
+    date: "Saturday, 25 October 2026",
+    time: "7:00 PM – 8:30 PM IST",
+    meetingLink: "https://meet.google.com/trm-acdm-web",
+    fee: "100% Free Open Access (Certificate Provided)",
+    takeaways: [
+      "2D Shallow Water Equations & Finite Volume Hydrodynamic Solvers",
+      "Dam Break Hydrograph Generation & Flood Hazard Inundation Mapping",
+      "Model Calibration against Real-World Gauge Telemetry & CWC Guidelines",
+    ],
+    targetAudience: "Civil Engineers, Hydrologists, Water Planners & Students",
+  });
+  const [copiedAnnouncement, setCopiedAnnouncement] = useState(false);
+  const [broadcastDone, setBroadcastDone] = useState(false);
+
   const showNotice = (msg: string) => {
     setRolloutNotice(msg);
     setTimeout(() => setRolloutNotice(""), 3500);
@@ -1084,14 +1110,24 @@ export function AdminProgrammesRolloutPanel({
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--tm3-surface)", padding: "4px 12px", borderRadius: 10, border: "1px solid var(--tm3-border)", width: 260 }}>
-          <Search size={15} style={{ color: "var(--tm3-text-soft)" }} />
-          <input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search offerings, instructors..."
-            style={{ border: "none", background: "transparent", color: "var(--tm3-text)", fontSize: "0.8rem", outline: "none", width: "100%" }}
-          />
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="tm3-button tm3-button--lime"
+            onClick={() => setBrochureModalOpen(true)}
+            style={{ fontSize: "0.78rem", whiteSpace: "nowrap", padding: "6px 14px" }}
+          >
+            <Sparkles size={14} /> Webinar Brochure Studio
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--tm3-surface)", padding: "4px 12px", borderRadius: 10, border: "1px solid var(--tm3-border)", width: 240 }}>
+            <Search size={15} style={{ color: "var(--tm3-text-soft)" }} />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search offerings, instructors..."
+              style={{ border: "none", background: "transparent", color: "var(--tm3-text)", fontSize: "0.8rem", outline: "none", width: "100%" }}
+            />
+          </div>
         </div>
       </div>
 
@@ -1179,6 +1215,292 @@ export function AdminProgrammesRolloutPanel({
           </tbody>
         </table>
       </div>
+
+      {/* AUTOMATED WEBINAR BROCHURE STUDIO MODAL */}
+      {brochureModalOpen && (
+        <div className="tm3-modal-backdrop" role="presentation">
+          <div className="tm3-modal tm3-modal--composer" role="dialog" aria-modal="true" style={{ maxWidth: 860 }}>
+            <div className="tm3-modal__head">
+              <div>
+                <span className="tm3-eyebrow tm3-eyebrow--gold">Admin Automation Engine</span>
+                <h2>Automated Webinar Brochure & Invitation Studio</h2>
+                <p style={{ margin: "4px 0 0", color: "var(--tm3-text-soft)", fontSize: "0.82rem" }}>
+                  Create or schedule bi-weekly webinars. Instantly generate publication-grade brochures, copy social invitation announcements, and broadcast reminders to enrolled students and faculty.
+                </p>
+              </div>
+              <button type="button" onClick={() => setBrochureModalOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+              {/* Left Column: Form Controls */}
+              <div className="tm3-form-grid" style={{ alignContent: "start" }}>
+                <label className="tm3-field tm3-field--full">
+                  <span>Load from Scheduled Webinar</span>
+                  <select
+                    onChange={(e) => {
+                      const found = webinars.find((w) => w.id === Number(e.target.value));
+                      if (found) {
+                        setBrochureState({
+                          ...brochureState,
+                          title: found.title,
+                          category: found.category,
+                          speaker: found.resourcePerson,
+                          date: formatDate(found.date),
+                          time: found.time || "7:00 PM IST",
+                          meetingLink: found.link || "https://meet.google.com/trm-acdm-web",
+                        });
+                      }
+                    }}
+                  >
+                    <option value="">-- Select an Existing Webinar --</option>
+                    {webinars.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.title} ({formatDate(w.date)})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="tm3-field tm3-field--full">
+                  <span>Webinar Topic / Title</span>
+                  <input
+                    value={brochureState.title}
+                    onChange={(e) => setBrochureState({ ...brochureState, title: e.target.value })}
+                  />
+                </label>
+
+                <label className="tm3-field">
+                  <span>Speaker / Resource Person</span>
+                  <input
+                    value={brochureState.speaker}
+                    onChange={(e) => setBrochureState({ ...brochureState, speaker: e.target.value })}
+                  />
+                </label>
+
+                <label className="tm3-field">
+                  <span>Speaker Role / Affiliation</span>
+                  <input
+                    value={brochureState.speakerRole}
+                    onChange={(e) => setBrochureState({ ...brochureState, speakerRole: e.target.value })}
+                  />
+                </label>
+
+                <label className="tm3-field">
+                  <span>Date</span>
+                  <input
+                    value={brochureState.date}
+                    onChange={(e) => setBrochureState({ ...brochureState, date: e.target.value })}
+                  />
+                </label>
+
+                <label className="tm3-field">
+                  <span>Time (with Timezone)</span>
+                  <input
+                    value={brochureState.time}
+                    onChange={(e) => setBrochureState({ ...brochureState, time: e.target.value })}
+                  />
+                </label>
+
+                <label className="tm3-field tm3-field--full">
+                  <span>Live Meeting Link (Google Meet / Zoom)</span>
+                  <input
+                    value={brochureState.meetingLink}
+                    onChange={(e) => setBrochureState({ ...brochureState, meetingLink: e.target.value })}
+                  />
+                </label>
+
+                <label className="tm3-field tm3-field--full">
+                  <span>Key Takeaway #1</span>
+                  <input
+                    value={brochureState.takeaways[0]}
+                    onChange={(e) => {
+                      const updated = [...brochureState.takeaways];
+                      updated[0] = e.target.value;
+                      setBrochureState({ ...brochureState, takeaways: updated });
+                    }}
+                  />
+                </label>
+
+                <label className="tm3-field tm3-field--full">
+                  <span>Key Takeaway #2</span>
+                  <input
+                    value={brochureState.takeaways[1]}
+                    onChange={(e) => {
+                      const updated = [...brochureState.takeaways];
+                      updated[1] = e.target.value;
+                      setBrochureState({ ...brochureState, takeaways: updated });
+                    }}
+                  />
+                </label>
+
+                <label className="tm3-field tm3-field--full">
+                  <span>Key Takeaway #3</span>
+                  <input
+                    value={brochureState.takeaways[2]}
+                    onChange={(e) => {
+                      const updated = [...brochureState.takeaways];
+                      updated[2] = e.target.value;
+                      setBrochureState({ ...brochureState, takeaways: updated });
+                    }}
+                  />
+                </label>
+              </div>
+
+              {/* Right Column: Live Publication Brochure Card */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <span style={{ fontSize: "0.78rem", color: "var(--tm3-text-soft)", fontWeight: 700 }}>
+                  Live Generated Brochure Preview (Publication Ready):
+                </span>
+
+                <div
+                  id="tm-webinar-brochure"
+                  style={{
+                    borderRadius: 20,
+                    background: "linear-gradient(145deg, #05241d 0%, #083c31 55%, #051d18 100%)",
+                    border: "2px solid rgba(214, 245, 109, 0.4)",
+                    padding: 24,
+                    color: "#fff",
+                    boxShadow: "0 16px 36px rgba(0,0,0,0.45)",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Decorative background grid accents */}
+                  <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(214, 245, 109, 0.08)", pointerEvents: "none" }} />
+
+                  {/* Header Strip */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.12)", paddingBottom: 14, marginBottom: 16 }}>
+                    <div>
+                      <strong style={{ fontSize: "0.95rem", letterSpacing: "0.5px", color: "#fff", display: "block" }}>
+                        TERRAMATRIX ACADEMY
+                      </strong>
+                      <small style={{ color: "var(--tm3-lime)", fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase" }}>
+                        Bi-Weekly Technical Webinar Series
+                      </small>
+                    </div>
+                    <span style={{ padding: "3px 10px", borderRadius: 20, background: "rgba(214,245,109,0.15)", color: "var(--tm3-lime)", fontSize: "0.7rem", fontWeight: 800, border: "1px solid rgba(214,245,109,0.3)" }}>
+                      FREE OPEN ACCESS
+                    </span>
+                  </div>
+
+                  {/* Domain & Title */}
+                  <Badge tone="green">{brochureState.category}</Badge>
+                  <h3 style={{ fontSize: "1.25rem", margin: "10px 0 6px", lineHeight: 1.35, color: "#fff", fontWeight: 800 }}>
+                    {brochureState.title}
+                  </h3>
+
+                  {/* Speaker Card */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", margin: "12px 0" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--tm3-primary)", display: "grid", placeItems: "center", color: "#fff", fontWeight: 800 }}>
+                      {brochureState.speaker.slice(0, 1)}
+                    </div>
+                    <div>
+                      <strong style={{ fontSize: "0.88rem", display: "block" }}>{brochureState.speaker}</strong>
+                      <small style={{ color: "#a4c4b8", fontSize: "0.74rem" }}>{brochureState.speakerRole}</small>
+                    </div>
+                  </div>
+
+                  {/* Key Takeaways */}
+                  <div style={{ margin: "14px 0" }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--tm3-lime)", fontWeight: 800, textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                      Key Learning Takeaways:
+                    </span>
+                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: "0.78rem", color: "#d1fae5", lineHeight: 1.55 }}>
+                      {brochureState.takeaways.filter(Boolean).map((t, idx) => (
+                        <li key={idx}>{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Schedule & Platform Strip */}
+                  <div style={{ padding: 12, borderRadius: 12, background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.1)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: "0.75rem" }}>
+                    <div>
+                      <span style={{ color: "var(--tm3-text-soft)", display: "block" }}>Date & Time:</span>
+                      <strong style={{ color: "#fff" }}>{brochureState.date}</strong>
+                      <small style={{ color: "#a4c4b8", display: "block" }}>{brochureState.time}</small>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--tm3-text-soft)", display: "block" }}>Live Platform:</span>
+                      <strong style={{ color: "var(--tm3-lime)" }}>Google Meet / Live Studio</strong>
+                      <small style={{ color: "#a4c4b8", display: "block" }}>Interactive Q&A Session</small>
+                    </div>
+                  </div>
+
+                  {/* Registration Footer & QR / Link note */}
+                  <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.12)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={{ fontSize: "0.68rem", color: "var(--tm3-text-soft)", display: "block" }}>Register free at:</span>
+                      <strong style={{ fontSize: "0.76rem", color: "var(--tm3-lime)" }}>
+                        terra-matrix-academy.vercel.app/#/webinars
+                      </strong>
+                    </div>
+                    <span style={{ fontSize: "0.68rem", color: "#a4c4b8", textAlign: "right" }}>
+                      Auto-enrolls in Academy Community
+                    </span>
+                  </div>
+                </div>
+
+                {/* Brochure Actions */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <button
+                    type="button"
+                    className="tm3-button tm3-button--outline"
+                    onClick={() => {
+                      window.print();
+                    }}
+                    style={{ fontSize: "0.78rem", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                  >
+                    <Printer size={15} /> Print / Save PDF
+                  </button>
+
+                  <button
+                    type="button"
+                    className="tm3-button tm3-button--gold"
+                    onClick={() => {
+                      const text = `🌐 TERRAMATRIX ACADEMY · TECHNICAL WEBINAR\n\n📌 Topic: ${brochureState.title}\n🎙 Speaker: ${brochureState.speaker} (${brochureState.speakerRole})\n🗓 Date: ${brochureState.date} at ${brochureState.time}\n💻 Platform: ${brochureState.meetingLink}\n💰 Registration: Free Open Access\n\nKey Takeaways:\n• ${brochureState.takeaways.join("\n• ")}\n\n👉 Register here: https://terra-matrix-academy.vercel.app/#/webinars\n(Registering automatically joins the TerraMatrix Student Community with free access to exam simulators, video lessons, and handbooks!)`;
+                      navigator.clipboard.writeText(text);
+                      setCopiedAnnouncement(true);
+                      setTimeout(() => setCopiedAnnouncement(false), 2500);
+                    }}
+                    style={{ fontSize: "0.78rem", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                  >
+                    <Copy size={14} /> {copiedAnnouncement ? "Copied to Clipboard!" : "Copy WhatsApp/Social Invite"}
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  className="tm3-button tm3-button--lime"
+                  onClick={() => {
+                    try {
+                      const stored = JSON.parse(localStorage.getItem("terramatrix_announcements") || "[]");
+                      stored.unshift({
+                        id: Date.now(),
+                        title: `Upcoming Bi-Weekly Webinar: ${brochureState.title}`,
+                        date: brochureState.date,
+                        speaker: brochureState.speaker,
+                        link: brochureState.meetingLink,
+                        postedAt: new Date().toLocaleDateString("en-IN"),
+                      });
+                      localStorage.setItem("terramatrix_announcements", JSON.stringify(stored));
+                      setBroadcastDone(true);
+                      setTimeout(() => setBroadcastDone(false), 3000);
+                      showNotice("Webinar invitation broadcasted to enrolled students and instructors!");
+                    } catch {
+                      // Fallback
+                    }
+                  }}
+                  style={{ fontSize: "0.78rem", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                >
+                  <Send size={14} /> {broadcastDone ? "Broadcast Active!" : "Broadcast Notification to Enrolled Students & Faculty"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, CalendarDays, Clock3, MapPin, UsersRound, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Copy, ExternalLink, MapPin, Sparkles, UsersRound, Video, X } from "lucide-react";
 import { submitPublicRegistration } from "../lib/appsScriptApi";
 import { Badge, EmptyState, Metric, PageIntro } from "./Ui";
 import { formatDate, formatFee, loadEvents, type AcademyEvent } from "../lib/catalogData";
@@ -17,6 +18,7 @@ const emptyForm: FormState = { name: "", email: "", phone: "", organisation: "",
 export default function EventCatalogue({ kind }: { kind: "webinars" | "workshops" }) {
   const [items, setItems] = useState<AcademyEvent[]>([]);
   const [selected, setSelected] = useState<AcademyEvent | null>(null);
+  const [registeredSuccess, setRegisteredSuccess] = useState<{ event: AcademyEvent; student: FormState; linkCopied?: boolean } | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState("All");
@@ -57,9 +59,44 @@ export default function EventCatalogue({ kind }: { kind: "webinars" | "workshops
         organisation: form.organisation.trim(),
         message: form.message.trim(),
       });
+
+      // Unified Learner Registration: Auto-enroll attendee into TerraMatrix Academy
+      const studentSession = {
+        email: form.email.trim().toLowerCase(),
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        organisation: form.organisation.trim(),
+        role: "Student",
+        joinedVia: `${noun}: ${selected.title}`,
+        registeredAt: new Date().toLocaleDateString("en-IN"),
+      };
+      localStorage.setItem("terramatrix_student_login", JSON.stringify(studentSession));
+
+      try {
+        const storedEnrollments = JSON.parse(localStorage.getItem("terramatrix_enrollments") || "[]");
+        storedEnrollments.unshift({
+          id: Date.now(),
+          courseId: selected.id,
+          courseTitle: selected.title,
+          studentName: studentSession.name,
+          email: studentSession.email,
+          phone: studentSession.phone,
+          organisation: studentSession.organisation,
+          enrolledAt: new Date().toLocaleDateString("en-IN"),
+          status: "Enrolled",
+          progress: 0,
+          kind: noun,
+          meetingLink: selected.link || "https://meet.google.com/trm-acdm-web",
+        });
+        localStorage.setItem("terramatrix_enrollments", JSON.stringify(storedEnrollments));
+      } catch {
+        // Fallback
+      }
+
+      window.dispatchEvent(new Event("storage"));
+      setRegisteredSuccess({ event: selected, student: form });
       setSelected(null);
       setForm(emptyForm);
-      alert(`${noun} registration submitted. The academy will send confirmation details.`);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Registration could not be submitted.");
     } finally {
@@ -134,6 +171,97 @@ export default function EventCatalogue({ kind }: { kind: "webinars" | "workshops
               </div>
               <label className="tm3-field">Message<textarea value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} placeholder="Optional note or question" /></label>
               <button className="tm3-button tm3-button--dark" type="button" onClick={() => void submit()} disabled={submitting}>{submitting ? "Submitting…" : "Submit registration"}<ArrowRight size={17} /></button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTRATION CONFIRMED & ONBOARDING MODAL */}
+      {registeredSuccess && (
+        <div className="tm3-modal-backdrop" role="dialog" aria-modal="true" aria-label="Registration Confirmed">
+          <div className="tm3-modal tm3-modal--composer" style={{ maxWidth: 580 }}>
+            <button className="tm3-modal__close" type="button" onClick={() => setRegisteredSuccess(null)} aria-label="Close">
+              <X size={18} />
+            </button>
+
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <span style={{ display: "inline-grid", placeItems: "center", width: 56, height: 56, borderRadius: "50%", background: "rgba(214,245,109,0.15)", color: "var(--tm3-lime)", marginBottom: 12 }}>
+                <CheckCircle2 size={32} />
+              </span>
+              <div className="tm3-eyebrow tm3-eyebrow--gold" style={{ margin: "0 auto 4px" }}>
+                Registration Confirmed · Welcome to the Community
+              </div>
+              <h2 style={{ fontSize: "1.45rem", margin: 0 }}>
+                You're In! Welcome to TerraMatrix Academy
+              </h2>
+            </div>
+
+            <div style={{ padding: 18, borderRadius: 16, background: "var(--tm3-surface)", border: "1px solid var(--tm3-border)", marginBottom: 18 }}>
+              <Badge tone="green">{noun} Session Details</Badge>
+              <h3 style={{ margin: "8px 0 6px", fontSize: "1.1rem", fontWeight: 800 }}>
+                {registeredSuccess.event.title}
+              </h3>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: "0.82rem", color: "var(--tm3-text-soft)", margin: "8px 0 14px" }}>
+                <span><CalendarDays size={14} style={{ verticalAlign: -2 }} /> {formatDate(registeredSuccess.event.date)}</span>
+                <span><Clock3 size={14} style={{ verticalAlign: -2 }} /> {registeredSuccess.event.time || "Time TBA"}</span>
+                <span><UsersRound size={14} style={{ verticalAlign: -2 }} /> {registeredSuccess.event.resourcePerson}</span>
+              </div>
+
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(0,0,0,0.25)", border: "1px dashed var(--tm3-border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                <span style={{ fontSize: "0.8rem", color: "#a7f3d0", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <Video size={15} style={{ color: "var(--tm3-lime)" }} />
+                  <strong>Meeting Room:</strong> {registeredSuccess.event.link || "https://meet.google.com/trm-acdm-web"}
+                </span>
+                <button
+                  type="button"
+                  className="tm3-button tm3-button--outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(registeredSuccess.event.link || "https://meet.google.com/trm-acdm-web");
+                    setRegisteredSuccess({ ...registeredSuccess, linkCopied: true });
+                    setTimeout(() => setRegisteredSuccess((prev) => prev ? { ...prev, linkCopied: false } : null), 2500);
+                  }}
+                  style={{ padding: "4px 10px", fontSize: "0.75rem" }}
+                >
+                  <Copy size={12} /> {registeredSuccess.linkCopied ? "Copied!" : "Copy Link"}
+                </button>
+              </div>
+            </div>
+
+            {/* TerraMatrix Academy Community Access Perk Banner */}
+            <div style={{ padding: "14px 18px", borderRadius: 14, background: "rgba(214, 245, 109, 0.08)", border: "1px solid rgba(214, 245, 109, 0.25)", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--tm3-lime)", fontWeight: 800, fontSize: "0.82rem", marginBottom: 4 }}>
+                <Sparkles size={16} />
+                <span>Learner Community Privileges Unlocked:</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--tm3-text-soft)", lineHeight: 1.5 }}>
+                Your email (<strong>{registeredSuccess.student.email}</strong>) is now registered in our active student community. You have immediate free access to all Learning Library videos, Competitive Exam Question Banks, and open-access code notebooks.
+              </p>
+            </div>
+
+            <div className="tm3-modal__actions" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+              <Link
+                to="/student-portal"
+                className="tm3-button tm3-button--gold"
+                style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setRegisteredSuccess(null)}
+              >
+                Enter Student Portal Now <ArrowRight size={15} />
+              </Link>
+              <Link
+                to="/exam-prep"
+                className="tm3-button tm3-button--outline"
+                style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setRegisteredSuccess(null)}
+              >
+                Try Exam Simulator
+              </Link>
+              <button
+                type="button"
+                className="tm3-button tm3-button--ghost"
+                onClick={() => setRegisteredSuccess(null)}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

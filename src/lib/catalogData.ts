@@ -72,6 +72,7 @@ export type AcademyEvent = {
   instructorIds: number[];
   fee: string;
   certification: string;
+  link?: string;
   recordingLink: string;
   imageUrl: string;
   status: "Draft" | "Published" | "Upcoming" | "Completed";

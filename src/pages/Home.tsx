@@ -11,6 +11,7 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Compass,
   Cpu,
@@ -112,112 +113,64 @@ const domains = [
 
 const engineeringTopics = [
   {
-    name: "BIM & Digital Coordination",
-    subtitle: "Parametric 3D & Detailing",
-    tools: "Revit · Navisworks · IFC",
-    code: "ISO 19650",
-    icon: Boxes,
-    to: "/student?category=Design%20%26%20Analysis",
-    tone: "gold",
-  },
-  {
-    name: "CAD & Structural Drafting",
-    subtitle: "Reinforcement & Detailing",
-    tools: "AutoCAD · Detailing · IS 456",
-    code: "IS 456 / SP 34",
-    icon: Compass,
-    to: "/student?category=Engineering%20Tools",
-    tone: "green",
-  },
-  {
-    name: "GIS & Spatial Intelligence",
-    subtitle: "Vector, Raster & Spatial SQL",
-    tools: "QGIS · ArcGIS Pro · PostGIS",
-    code: "OGC Standards",
-    icon: Map,
-    to: "/student?category=Geospatial%20Tools",
-    tone: "lime",
-  },
-  {
-    name: "Structural Design & Codes",
-    subtitle: "Concrete, Steel & Foundations",
-    tools: "IS Codes · Eurocodes · ACI",
-    code: "IS 1893 / EC 2",
-    icon: Building2,
-    to: "/student?category=Design%20%26%20Analysis",
-    tone: "green",
-  },
-  {
-    name: "Finite Element & Analysis",
-    subtitle: "Dynamic & Seismic Solvers",
-    tools: "SAP2000 · ETABS · Modal FEA",
-    code: "Nonlinear Solvers",
+    name: "Structural Analysis & Computational Mechanics",
+    headline: "Nonlinear Solvers, Dynamic Response & Code Detailing",
+    description: "Finite element formulations, seismic response spectra (IS 1893, Eurocodes), and structural detailing for reinforced concrete and steel infrastructure.",
+    tools: "SAP2000 · ETABS · Non-linear FEA · IS 456 · IS 1893",
+    code: "Structural & Seismic",
     icon: Activity,
     to: "/student?category=Design%20%26%20Analysis",
     tone: "blue",
   },
   {
-    name: "Catchment & Hydrology",
-    subtitle: "Rainfall-Runoff Modeling",
-    tools: "HEC-HMS · Curve Number · IDF",
-    code: "CWC / SCS-CN",
+    name: "Water Resources, Catchments & Hydrodynamics",
+    headline: "Basin Hydrology, Dam Breach & 2D Flood Dynamics",
+    description: "Catchment rainfall-runoff modeling, unsteady river hydrodynamics, shallow-water solvers, and water infrastructure risk evaluation.",
+    tools: "HEC-RAS 1D/2D · HEC-HMS · Hydrodynamic Solvers · CWC",
+    code: "Hydraulics & Basin Modeling",
     icon: Waves,
     to: "/student?category=Engineering%20Tools",
     tone: "lime",
   },
   {
-    name: "2D River Hydraulics",
-    subtitle: "Dam Breach & Flood Hydrodynamics",
-    tools: "HEC-RAS 1D/2D · Hydrodynamic",
-    code: "Shallow Water Eqns",
-    icon: Layers,
-    to: "/student?category=Engineering%20Tools",
-    tone: "blue",
-  },
-  {
-    name: "Engineering Data Science",
-    subtitle: "Statistical Insights & Reliability",
-    tools: "Pandas · SciPy · Monte Carlo",
-    code: "Weibull / Gumbel",
-    icon: Database,
-    to: "/student?category=Computational%20Tools",
-    tone: "gold",
-  },
-  {
-    name: "Field Survey & GNSS",
-    subtitle: "Total Station & Drone Photogrammetry",
-    tools: "RTK GNSS · Pix4D · DTM Mesh",
-    code: "WGS84 / UTM",
-    icon: Navigation,
+    name: "Geospatial Intelligence, Remote Sensing & Geomatics",
+    headline: "Multispectral Satellites, Spatial SQL & Drone Photogrammetry",
+    description: "Earth observation analysis, multispectral satellite data, radar InSAR deformation, UAV terrain photogrammetry, and spatial databases.",
+    tools: "QGIS · ArcGIS Pro · Google Earth Engine · RTK GNSS · PostGIS",
+    code: "GIS & Spatial Intelligence",
+    icon: Satellite,
     to: "/student?category=Geospatial%20Tools",
     tone: "green",
   },
   {
-    name: "Satellite Remote Sensing",
-    subtitle: "Multispectral & Radar InSAR",
-    tools: "Sentinel · Landsat · GEE",
-    code: "Copernicus / ESA",
-    icon: Satellite,
-    to: "/student?category=Geospatial%20Tools",
-    tone: "lime",
-  },
-  {
-    name: "Scientific Python",
-    subtitle: "Numerical Modeling & Automation",
-    tools: "NumPy · SymPy · Matplotlib",
-    code: "PEP 8 Scientific",
+    name: "Computational Engineering & Numerical Solvers",
+    headline: "Scientific Python, Matrix Formulations & Optimization",
+    description: "Translating engineering governing equations into scientific computing pipelines, matrix solvers, probabilistic reliability, and sensitivity analysis.",
+    tools: "NumPy · SciPy · SymPy · Pandas · Monte Carlo · Python",
+    code: "Scientific Computing",
     icon: FileCode,
     to: "/student?category=Computational%20Tools",
     tone: "gold",
   },
   {
-    name: "AI & Telemetry Automations",
-    subtitle: "Digital Twins & Engineering APIs",
-    tools: "FastAPI · PyTorch · Sensor IoT",
-    code: "Digital Twin API",
+    name: "Infrastructure BIM, Digital Twins & Virtual Design",
+    headline: "Parametric Modeling, Clash Coordination & Field Verification",
+    description: "Multi-disciplinary 3D BIM coordination, structural reinforcement detailing, construction scheduling, and drone-based reality capture.",
+    tools: "Autodesk Revit · Navisworks · ISO 19650 · Drone Mesh · Total Station",
+    code: "BIM & Digital Infrastructure",
+    icon: Boxes,
+    to: "/student?category=Design%20%26%20Analysis",
+    tone: "blue",
+  },
+  {
+    name: "AI & Machine Learning for Physical Engineers",
+    headline: "Physics-Informed ML, Structural Health & Engineering APIs",
+    description: "Surrogate neural network models, structural health monitoring, automated calculation microservices, and AI-assisted engineering decision support.",
+    tools: "PyTorch · Scikit-Learn · Sensor IoT · Fast Engineering APIs",
+    code: "AI for Engineers",
     icon: BrainCircuit,
     to: "/student",
-    tone: "blue",
+    tone: "lime",
   },
 ];
 
@@ -235,12 +188,30 @@ export default function Home() {
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [form, setForm] = useState<EnquiryForm>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
 
   useEffect(() => {
     setCourses(loadCourses());
     setInstructors(loadInstructors());
     setEventCount(loadEvents("webinars").length + loadEvents("workshops").length);
   }, []);
+
+  useEffect(() => {
+    if (isCarouselPaused) return;
+    const timer = setInterval(() => {
+      setCarouselIndex((prev) => (prev + 1) % engineeringTopics.length);
+    }, 4200);
+    return () => clearInterval(timer);
+  }, [isCarouselPaused]);
+
+  const prevCarouselSlide = () => {
+    setCarouselIndex((prev) => (prev - 1 + engineeringTopics.length) % engineeringTopics.length);
+  };
+
+  const nextCarouselSlide = () => {
+    setCarouselIndex((prev) => (prev + 1) % engineeringTopics.length);
+  };
 
   const featuredCourses = useMemo(() => courses.slice(0, 3), [courses]);
 
@@ -445,30 +416,113 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="tm3-tools-section">
+      <section
+        className="tm3-tools-section"
+        onMouseEnter={() => setIsCarouselPaused(true)}
+        onMouseLeave={() => setIsCarouselPaused(false)}
+      >
         <div className="tm3-shell">
-          <SectionHeading
-            eyebrow="Competency matrix"
-            title="Master authentic engineering tools and codes."
-            description="Hands-on capability building across structural analysis, hydrodynamics, spatial engines, and scientific computing."
-            align="center"
-          />
-          <div className="tm3-topics-grid">
-            {engineeringTopics.map((topic) => {
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
+            <div>
+              <span className="tm3-eyebrow tm3-eyebrow--light">Competency matrix</span>
+              <h2 style={{ fontSize: "2rem", margin: "4px 0 8px", fontWeight: 800, color: "#fff" }}>
+                Master authentic engineering tools & standards.
+              </h2>
+              <p style={{ margin: 0, color: "#c5d9d1", fontSize: "0.95rem", maxWidth: 680 }}>
+                Progressive capability pathways across computational mechanics, 2D river hydrodynamics, satellite geospatial intelligence, and engineering AI.
+              </p>
+            </div>
+
+            {/* Carousel Navigation Bar */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ display: "flex", gap: 6 }}>
+                {engineeringTopics.map((_, dotIdx) => (
+                  <button
+                    key={dotIdx}
+                    type="button"
+                    onClick={() => setCarouselIndex(dotIdx)}
+                    style={{
+                      width: dotIdx === carouselIndex ? 24 : 8,
+                      height: 8,
+                      borderRadius: 4,
+                      background: dotIdx === carouselIndex ? "var(--tm3-lime)" : "rgba(255,255,255,0.25)",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      transition: "all 0.25s ease",
+                    }}
+                    aria-label={`Go to slide ${dotIdx + 1}`}
+                  />
+                ))}
+              </div>
+
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={prevCarouselSlide}
+                  className="tm3-button tm3-button--outline"
+                  style={{ width: 36, height: 36, padding: 0, display: "grid", placeItems: "center", borderRadius: "50%", color: "#fff", borderColor: "rgba(255,255,255,0.25)" }}
+                  aria-label="Previous competency cluster"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={nextCarouselSlide}
+                  className="tm3-button tm3-button--outline"
+                  style={{ width: 36, height: 36, padding: 0, display: "grid", placeItems: "center", borderRadius: "50%", color: "#fff", borderColor: "rgba(255,255,255,0.25)" }}
+                  aria-label="Next competency cluster"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Carousel Slide Cards: Displaying rotating window */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+            {[0, 1, 2].map((offset) => {
+              const topicIndex = (carouselIndex + offset) % engineeringTopics.length;
+              const topic = engineeringTopics[topicIndex];
               const Icon = topic.icon;
               return (
-                <Link to={topic.to} className="tm3-topic-card" key={topic.name}>
-                  <div className="tm3-topic-card__head">
+                <Link
+                  to={topic.to}
+                  className="tm3-topic-card"
+                  key={topic.name}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    minHeight: 280,
+                    textDecoration: "none",
+                    position: "relative",
+                  }}
+                >
+                  <div className="tm3-topic-card__head" style={{ marginBottom: 14 }}>
                     <div className={`tm3-topic-card__icon tm3-topic-card__icon--${topic.tone}`}>
-                      <Icon size={20} />
+                      <Icon size={22} />
                     </div>
                     <span className="tm3-topic-card__code">{topic.code}</span>
                   </div>
-                  <h3>{topic.name}</h3>
-                  <p>{topic.subtitle}</p>
-                  <div className="tm3-topic-card__footer">
-                    <span>{topic.tools}</span>
-                    <ArrowRight size={14} />
+
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: "0 0 6px", lineHeight: 1.35, color: "#fff" }}>
+                    {topic.name}
+                  </h3>
+
+                  <div style={{ color: "var(--tm3-lime)", fontSize: "0.84rem", fontWeight: 700, margin: "0 0 10px" }}>
+                    {topic.headline}
+                  </div>
+
+                  <p style={{ margin: "0 0 16px", color: "var(--tm3-text-soft)", fontSize: "0.85rem", lineHeight: 1.6, flex: 1 }}>
+                    {topic.description}
+                  </p>
+
+                  <div className="tm3-topic-card__footer" style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 14, marginTop: "auto" }}>
+                    <span style={{ fontSize: "0.78rem", color: "#a4c4b8" }}>{topic.tools}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--tm3-lime)", fontWeight: 700, fontSize: "0.82rem" }}>
+                      Explore <ArrowRight size={14} />
+                    </span>
                   </div>
                 </Link>
               );
