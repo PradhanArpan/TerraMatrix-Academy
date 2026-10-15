@@ -1,0 +1,62 @@
+name: Compliance & Codebase Hygiene CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+
+jobs:
+  hygiene-audit:
+    name: Code Hygiene & Route Inventory Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Build & Typecheck
+        run: npm run build
+
+      - name: Dead Code Audit (Knip)
+        run: npx knip --no-exit-code
+
+      - name: Code Duplication Audit (jscpd)
+        run: npx jscpd src/ --threshold 5.0 --reporters console
+
+      - name: Verify Route & Endpoint Inventory
+        run: |
+          npm run inventory:routes
+          git diff --exit-code docs/API_AND_ROUTE_INVENTORY.md || (echo "Route inventory outdated! Run 'npm run inventory:routes' and commit changes." && exit 1)
+
+  accessibility-audit:
+    name: WCAG 2.2 AA Accessibility Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Application
+        run: npm run build
+
+      - name: Run Preview Server & Axe Core Check
+        run: |
+          npx vite preview --port 4173 &
+          npx wait-on http://localhost:4173
+          npx @axe-core/cli http://localhost:4173 --rules color-contrast,label,button-name,link-name,image-alt
