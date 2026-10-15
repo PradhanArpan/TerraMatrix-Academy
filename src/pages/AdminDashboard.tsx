@@ -6,6 +6,7 @@ import {
   BookOpen,
   CalendarDays,
   CheckSquare,
+  Compass,
   CreditCard,
   FileText,
   GraduationCap,
@@ -42,6 +43,7 @@ import {
 } from "../lib/catalogData";
 import {
   AdminExamBankPanel,
+  AdminKnowledgeHubPanel,
   AdminModerationPanel,
   AdminProgrammesRolloutPanel,
 } from "../components/AdminModerationPanels";
@@ -992,6 +994,7 @@ type AdminTab =
   | "moderation"
   | "programmes"
   | "exambank"
+  | "knowledgehub"
   | "levels"
   | "categories"
   | "themes"
@@ -1011,6 +1014,7 @@ const adminTabLabels: Record<AdminTab, string> = {
   moderation: "Approvals & Moderation",
   programmes: "Rollout & Offerings",
   exambank: "Exam Prep Question Bank",
+  knowledgehub: "Knowledge Hub & AI Bot",
   levels: "Levels",
   categories: "Categories",
   themes: "Themes",
@@ -1844,6 +1848,14 @@ export default function AdminDashboard() {
             <CheckSquare size={18} />
             <span>Exam Prep Question Bank</span>
           </button>
+          <button
+            type="button"
+            className={activeAdminTab === "knowledgehub" ? "is-active" : ""}
+            onClick={() => setActiveAdminTab("knowledgehub")}
+          >
+            <Compass size={18} />
+            <span>Knowledge Hub & AI Bot</span>
+          </button>
 
           <div className="tm3-sidebar-group-title">Analytics</div>
           <button type="button" className={activeAdminTab === "overview" ? "is-active" : ""} onClick={() => setActiveAdminTab("overview")}>
@@ -1980,6 +1992,10 @@ export default function AdminDashboard() {
 
       {activeAdminTab === "exambank" && (
         <AdminExamBankPanel />
+      )}
+
+      {activeAdminTab === "knowledgehub" && (
+        <AdminKnowledgeHubPanel />
       )}
 
       {activeAdminTab === "overview" && (

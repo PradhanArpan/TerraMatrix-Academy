@@ -8,14 +8,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Compass,
   FileQuestion,
-  FileText,
   Filter,
   HelpCircle,
   Layers,
   Lock,
-  Maximize2,
-  Minimize2,
   Play,
   RotateCcw,
   Search,
@@ -29,6 +27,7 @@ import { Badge, EmptyState, Metric, PageIntro } from "../components/Ui";
 import {
   loadExamTracks,
   loadExamQuestions,
+  getRandomCbtQuestions,
   shuffleQuestions,
   saveUserExamAttempt,
   loadUserExamAttempts,
@@ -36,9 +35,19 @@ import {
   type ExamQuestion,
   type ExamTrackId,
   type ExamAttemptResult,
+  type ExamHeadCategory,
 } from "../lib/examBankData";
 
 type QuestionStatus = "not_visited" | "not_answered" | "answered" | "marked_for_review";
+
+const EXAM_HEAD_ORDER: ExamHeadCategory[] = [
+  "GATE (National Level)",
+  "UPSC ESE / IES",
+  "State AE / JE & SSC",
+  "Research & PSUs (ISRO/BARC)",
+  "Campus Placement & Viva",
+  "Engineering Aptitude",
+];
 
 export default function ExamPractice() {
   const [tracks, setTracks] = useState<ExamTrack[]>([]);
@@ -55,7 +64,6 @@ export default function ExamPractice() {
   const [visitedIds, setVisitedIds] = useState<Record<string, boolean>>({});
   const [secondsRemaining, setSecondsRemaining] = useState<number>(1800); // 30 mins
   const [isCbtOpen, setIsCbtOpen] = useState(false);
-  const [isPaperViewOpen, setIsPaperViewOpen] = useState(false);
   const [isResultOpen, setIsResultOpen] = useState(false);
   const [examResult, setExamResult] = useState<ExamAttemptResult | null>(null);
   const [confirmExitOpen, setConfirmExitOpen] = useState(false);
@@ -96,8 +104,8 @@ export default function ExamPractice() {
     return [
       "All",
       "All Engineering",
-      "Mechanical & Aerospace",
       "Civil & Infrastructure",
+      "Mechanical & Aerospace",
       "Computer Science & AI",
       "Electrical & Electronics",
       "General Aptitude",
@@ -110,31 +118,51 @@ export default function ExamPractice() {
         selectedDiscipline === "All" || t.discipline === selectedDiscipline;
       const matchSearch =
         !searchQuery.trim() ||
-        `${t.name} ${t.headline} ${t.description} ${t.topics.join(" ")}`
+        `${t.name} ${t.headline} ${t.description} ${t.headCategory} ${t.topics.join(" ")}`
           .toLowerCase()
           .includes(searchQuery.trim().toLowerCase());
       return matchDiscipline && matchSearch;
     });
   }, [tracks, selectedDiscipline, searchQuery]);
 
-  // Launch CBT Exam
-  const launchCbt = (track: ExamTrack, sampleOnly: boolean = false) => {
-    let pool = loadExamQuestions(track.id);
-    if (!studentLogin && sampleOnly) {
-      pool = pool.filter((q) => q.isSample);
+  // Group filtered tracks by Head Category
+  const groupedTracks = useMemo(() => {
+    const groups: { head: ExamHeadCategory; tracks: ExamTrack[] }[] = [];
+    EXAM_HEAD_ORDER.forEach((head) => {
+      const matching = filteredTracks.filter((t) => t.headCategory === head);
+      if (matching.length > 0) {
+        groups.push({ head, tracks: matching });
+      }
+    });
+    // Check if any leftover tracks exist
+    const leftover = filteredTracks.filter(
+      (t) => !EXAM_HEAD_ORDER.includes(t.headCategory as ExamHeadCategory)
+    );
+    if (leftover.length > 0) {
+      groups.push({ head: "Other Examinations" as ExamHeadCategory, tracks: leftover });
     }
-    if (pool.length === 0) return;
+    return groups;
+  }, [filteredTracks]);
 
-    const shuffled = shuffleQuestions(pool);
+  // Launch CBT Exam with Randomized Questions & Options
+  const launchCbt = (track: ExamTrack, sampleOnly: boolean = false) => {
+    let questions: ExamQuestion[];
+    if (!studentLogin && sampleOnly) {
+      const samplePool = loadExamQuestions(track.id).filter((q) => q.isSample);
+      questions = shuffleQuestions(samplePool);
+    } else {
+      questions = getRandomCbtQuestions(track.id, 15);
+    }
+    if (questions.length === 0) return;
+
     setCbtTrack(track);
-    setCbtQuestions(shuffled);
+    setCbtQuestions(questions);
     setCurrentIndex(0);
     setUserAnswers({});
     setReviewedIds({});
-    setVisitedIds({ [shuffled[0].id]: true });
+    setVisitedIds({ [questions[0].id]: true });
     setSecondsRemaining((track.durationMinutes || 30) * 60);
     setIsResultOpen(false);
-    setIsPaperViewOpen(false);
     setConfirmExitOpen(false);
     setIsCbtOpen(true);
   };
@@ -152,91 +180,90 @@ export default function ExamPractice() {
     });
   };
 
-  const handleToggleReview = (qId: string) => {
+  const toggleMarkForReview = (qId: string) => {
     setReviewedIds((prev) => ({ ...prev, [qId]: !prev[qId] }));
-    if (currentIndex < cbtQuestions.length - 1) {
-      goToQuestion(currentIndex + 1);
-    }
   };
 
   const goToQuestion = (index: number) => {
     if (index >= 0 && index < cbtQuestions.length) {
       setCurrentIndex(index);
-      const nextQ = cbtQuestions[index];
-      setVisitedIds((prev) => ({ ...prev, [nextQ.id]: true }));
+      const targetId = cbtQuestions[index].id;
+      setVisitedIds((prev) => ({ ...prev, [targetId]: true }));
     }
   };
 
-  // Determine question state in palette
-  const getQuestionStatus = (q: ExamQuestion): QuestionStatus => {
-    const isAnswered = userAnswers[q.id] !== undefined;
-    const isMarked = !!reviewedIds[q.id];
-    const isVisited = !!visitedIds[q.id];
-
-    if (isMarked) return "marked_for_review";
-    if (isAnswered) return "answered";
-    if (isVisited) return "not_answered";
-    return "not_visited";
+  const handleSaveAndNext = () => {
+    if (currentIndex < cbtQuestions.length - 1) {
+      goToQuestion(currentIndex + 1);
+    }
   };
 
-  // Submit CBT Exam
   const submitExam = () => {
     if (!cbtTrack) return;
     let score = 0;
-    const answerSummary: Record<
-      string,
-      { selected: number; correct: number; isCorrect: boolean }
-    > = {};
+    const answersRecord: Record<string, { selected: number; correct: number; isCorrect: boolean }> = {};
 
     cbtQuestions.forEach((q) => {
-      const userChoice = userAnswers[q.id];
-      const isCorrect = userChoice === q.correctIndex;
-      if (userChoice !== undefined) {
+      const selected = userAnswers[q.id];
+      const isAnswered = selected !== undefined;
+      const isCorrect = isAnswered && selected === q.correctIndex;
+
+      if (isAnswered) {
         if (isCorrect) score += 1;
-        else score -= 0.33; // Standard GATE negative marking
+        else score = Math.max(0, score - 0.33); // standard negative marking
       }
-      answerSummary[q.id] = {
-        selected: userChoice ?? -1,
+
+      answersRecord[q.id] = {
+        selected: isAnswered ? selected : -1,
         correct: q.correctIndex,
         isCorrect: isCorrect,
       };
     });
 
-    const netScore = Math.max(0, Number(score.toFixed(2)));
-    const totalPossible = cbtQuestions.length;
-    const percentage = Math.round((netScore / totalPossible) * 100);
-    const duration = (cbtTrack.durationMinutes || 30) * 60;
-    const timeSpent = duration - secondsRemaining;
+    const roundedScore = Math.round(score * 100) / 100;
+    const percentage = Math.round((roundedScore / cbtQuestions.length) * 100);
+    const totalTimeSpent = (cbtTrack.durationMinutes || 30) * 60 - secondsRemaining;
 
-    const attempt: ExamAttemptResult = {
+    const result: ExamAttemptResult = {
       id: `attempt_${Date.now()}`,
-      userEmail: studentLogin?.email || "guest@terramatrix.academy",
+      userEmail: studentLogin?.email || "anonymous_student@terramatrix.academy",
       trackId: cbtTrack.id,
       topic: cbtTrack.name,
-      totalQuestions: totalPossible,
-      score: netScore,
-      percentage,
-      timeSpentSeconds: timeSpent,
+      totalQuestions: cbtQuestions.length,
+      score: roundedScore,
+      percentage: Math.max(0, percentage),
+      timeSpentSeconds: Math.max(1, totalTimeSpent),
       date: new Date().toISOString(),
-      answers: answerSummary,
+      answers: answersRecord,
     };
 
-    saveUserExamAttempt(attempt);
-    setExamResult(attempt);
+    saveUserExamAttempt(result);
+    setExamResult(result);
     setIsResultOpen(true);
   };
 
-  // Timer formatting
+  // Helper formatting seconds
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  // Current question pointer
+  // Current Question Object
   const currentQ = cbtQuestions[currentIndex];
 
-  // Palette counts
+  // Palette Status Resolver
+  const getQuestionStatus = (q: ExamQuestion): QuestionStatus => {
+    const isAnswered = userAnswers[q.id] !== undefined;
+    const isReviewed = reviewedIds[q.id];
+    const isVisited = visitedIds[q.id];
+
+    if (isReviewed) return "marked_for_review";
+    if (isAnswered) return "answered";
+    if (isVisited) return "not_answered";
+    return "not_visited";
+  };
+
   const paletteCounts = useMemo(() => {
     let answered = 0;
     let marked = 0;
@@ -258,11 +285,11 @@ export default function ExamPractice() {
     <main>
       <PageIntro
         eyebrow="Standardized Engineering Assessment"
-        title="Examination & Model CBT Test Simulator"
-        description="Interactive Computer-Based Test (CBT) environment modeled after official IIT GATE and UPSC examination consoles. Select from universal and branch-specific papers with instant automated scoring, question palettes, timer controls, and detailed mathematical explanations."
+        title="Examination & CBT Simulator"
+        description="Authentic Computer-Based Test (CBT) environment modeled after official IIT GATE, UPSC ESE, State PSC, and PSU examination consoles. Select from branch-specific model papers with instant automated scoring, question palettes, timer controls, and detailed mathematical derivations."
         aside={
           <div style={{ display: "grid", gap: 10 }}>
-            <Metric value="100% Free" label="Candidate access" helper="Shuffled on every attempt" />
+            <Metric value="100% Free" label="Candidate access" helper="Fresh questions on every run" />
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--tm3-muted)", fontWeight: 700 }}>
               <Sparkles size={14} style={{ color: "var(--tm3-lime)" }} /> Official IIT / UPSC Question Architecture
             </div>
@@ -273,7 +300,7 @@ export default function ExamPractice() {
       {/* Main Container */}
       <section className="tm3-shell" style={{ marginBottom: 60 }}>
         {/* Discipline Filters & Search */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 28 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {disciplines.map((d) => (
               <button
@@ -288,13 +315,13 @@ export default function ExamPractice() {
             ))}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 260 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 280 }}>
             <div className="tm3-field" style={{ margin: 0, width: "100%" }}>
               <div style={{ position: "relative" }}>
                 <Search size={15} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--tm3-text-soft)" }} />
                 <input
                   type="text"
-                  placeholder="Search papers, topics, codes..."
+                  placeholder="Search model papers, topics, formulas..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ paddingLeft: 34, height: 36, fontSize: "0.82rem" }}
@@ -304,81 +331,115 @@ export default function ExamPractice() {
           </div>
         </div>
 
-        {/* Paper Cards Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 24 }}>
-          {filteredTracks.map((track) => (
-            <article
-              key={track.id}
-              style={{
-                borderRadius: 20,
-                background: "var(--tm3-surface)",
-                border: "1px solid var(--tm3-border)",
-                padding: 24,
-                display: "flex",
-                flexDirection: "column",
-                boxShadow: "var(--tm3-shadow-sm)",
-                transition: "transform .15s, border-color .15s",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-                <Badge tone="green">{track.discipline}</Badge>
-                <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--tm3-primary)", display: "flex", alignItems: "center", gap: 4 }}>
-                  <Clock size={12} /> {track.durationMinutes} Mins · +1 / -0.33
+        {/* Section Heading: Model Papers */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, borderBottom: "2px solid var(--tm3-border)", paddingBottom: 12 }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800, color: "var(--tm3-ink)" }}>
+              Model Papers
+            </h2>
+            <p style={{ margin: "4px 0 0", fontSize: "0.84rem", color: "var(--tm3-text-soft)" }}>
+              Categorized by national examination bodies and competitive tracks. Practice repeatedly with randomized question sets.
+            </p>
+          </div>
+          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--tm3-primary)", background: "rgba(16,185,129,.1)", padding: "4px 10px", borderRadius: 8 }}>
+            {filteredTracks.length} Papers Available
+          </span>
+        </div>
+
+        {/* Categorized Model Papers in Sleek Compact Rows */}
+        <div style={{ display: "grid", gap: 32 }}>
+          {groupedTracks.map(({ head, tracks: categoryTracks }) => (
+            <div key={head} style={{ display: "grid", gap: 12 }}>
+              {/* Category Head Banner */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", background: "var(--tm3-surface-muted)", borderRadius: 10, borderLeft: "4px solid var(--tm3-primary)" }}>
+                <Compass size={16} style={{ color: "var(--tm3-primary)" }} />
+                <h3 style={{ margin: 0, fontSize: "0.98rem", fontWeight: 800, color: "var(--tm3-ink)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                  {head}
+                </h3>
+                <span style={{ marginLeft: "auto", fontSize: "0.74rem", fontWeight: 700, color: "var(--tm3-text-soft)" }}>
+                  {categoryTracks.length} {categoryTracks.length === 1 ? "Paper" : "Papers"}
                 </span>
               </div>
 
-              <h3 style={{ margin: "0 0 6px", fontSize: "1.2rem", fontWeight: 800, color: "var(--tm3-ink)", lineHeight: 1.35 }}>
-                {track.name}
-              </h3>
-              <p style={{ margin: "0 0 16px", fontSize: "0.82rem", color: "var(--tm3-text-soft)", lineHeight: 1.5, flex: 1 }}>
-                {track.description}
-              </p>
-
-              {/* Topics Pills */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
-                {track.topics.slice(0, 4).map((top) => (
-                  <span
-                    key={top}
+              {/* Compact Rows */}
+              <div style={{ display: "grid", gap: 10 }}>
+                {categoryTracks.map((track) => (
+                  <article
+                    key={track.id}
                     style={{
-                      padding: "3px 8px",
-                      borderRadius: 6,
-                      background: "var(--tm3-surface-muted)",
-                      color: "var(--tm3-text)",
-                      fontSize: "0.72rem",
-                      fontWeight: 600,
+                      borderRadius: 14,
+                      background: "var(--tm3-surface)",
+                      border: "1px solid var(--tm3-border)",
+                      padding: "16px 20px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 20,
+                      flexWrap: "wrap",
+                      boxShadow: "var(--tm3-shadow-sm)",
+                      transition: "border-color .15s, transform .15s",
                     }}
                   >
-                    {top}
-                  </span>
+                    {/* Left: Info & Badges */}
+                    <div style={{ flex: "1 1 500px", minWidth: 280 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+                        <Badge tone="green">{track.discipline}</Badge>
+                        <span style={{ fontSize: "0.74rem", color: "var(--tm3-text-soft)", display: "flex", alignItems: "center", gap: 4 }}>
+                          <Clock size={12} /> {track.durationMinutes} Mins · 15 Qs · +1 / -0.33
+                        </span>
+                      </div>
+
+                      <h4 style={{ margin: "0 0 4px", fontSize: "1.08rem", fontWeight: 800, color: "var(--tm3-ink)", lineHeight: 1.3 }}>
+                        {track.name}
+                      </h4>
+                      <p style={{ margin: "0 0 10px", fontSize: "0.82rem", color: "var(--tm3-text-soft)", lineHeight: 1.45 }}>
+                        {track.description}
+                      </p>
+
+                      {/* Topic chips */}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {track.topics.slice(0, 4).map((top) => (
+                          <span
+                            key={top}
+                            style={{
+                              padding: "2px 8px",
+                              borderRadius: 6,
+                              background: "var(--tm3-surface-muted)",
+                              color: "var(--tm3-text)",
+                              fontSize: "0.7rem",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {top}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right: Actions */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        className="tm3-button tm3-button--gold"
+                        onClick={() => launchCbt(track, false)}
+                        style={{ fontSize: "0.86rem", padding: "8px 18px", minHeight: 40, fontWeight: 700 }}
+                      >
+                        <Play size={14} fill="currentColor" /> CBT Simulator
+                      </button>
+                    </div>
+                  </article>
                 ))}
               </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: "flex", gap: 10, marginTop: "auto", borderTop: "1px solid var(--tm3-border)", paddingTop: 16 }}>
-                <button
-                  type="button"
-                  className="tm3-button tm3-button--gold"
-                  onClick={() => launchCbt(track, false)}
-                  style={{ flex: 1, justifyContent: "center", fontSize: "0.85rem", minHeight: 38 }}
-                >
-                  <Play size={15} /> Launch CBT Simulator
-                </button>
-                <button
-                  type="button"
-                  className="tm3-button tm3-button--outline"
-                  onClick={() => {
-                    setCbtTrack(track);
-                    setCbtQuestions(loadExamQuestions(track.id));
-                    setIsPaperViewOpen(true);
-                  }}
-                  style={{ padding: "0 14px", fontSize: "0.8rem", minHeight: 38 }}
-                  title="Preview entire paper in single document"
-                >
-                  <FileText size={15} /> Paper View
-                </button>
-              </div>
-            </article>
+            </div>
           ))}
+
+          {groupedTracks.length === 0 && (
+            <EmptyState
+              icon="search"
+              title="No model papers matched your search"
+              description="Try adjusting your keyword or switching engineering branch filters."
+            />
+          )}
         </div>
       </section>
 
@@ -449,15 +510,6 @@ export default function ExamPractice() {
 
               <button
                 type="button"
-                className="tm3-button tm3-button--outline"
-                onClick={() => setIsPaperViewOpen(true)}
-                style={{ fontSize: "0.8rem", padding: "6px 12px", minHeight: 34 }}
-              >
-                <FileText size={15} /> Question Paper
-              </button>
-
-              <button
-                type="button"
                 className="tm3-button tm3-button--ghost"
                 onClick={() => setConfirmExitOpen(true)}
                 style={{ fontSize: "0.8rem", padding: "6px 12px", color: "var(--tm3-danger)" }}
@@ -478,111 +530,78 @@ export default function ExamPractice() {
                 borderRight: "1px solid var(--tm3-border)",
                 overflowY: "auto",
                 padding: "24px 32px",
-                background: "var(--tm3-surface)",
               }}
             >
-              {currentQ && (
+              {currentQ ? (
                 <>
-                  {/* Question Info Bar */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      borderBottom: "1px solid var(--tm3-border)",
-                      paddingBottom: 12,
-                      marginBottom: 18,
-                    }}
-                  >
+                  {/* Question Meta Head */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--tm3-border)", paddingBottom: 14, marginBottom: 20 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--tm3-primary)" }}>
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--tm3-primary)" }}>
                         Question No. {currentIndex + 1}
                       </span>
                       <Badge tone="green">{currentQ.topic}</Badge>
-                      <span style={{ fontSize: "0.75rem", color: "var(--tm3-text-soft)", fontWeight: 600 }}>
-                        {currentQ.source}
-                      </span>
+                      {currentQ.source && (
+                        <span style={{ fontSize: "0.74rem", color: "var(--tm3-text-soft)", background: "var(--tm3-surface-muted)", padding: "2px 8px", borderRadius: 6 }}>
+                          Source: {currentQ.source}
+                        </span>
+                      )}
                     </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.78rem", fontWeight: 700 }}>
-                      <span style={{ color: "var(--tm3-success)" }}>Marks: +1.00</span>
-                      <span style={{ color: "var(--tm3-danger)" }}>Negative: -0.33</span>
+                    <div style={{ fontSize: "0.8rem", color: "var(--tm3-text-soft)", fontWeight: 700 }}>
+                      Marks: <span style={{ color: "var(--tm3-primary)" }}>+1.00</span> | Negative: <span style={{ color: "var(--tm3-danger)" }}>-0.33</span>
                     </div>
                   </div>
 
-                  {/* Problem Statement */}
-                  <div style={{ marginBottom: 24, fontSize: "1.05rem", lineHeight: 1.6, color: "var(--tm3-ink)", fontWeight: 500 }}>
+                  {/* Question Statement */}
+                  <div style={{ fontSize: "1.05rem", color: "var(--tm3-ink)", lineHeight: 1.6, marginBottom: 24, fontWeight: 500 }}>
                     {currentQ.question}
                   </div>
 
                   {/* Options List */}
-                  <div style={{ display: "grid", gap: 12, marginBottom: 28 }}>
-                    {currentQ.options.map((opt, oIdx) => {
-                      const isSelected = userAnswers[currentQ.id] === oIdx;
-                      const letter = String.fromCharCode(65 + oIdx);
+                  <div style={{ display: "grid", gap: 12, marginBottom: 30 }}>
+                    {currentQ.options.map((opt, optIdx) => {
+                      const isSelected = userAnswers[currentQ.id] === optIdx;
                       return (
-                        <div
-                          key={oIdx}
-                          onClick={() => handleSelectOption(currentQ.id, oIdx)}
+                        <label
+                          key={optIdx}
                           style={{
-                            padding: "14px 18px",
-                            borderRadius: 12,
-                            border: `2px solid ${isSelected ? "var(--tm3-primary)" : "var(--tm3-border)"}`,
-                            background: isSelected ? "var(--tm3-primary-soft)" : "var(--tm3-bg)",
-                            cursor: "pointer",
                             display: "flex",
                             alignItems: "center",
                             gap: 14,
-                            transition: "border-color .15s, background .15s",
+                            padding: "14px 18px",
+                            borderRadius: 12,
+                            background: isSelected ? "rgba(16, 185, 129, 0.1)" : "var(--tm3-surface)",
+                            border: `2px solid ${isSelected ? "var(--tm3-primary)" : "var(--tm3-border)"}`,
+                            cursor: "pointer",
+                            transition: "all .15s",
                           }}
                         >
-                          <span
-                            style={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: "50%",
-                              display: "grid",
-                              placeItems: "center",
-                              background: isSelected ? "var(--tm3-primary)" : "var(--tm3-surface-muted)",
-                              color: isSelected ? "#fff" : "var(--tm3-ink)",
-                              fontWeight: 800,
-                              fontSize: "0.85rem",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {letter}
+                          <input
+                            type="radio"
+                            name={`cbt-option-${currentQ.id}`}
+                            checked={isSelected}
+                            onChange={() => handleSelectOption(currentQ.id, optIdx)}
+                            style={{ accentColor: "var(--tm3-primary)", width: 18, height: 18 }}
+                          />
+                          <span style={{ fontWeight: 800, color: isSelected ? "var(--tm3-primary)" : "var(--tm3-text-soft)", width: 24 }}>
+                            {String.fromCharCode(65 + optIdx)}.
                           </span>
-                          <span style={{ fontSize: "0.95rem", color: "var(--tm3-ink)", fontWeight: isSelected ? 600 : 400 }}>
+                          <span style={{ fontSize: "0.95rem", color: "var(--tm3-ink)" }}>
                             {opt}
                           </span>
-                        </div>
+                        </label>
                       );
                     })}
                   </div>
 
-                  {/* Bottom Action Toolbar */}
-                  <div
-                    style={{
-                      marginTop: "auto",
-                      borderTop: "1px solid var(--tm3-border)",
-                      paddingTop: 18,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: 10,
-                    }}
-                  >
-                    <div style={{ display: "flex", gap: 8 }}>
+                  {/* CBT Navigation & Action Bottom Bar */}
+                  <div style={{ marginTop: "auto", borderTop: "1px solid var(--tm3-border)", paddingTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+                    <div style={{ display: "flex", gap: 10 }}>
                       <button
                         type="button"
                         className="tm3-button tm3-button--outline"
-                        onClick={() => handleToggleReview(currentQ.id)}
-                        style={{
-                          fontSize: "0.82rem",
-                          color: reviewedIds[currentQ.id] ? "#9333ea" : undefined,
-                          borderColor: reviewedIds[currentQ.id] ? "#9333ea" : undefined,
-                        }}
+                        onClick={() => toggleMarkForReview(currentQ.id)}
+                        style={{ fontSize: "0.82rem", padding: "6px 14px", color: reviewedIds[currentQ.id] ? "#f59e0b" : undefined }}
                       >
                         {reviewedIds[currentQ.id] ? "Unmark Review" : "Mark for Review & Next"}
                       </button>
@@ -590,7 +609,8 @@ export default function ExamPractice() {
                         type="button"
                         className="tm3-button tm3-button--ghost"
                         onClick={() => handleClearOption(currentQ.id)}
-                        style={{ fontSize: "0.82rem" }}
+                        style={{ fontSize: "0.82rem", padding: "6px 14px" }}
+                        disabled={userAnswers[currentQ.id] === undefined}
                       >
                         Clear Response
                       </button>
@@ -600,132 +620,97 @@ export default function ExamPractice() {
                       <button
                         type="button"
                         className="tm3-button tm3-button--outline"
-                        disabled={currentIndex === 0}
                         onClick={() => goToQuestion(currentIndex - 1)}
-                        style={{ fontSize: "0.82rem" }}
+                        disabled={currentIndex === 0}
+                        style={{ fontSize: "0.82rem", padding: "6px 14px" }}
                       >
                         <ChevronLeft size={16} /> Previous
                       </button>
-                      <button
-                        type="button"
-                        className="tm3-button tm3-button--dark"
-                        onClick={() => {
-                          if (currentIndex < cbtQuestions.length - 1) {
-                            goToQuestion(currentIndex + 1);
-                          } else {
-                            submitExam();
-                          }
-                        }}
-                        style={{ fontSize: "0.85rem", padding: "6px 18px" }}
-                      >
-                        {currentIndex < cbtQuestions.length - 1 ? (
-                          <>
-                            Save & Next <ChevronRight size={16} />
-                          </>
-                        ) : (
-                          "Save & Review Test"
-                        )}
-                      </button>
+
+                      {currentIndex < cbtQuestions.length - 1 ? (
+                        <button
+                          type="button"
+                          className="tm3-button tm3-button--gold"
+                          onClick={handleSaveAndNext}
+                          style={{ fontSize: "0.82rem", padding: "6px 18px" }}
+                        >
+                          Save & Next <ChevronRight size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="tm3-button tm3-button--gold"
+                          onClick={submitExam}
+                          style={{ fontSize: "0.82rem", padding: "6px 18px", background: "var(--tm3-primary)", color: "#fff" }}
+                        >
+                          Submit Test Paper
+                        </button>
+                      )}
                     </div>
                   </div>
                 </>
-              )}
+              ) : null}
             </section>
 
             {/* Right Question Palette & Candidate Profile (28%) */}
             <aside
               style={{
-                flex: "0 0 320px",
-                background: "var(--tm3-surface-muted)",
+                flex: "0 0 340px",
+                background: "var(--tm3-surface)",
                 display: "flex",
                 flexDirection: "column",
-                padding: "20px",
+                padding: 20,
                 overflowY: "auto",
               }}
             >
-              {/* Candidate Info */}
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 14,
-                  background: "var(--tm3-surface)",
-                  border: "1px solid var(--tm3-border)",
-                  marginBottom: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
-                    background: "var(--tm3-primary-soft)",
-                    color: "var(--tm3-primary)",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 800,
-                  }}
-                >
-                  {studentLogin?.name ? studentLogin.name.slice(0, 1).toUpperCase() : "TM"}
-                </div>
-                <div>
-                  <strong style={{ fontSize: "0.85rem", display: "block", color: "var(--tm3-ink)" }}>
-                    {studentLogin?.name || "Candidate #TM-2026-ENG"}
-                  </strong>
-                  <small style={{ fontSize: "0.72rem", color: "var(--tm3-text-soft)" }}>
-                    {studentLogin?.email || "Practice Candidate"}
-                  </small>
-                </div>
-              </div>
-
-              {/* Status Legend */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16, fontSize: "0.72rem", fontWeight: 700 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 14, height: 14, borderRadius: "50%", background: "#22c55e" }} />
-                  <span>Answered ({paletteCounts.answered})</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 14, height: 14, borderRadius: "50%", background: "#ef4444" }} />
-                  <span>Not Answered ({paletteCounts.notAnswered})</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 14, height: 14, borderRadius: "50%", background: "#a855f7" }} />
-                  <span>Marked Review ({paletteCounts.marked})</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 14, height: 14, borderRadius: 3, background: "var(--tm3-border)" }} />
-                  <span>Not Visited ({paletteCounts.notVisited})</span>
-                </div>
-              </div>
-
-              {/* Question Palette Number Grid */}
-              <div style={{ borderTop: "1px solid var(--tm3-border)", paddingTop: 14, marginBottom: 20 }}>
-                <h4 style={{ margin: "0 0 10px", fontSize: "0.82rem", color: "var(--tm3-ink)", textTransform: "uppercase" }}>
+              {/* Palette Legend */}
+              <div style={{ marginBottom: 18 }}>
+                <span className="tm3-eyebrow" style={{ marginBottom: 8, display: "block" }}>
                   Question Palette
-                </h4>
+                </span>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: "0.75rem", color: "var(--tm3-text-soft)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 14, height: 14, borderRadius: 4, background: "#10b981" }} />
+                    Answered ({paletteCounts.answered})
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 14, height: 14, borderRadius: 4, background: "#ef4444" }} />
+                    Not Answered ({paletteCounts.notAnswered})
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 14, height: 14, borderRadius: 4, background: "#f59e0b" }} />
+                    Marked for Review ({paletteCounts.marked})
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 14, height: 14, borderRadius: 4, background: "var(--tm3-surface-muted)", border: "1px solid var(--tm3-border)" }} />
+                    Not Visited ({paletteCounts.notVisited})
+                  </div>
+                </div>
+              </div>
+
+              {/* Numbered Palette Grid */}
+              <div style={{ marginBottom: 24 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
                   {cbtQuestions.map((q, idx) => {
                     const status = getQuestionStatus(q);
-                    const isCurrent = currentIndex === idx;
+                    const isCurrent = idx === currentIndex;
 
-                    let bg = "var(--tm3-surface)";
+                    let bg = "var(--tm3-surface-muted)";
                     let color = "var(--tm3-ink)";
                     let border = "1px solid var(--tm3-border)";
 
                     if (status === "answered") {
-                      bg = "#22c55e";
-                      color = "#fff";
-                      border = "1px solid #16a34a";
+                      bg = "#10b981";
+                      color = "#ffffff";
+                      border = "1px solid #10b981";
                     } else if (status === "marked_for_review") {
-                      bg = "#a855f7";
-                      color = "#fff";
-                      border = "1px solid #9333ea";
+                      bg = "#f59e0b";
+                      color = "#ffffff";
+                      border = "1px solid #f59e0b";
                     } else if (status === "not_answered") {
                       bg = "#ef4444";
-                      color = "#fff";
-                      border = "1px solid #dc2626";
+                      color = "#ffffff";
+                      border = "1px solid #ef4444";
                     }
 
                     if (isCurrent) {
@@ -770,67 +755,6 @@ export default function ExamPractice() {
                 </button>
               </div>
             </aside>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          QUESTION PAPER VIEW MODAL (ALL QUESTIONS IN SINGLE DOCUMENT)
-          ========================================================================= */}
-      {isPaperViewOpen && cbtTrack && (
-        <div className="tm3-modal-backdrop" style={{ zIndex: 1300 }} role="presentation">
-          <div
-            className="tm3-modal"
-            style={{ maxWidth: 860, maxHeight: "90vh", display: "flex", flexDirection: "column" }}
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="tm3-modal__head" style={{ borderBottom: "1px solid var(--tm3-border)", paddingBottom: 14 }}>
-              <div>
-                <span className="tm3-eyebrow">Standard Question Paper View</span>
-                <h2 style={{ fontSize: "1.2rem", margin: "4px 0 0" }}>{cbtTrack.name}</h2>
-              </div>
-              <button type="button" onClick={() => setIsPaperViewOpen(false)} aria-label="Close">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ overflowY: "auto", padding: "20px 0", display: "grid", gap: 20 }}>
-              {cbtQuestions.map((q, idx) => (
-                <article
-                  key={q.id}
-                  style={{
-                    padding: 16,
-                    borderRadius: 14,
-                    background: "var(--tm3-surface-muted)",
-                    border: "1px solid var(--tm3-border)",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <strong style={{ color: "var(--tm3-primary)", fontSize: "0.9rem" }}>
-                      Q{idx + 1}. ({q.topic})
-                    </strong>
-                    <span style={{ fontSize: "0.75rem", color: "var(--tm3-text-soft)" }}>+1.00 / -0.33</span>
-                  </div>
-                  <p style={{ margin: "0 0 12px", fontSize: "0.92rem", lineHeight: 1.5, color: "var(--tm3-ink)" }}>
-                    {q.question}
-                  </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: "0.85rem" }}>
-                    {q.options.map((opt, oIdx) => (
-                      <div key={oIdx} style={{ padding: "6px 10px", borderRadius: 8, background: "var(--tm3-surface)", border: "1px solid var(--tm3-border)" }}>
-                        <strong>{String.fromCharCode(65 + oIdx)}.</strong> {opt}
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            <div className="tm3-modal__actions" style={{ borderTop: "1px solid var(--tm3-border)", paddingTop: 14 }}>
-              <button className="tm3-button tm3-button--outline" type="button" onClick={() => setIsPaperViewOpen(false)}>
-                Return to CBT
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -984,7 +908,7 @@ export default function ExamPractice() {
                 type="button"
                 onClick={() => launchCbt(cbtTrack, false)}
               >
-                <Shuffle size={15} /> Retake Paper (Shuffled)
+                <Shuffle size={15} /> Retake Paper (New Randomized Pool)
               </button>
             </div>
           </div>

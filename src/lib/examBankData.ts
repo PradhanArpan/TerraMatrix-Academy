@@ -5,8 +5,18 @@ export type ExamTrackId =
   | "gate_cs_ai"
   | "gate_electrical"
   | "ese_ies"
+  | "state_ae_je"
+  | "isro_barc_psu"
   | "campus_placement"
   | "aptitude";
+
+export type ExamHeadCategory =
+  | "GATE (National Level)"
+  | "UPSC ESE / IES"
+  | "State AE / JE & SSC"
+  | "Research & PSUs (ISRO/BARC)"
+  | "Campus Placement & Viva"
+  | "Engineering Aptitude";
 
 export type ExamDifficulty = "Foundational" | "Intermediate" | "Advanced";
 
@@ -31,6 +41,7 @@ export type ExamTrack = {
   id: ExamTrackId;
   name: string;
   category: "Engineering" | "General";
+  headCategory: ExamHeadCategory;
   discipline:
     | "All Engineering"
     | "Mechanical & Aerospace"
@@ -65,6 +76,7 @@ export const EXAM_TRACKS: ExamTrack[] = [
     id: "gate_general",
     name: "GATE Engineering Mathematics & Applied Mechanics",
     category: "Engineering",
+    headCategory: "GATE (National Level)",
     discipline: "All Engineering",
     headline: "Universal Foundation for All GATE Disciplines",
     description: "Rigorous paper covering Linear Algebra, Differential Calculus, Vector Field Analysis, Numerical Methods, and Probability Distributions common across all GATE engineering branches.",
@@ -84,6 +96,7 @@ export const EXAM_TRACKS: ExamTrack[] = [
     id: "gate_mechanical",
     name: "GATE Mechanical Engineering (ME)",
     category: "Engineering",
+    headCategory: "GATE (National Level)",
     discipline: "Mechanical & Aerospace",
     headline: "Thermal, Fluid Dynamics & Solid Mechanics",
     description: "Analytical problems on Thermodynamic Cycles, Incompressible & Compressible Aerodynamics, Heat Transfer, Machine Design, and Strength of Materials.",
@@ -103,6 +116,7 @@ export const EXAM_TRACKS: ExamTrack[] = [
     id: "gate_civil",
     name: "GATE Civil & Infrastructure Engineering (CE)",
     category: "Engineering",
+    headCategory: "GATE (National Level)",
     discipline: "Civil & Infrastructure",
     headline: "Structural, Geotechnical & Hydrodynamic Systems",
     description: "Rigorous analytical questions aligned with IIT GATE syllabus covering Structural Mechanics, Limit State Concrete Design, Geotechnical Engineering, and Open Channel Flow.",
@@ -122,6 +136,7 @@ export const EXAM_TRACKS: ExamTrack[] = [
     id: "gate_cs_ai",
     name: "GATE Computer Science & AI / Data Science (CS/DA)",
     category: "Engineering",
+    headCategory: "GATE (National Level)",
     discipline: "Computer Science & AI",
     headline: "Algorithms, Machine Learning & Systems Architecture",
     description: "Computational problems on Advanced Algorithms, Asymptotic Complexity, Neural Network Formulations, Database Architecture, and Operating Systems.",
@@ -141,6 +156,7 @@ export const EXAM_TRACKS: ExamTrack[] = [
     id: "gate_electrical",
     name: "GATE Electrical & Electronics Engineering (EE/EC)",
     category: "Engineering",
+    headCategory: "GATE (National Level)",
     discipline: "Electrical & Electronics",
     headline: "Signals, Control Systems & Power Electronics",
     description: "High-level problems in Circuit Theory, Fourier & Laplace Transforms, State-Space Control Systems, and Electromagnetic Field Theory.",
@@ -160,13 +176,14 @@ export const EXAM_TRACKS: ExamTrack[] = [
     id: "ese_ies",
     name: "UPSC Engineering Services Examination (ESE / IES)",
     category: "Engineering",
+    headCategory: "UPSC ESE / IES",
     discipline: "All Engineering",
     headline: "Standard Design Codes, Mechanics & Materials",
     description: "Objective evaluation testing fundamental derivations, code safety factors, material failure envelopes, and project engineering systems.",
-    badge: "UPSC Standard · 10 Questions",
-    totalQuestions: 10,
-    sampleQuestionsCount: 3,
-    durationMinutes: 20,
+    badge: "UPSC Standard · 15 Questions",
+    totalQuestions: 15,
+    sampleQuestionsCount: 4,
+    durationMinutes: 30,
     topics: [
       "Engineering Mechanics",
       "Materials Science & Testing",
@@ -175,16 +192,56 @@ export const EXAM_TRACKS: ExamTrack[] = [
     ],
   },
   {
+    id: "state_ae_je",
+    name: "State AE / JE & SSC JE Technical Model Paper",
+    category: "Engineering",
+    headCategory: "State AE / JE & SSC",
+    discipline: "Civil & Infrastructure",
+    headline: "State PSC & Staff Selection Commission Examination Standard",
+    description: "Direct practice problems reflecting State Public Service Commission Assistant Engineer / Junior Engineer patterns and SSC JE Tier I & II.",
+    badge: "State PSC / SSC · 15 Questions",
+    totalQuestions: 15,
+    sampleQuestionsCount: 4,
+    durationMinutes: 30,
+    topics: [
+      "Building Materials & Concrete",
+      "Surveying & Levelling",
+      "Highway & Traffic Engineering",
+      "Environmental Engineering",
+      "Irrigation & Water Resources",
+    ],
+  },
+  {
+    id: "isro_barc_psu",
+    name: "ISRO Scientist/SC & BARC Scientific Officer Model Paper",
+    category: "Engineering",
+    headCategory: "Research & PSUs (ISRO/BARC)",
+    discipline: "All Engineering",
+    headline: "Advanced Research Aptitude & Applied Physics",
+    description: "Conceptual and analytical questions testing in-depth derivations, propulsion, heat transfer, continuum mechanics, and instrumentation for premier scientific bodies.",
+    badge: "ISRO / BARC / DRDO · 15 Questions",
+    totalQuestions: 15,
+    sampleQuestionsCount: 4,
+    durationMinutes: 30,
+    topics: [
+      "Continuum Mechanics & Elasticity",
+      "Thermodynamics & Heat Transfer",
+      "Fluid & Compressible Aerodynamics",
+      "Instrumentation & Sensors",
+    ],
+  },
+  {
     id: "campus_placement",
     name: "Engineering Graduate Placement & Technical Viva",
     category: "Engineering",
+    headCategory: "Campus Placement & Viva",
     discipline: "All Engineering",
     headline: "Core Technical Interviews & Industry Screenings",
     description: "Direct technical evaluation questions asked by premier EPC firms, consulting giants (L&T, Tata Projects, WSP, AECOM), and academic viva voce panels.",
-    badge: "Industry Screening · 10 Questions",
-    totalQuestions: 10,
-    sampleQuestionsCount: 3,
-    durationMinutes: 20,
+    badge: "Industry Screening · 15 Questions",
+    totalQuestions: 15,
+    sampleQuestionsCount: 4,
+    durationMinutes: 30,
     topics: [
       "Practical Engineering Detailing",
       "Failure Diagnostics & Lab Testing",
@@ -196,13 +253,14 @@ export const EXAM_TRACKS: ExamTrack[] = [
     id: "aptitude",
     name: "Engineering Aptitude & Quantitative Reasoning",
     category: "General",
+    headCategory: "Engineering Aptitude",
     discipline: "General Aptitude",
     headline: "Mathematical & Numerical Reasoning for Engineers",
     description: "Calculus, probability, work-rate, speed-distance, data interpretation, and deductive spatial logic required across all engineering entrance and PSU tests.",
-    badge: "Universal Aptitude · 10 Questions",
-    totalQuestions: 10,
-    sampleQuestionsCount: 3,
-    durationMinutes: 20,
+    badge: "Universal Aptitude · 15 Questions",
+    totalQuestions: 15,
+    sampleQuestionsCount: 4,
+    durationMinutes: 30,
     topics: [
       "Probability & Statistics",
       "Numerical Ability & Rates",
@@ -1688,6 +1746,140 @@ export const EXAM_QUESTIONS: ExamQuestion[] = [
     difficulty: "Foundational",
     isSample: false,
   },
+
+  // ==========================================
+  // STATE AE / JE & SSC JE TECHNICAL QUESTIONS
+  // ==========================================
+  {
+    id: "state-ae-01",
+    trackId: "state_ae_je",
+    trackName: "State AE / JE & SSC JE Technical",
+    topic: "Building Materials & Concrete",
+    question: "As per IS 456:2000 and IS 1199, what is the recommended slump range for normal reinforced concrete work in slabs and beams with standard vibration?",
+    options: ["50 mm to 100 mm", "10 mm to 25 mm", "150 mm to 200 mm", "0 mm to 10 mm"],
+    correctIndex: 0,
+    explanation: "Clause 7.1 of IS 456 specifies a slump of 50–100 mm for lightly reinforced sections in slabs, beams, and columns with standard compaction.",
+    source: "State PSC AE 2023 / IS 456:2000",
+    year: 2023,
+    difficulty: "Foundational",
+    isSample: true,
+  },
+  {
+    id: "state-ae-02",
+    trackId: "state_ae_je",
+    trackName: "State AE / JE & SSC JE Technical",
+    topic: "Highway & Traffic Engineering",
+    question: "According to IRC 73:1980, the design super-elevation 'e' on horizontal curves for mixed traffic condition neglecting lateral friction is given by (where V is speed in km/h and R is radius in metres):",
+    options: ["V² / (225 R)", "V² / (127 R)", "V² / (254 R)", "V² / (9.81 R)"],
+    correctIndex: 0,
+    explanation: "IRC design speed is designed for 75% of design speed neglecting friction: e = (0.75 V)² / (127 R) = 0.5625 V² / (127 R) = V² / (225 R).",
+    source: "SSC JE 2022 / IRC 73",
+    year: 2022,
+    difficulty: "Intermediate",
+    isSample: true,
+  },
+  {
+    id: "state-ae-03",
+    trackId: "state_ae_je",
+    trackName: "State AE / JE & SSC JE Technical",
+    topic: "Surveying & Levelling",
+    question: "The sensitivity of a spirit level bubble tube in optical surveying instruments increases with an increase in which parameter?",
+    options: ["Radius of curvature of the internal tube surface", "Viscosity of the spirit liquid", "Surface tension of the bubble liquid", "Roughness of the glass tube"],
+    correctIndex: 0,
+    explanation: "Sensitivity α = s / (n·D) = d / R. As the internal radius of curvature R increases, a smaller angular tilt causes a larger linear movement of the bubble, meaning sensitivity increases.",
+    source: "State PSC AE 2021",
+    year: 2021,
+    difficulty: "Foundational",
+    isSample: false,
+  },
+  {
+    id: "state-ae-04",
+    trackId: "state_ae_je",
+    trackName: "State AE / JE & SSC JE Technical",
+    topic: "Environmental Engineering",
+    question: "The typical 5-day Biochemical Oxygen Demand (BOD5 at 20°C) of average untreated raw municipal domestic sewage is approximately:",
+    options: ["150 to 300 mg/L", "10 to 30 mg/L", "1000 to 2000 mg/L", "1 to 5 mg/L"],
+    correctIndex: 0,
+    explanation: "Standard domestic wastewater in municipal systems exhibits a BOD5 value typically between 150 mg/L and 300 mg/L (with COD approximately 1.8 to 2.2 times BOD).",
+    source: "State AE 2020",
+    year: 2020,
+    difficulty: "Foundational",
+    isSample: false,
+  },
+  {
+    id: "state-ae-05",
+    trackId: "state_ae_je",
+    trackName: "State AE / JE & SSC JE Technical",
+    topic: "Irrigation & Water Resources",
+    question: "The duty (D) of irrigation water in hectares/cumec, base period (B) in days, and delta (Δ) in metres are related by the fundamental formula:",
+    options: ["Δ = 8.64 B / D", "Δ = 864 B / D", "D = 8.64 Δ / B", "Δ = B / (8.64 D)"],
+    correctIndex: 0,
+    explanation: "Volume of water in B days for 1 m³/s = 1 × B × 86400 m³. If this covers D hectares (D × 10⁴ m²) to depth Δ metres: Volume = D × 10⁴ × Δ. Equating gives Δ = 86400 B / (10⁴ D) = 8.64 B / D.",
+    source: "SSC JE 2023",
+    year: 2023,
+    difficulty: "Foundational",
+    isSample: false,
+  },
+
+  // ==========================================
+  // ISRO SCIENTIST/SC & BARC RESEARCH QUESTIONS
+  // ==========================================
+  {
+    id: "isro-barc-01",
+    trackId: "isro_barc_psu",
+    trackName: "ISRO Scientist/SC & BARC Scientific Officer",
+    topic: "Fluid & Compressible Aerodynamics",
+    question: "In a converging-diverging de Laval rocket nozzle, for supersonic gas flow to be established in the diverging divergent section, what must the Mach number at the throat cross-section be?",
+    options: ["M = 1.0 (Choked sonic flow)", "M < 0.5", "M = 2.0", "M = 0 (Stagnation point)"],
+    correctIndex: 0,
+    explanation: "By the area-velocity relation dA/A = (M² - 1) dV/V: At the throat dA = 0, which requires M = 1 (sonic condition) for acceleration to supersonic speeds (M > 1) in the diverging nozzle (dA > 0).",
+    source: "ISRO Scientist/SC Aerospace 2022",
+    year: 2022,
+    difficulty: "Intermediate",
+    isSample: true,
+  },
+  {
+    id: "isro-barc-02",
+    trackId: "isro_barc_psu",
+    trackName: "ISRO Scientist/SC & BARC Scientific Officer",
+    topic: "Continuum Mechanics & Elasticity",
+    question: "The Von Mises yield criterion states that yielding of a ductile material initiates when which stress invariant reaches a critical critical limit?",
+    options: ["Second invariant of deviatoric stress tensor J₂", "First invariant of stress tensor I₁", "Maximum principal stress σ₁", "Third invariant of deviatoric stress J₃"],
+    correctIndex: 0,
+    explanation: "The Von Mises criterion is based on distortion energy density, which is proportional to the second invariant of the stress deviator tensor J₂: J₂ = k² = (σ_y)² / 3.",
+    source: "BARC Scientific Officer 2023",
+    year: 2023,
+    difficulty: "Advanced",
+    isSample: true,
+  },
+  {
+    id: "isro-barc-03",
+    trackId: "isro_barc_psu",
+    trackName: "ISRO Scientist/SC & BARC Scientific Officer",
+    topic: "Thermodynamics & Heat Transfer",
+    question: "In space satellite thermal control, heat dissipation occurs purely via thermal radiation. If the surface temperature of a radiator doubles from 300 K to 600 K, by what factor does its emissive heat flux increase?",
+    options: ["16 times", "4 times", "2 times", "8 times"],
+    correctIndex: 0,
+    explanation: "By the Stefan-Boltzmann law: E = ε σ T⁴. When temperature doubles (T₂ / T₁ = 2), the emissive flux scales by (2)⁴ = 16 times.",
+    source: "ISRO Space Applications Centre 2021",
+    year: 2021,
+    difficulty: "Foundational",
+    isSample: false,
+  },
+  {
+    id: "isro-barc-04",
+    trackId: "isro_barc_psu",
+    trackName: "ISRO Scientist/SC & BARC Scientific Officer",
+    topic: "Instrumentation & Sensors",
+    question: "A first-order temperature sensor with mass m, specific heat c, surface area A, and convection coefficient h is plunged into a high-temperature rocket plume. The dynamic time constant τ of the sensor is:",
+    options: ["(m · c) / (h · A)", "(h · A) / (m · c)", "(m · h) / (c · A)", "sqrt((m · c) / (h · A))"],
+    correctIndex: 0,
+    explanation: "The lumped thermal capacitance equation is m c (dT/dt) + h A (T - T_inf) = 0. Rearranging into standard first-order form: τ (dT/dt) + T = T_inf, yielding τ = (m c) / (h A).",
+    source: "DRDO / ISRO Scientist Recruitment 2020",
+    year: 2020,
+    difficulty: "Intermediate",
+    isSample: false,
+  },
 ];
 
 // Helper functions for exam management
@@ -1710,6 +1902,43 @@ export function shuffleQuestions<T>(array: T[]): T[] {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
+}
+
+/**
+ * Returns a randomized test paper for CBT Simulator.
+ * Shuffles the question pool AND shuffles option choices ABCD dynamically for each question
+ * so every single test run is fresh and unique.
+ */
+export function getRandomCbtQuestions(trackId: string, count: number = 15): ExamQuestion[] {
+  let pool = EXAM_QUESTIONS.filter((q) => {
+    if (trackId && trackId !== "all" && q.trackId !== trackId) return false;
+    return true;
+  });
+  if (pool.length === 0) {
+    pool = [...EXAM_QUESTIONS];
+  }
+
+  // Shuffle pool
+  const shuffledPool = shuffleQuestions(pool);
+  const selected = shuffledPool.slice(0, Math.min(count, shuffledPool.length));
+
+  // Dynamically shuffle options for each question so choices ABCD are never identical across runs
+  return selected.map((q, idx) => {
+    const originalCorrectText = q.options[q.correctIndex];
+    const optionObjs = q.options.map((opt) => ({
+      text: opt,
+      isCorrect: opt === originalCorrectText,
+    }));
+    const shuffledOptions = shuffleQuestions(optionObjs);
+    const newCorrectIdx = shuffledOptions.findIndex((o) => o.isCorrect);
+
+    return {
+      ...q,
+      id: `${q.id}-rnd-${Date.now()}-${idx}`,
+      options: shuffledOptions.map((o) => o.text),
+      correctIndex: newCorrectIdx >= 0 ? newCorrectIdx : 0,
+    };
+  });
 }
 
 export function saveUserExamAttempt(attempt: ExamAttemptResult): void {

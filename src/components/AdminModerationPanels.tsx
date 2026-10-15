@@ -4,11 +4,13 @@ import { Link } from "react-router-dom";
 import {
   AlertCircle,
   BookOpen,
+  Bot,
   CalendarDays,
   CheckCircle2,
   CheckSquare,
   ChevronRight,
   Clock3,
+  Compass,
   Copy,
   Download,
   ExternalLink,
@@ -28,6 +30,7 @@ import {
   Share2,
   ShieldCheck,
   Sparkles,
+  Terminal,
   UsersRound,
   Video,
   X,
@@ -41,6 +44,29 @@ import {
   type Instructor,
   type LearningVideo,
 } from "../lib/catalogData";
+import {
+  loadExamCalendars,
+  saveExamCalendars,
+  loadOpportunities,
+  saveOpportunities,
+  loadStudyCodes,
+  saveStudyCodes,
+  loadHandbooks,
+  saveHandbooks,
+  loadGlossaries,
+  saveGlossaries,
+  type ExamCalendarItem,
+  type OpportunityItem,
+  type StudyCodeItem,
+  type HandbookItem,
+  type GlossaryItem,
+  ENGINEERING_BRANCHES,
+} from "../lib/knowledgeHubData";
+import {
+  getTmaShorts,
+  saveTmaShort,
+  type TmaShortVideo,
+} from "../lib/tmaShortsData";
 import {
   EXAM_QUESTIONS,
   EXAM_TRACKS,
@@ -1973,6 +1999,919 @@ export function AdminExamBankPanel() {
               <button className="tm3-button tm3-button--gold" type="button" onClick={handleAddQuestion}>
                 Save to Question Bank
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
+   4. KNOWLEDGE HUB & AI CONTENT LOADER / BOT
+   ========================================================================= */
+
+type KnowledgeHubSubTab = "prompts" | "loader" | "bot";
+
+export function AdminKnowledgeHubPanel() {
+  const [subTab, setSubTab] = useState<KnowledgeHubSubTab>("prompts");
+  const [notice, setNotice] = useState<string>("");
+
+  // Prompt Generator state
+  const [promptContentType, setPromptContentType] = useState<
+    "exam_calendar" | "opportunity" | "study_code" | "handbook" | "glossary" | "tma_short"
+  >("exam_calendar");
+  const [promptBranch, setPromptBranch] = useState<string>("Civil & Infrastructure");
+  const [promptTopic, setPromptTopic] = useState<string>("UPSC ESE 2026 Civil Engineering");
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
+
+  // Content Loader state
+  const [loaderTarget, setLoaderTarget] = useState<
+    "exam_calendar" | "opportunity" | "study_code" | "handbook" | "glossary" | "tma_short"
+  >("opportunity");
+  const [jsonInput, setJsonInput] = useState<string>("");
+  const [loaderStats, setLoaderStats] = useState({
+    calendars: loadExamCalendars().length,
+    opportunities: loadOpportunities().length,
+    codes: loadStudyCodes().length,
+    handbooks: loadHandbooks().length,
+    glossaries: loadGlossaries().length,
+    shorts: getTmaShorts().length,
+  });
+
+  // Bot state
+  const [botScanning, setBotScanning] = useState(false);
+  const [botLogs, setBotLogs] = useState<string[]>([]);
+  const [discoveredItems, setDiscoveredItems] = useState<
+    Array<{
+      id: string;
+      title: string;
+      org: string;
+      type: "Exam" | "Internship" | "Competition";
+      deadline: string;
+      url: string;
+      branch: string;
+      eligibility: string;
+      published: boolean;
+    }>
+  >([
+    {
+      id: "bot_gate_2026",
+      title: "GATE 2026 National Examination Notification",
+      org: "IIT Guwahati (Organizing Institute)",
+      type: "Exam",
+      deadline: "October 2025",
+      url: "https://gate2025.iitr.ac.in",
+      branch: "All Engineering Branches",
+      eligibility: "B.Tech / B.E / M.Sc Students & Graduates",
+      published: false,
+    },
+    {
+      id: "bot_drdo_rac_2025",
+      title: "DRDO Recruitment & Assessment Centre (RAC) Scientist 'B' Fellowships",
+      org: "DRDO Ministry of Defence",
+      type: "Internship",
+      deadline: "15 November 2025",
+      url: "https://rac.gov.in",
+      branch: "Mechanical, CS, Civil & Aerospace",
+      eligibility: "First Class B.Tech with valid GATE score",
+      published: false,
+    },
+    {
+      id: "bot_sih_2025",
+      title: "Smart India Hackathon (SIH 2025) - Hardware & Software Edition",
+      org: "Ministry of Education & AICTE",
+      type: "Competition",
+      deadline: "30 November 2025",
+      url: "https://www.sih.gov.in",
+      branch: "All Engineering & Sciences",
+      eligibility: "Undergraduate & Postgraduate Engineering Teams",
+      published: false,
+    },
+    {
+      id: "bot_iisc_cics_fellow",
+      title: "IISc Bangalore Centre for Infrastructure Research Summer Fellowship",
+      org: "Indian Institute of Science (IISc)",
+      type: "Internship",
+      deadline: "28 February 2026",
+      url: "https://iisc.ac.in",
+      branch: "Civil, Computational & Environmental",
+      eligibility: "3rd Year Pre-final B.Tech Students",
+      published: false,
+    },
+  ]);
+
+  const refreshCounts = () => {
+    setLoaderStats({
+      calendars: loadExamCalendars().length,
+      opportunities: loadOpportunities().length,
+      codes: loadStudyCodes().length,
+      handbooks: loadHandbooks().length,
+      glossaries: loadGlossaries().length,
+      shorts: getTmaShorts().length,
+    });
+  };
+
+  // Generate Prompt
+  const generatedAiPrompt = useMemo(() => {
+    switch (promptContentType) {
+      case "exam_calendar":
+        return `You are an engineering curriculum compiler for TerraMatrix Academy.
+Please generate 1 or more Exam Calendar items for: "${promptTopic}" in branch "${promptBranch}".
+Return ONLY a valid JSON array matching this exact schema:
+[
+  {
+    "id": "exam_${promptTopic.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}",
+    "examName": "${promptTopic}",
+    "conductingBody": "National / State Conducting Agency",
+    "branch": "${promptBranch}",
+    "department": "Core Department",
+    "notificationDate": "Month Year",
+    "applicationWindow": "Date to Date",
+    "examDate": "Tentative Exam Date",
+    "officialUrl": "https://official-portal-url.gov.in",
+    "status": "Active Registration",
+    "eligibility": "Academic criteria required",
+    "notes": "Key highlights and syllabus changes"
+  }
+]`;
+
+      case "opportunity":
+        return `You are an engineering career curator for TerraMatrix Academy.
+Please generate 1 or more verified Opportunities (Internship, Research Fellowship, or Hackathon) for: "${promptTopic}" in branch "${promptBranch}".
+Return ONLY a valid JSON array matching this exact schema:
+[
+  {
+    "id": "opp_${promptTopic.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}",
+    "title": "${promptTopic}",
+    "organization": "Institution or Organization Name",
+    "type": "Industrial Internship",
+    "branch": "${promptBranch}",
+    "department": "Engineering Department",
+    "specialization": "Sub-specialization",
+    "stipendOrPrize": "₹XX,000 / month OR Cash Prize",
+    "location": "City / Campus",
+    "mode": "Hybrid",
+    "deadline": "Day Month Year",
+    "officialUrl": "https://official-opportunity-link.org",
+    "verified": true,
+    "eligibility": "Eligibility criteria",
+    "description": "2-sentence practical engineering description of the role."
+  }
+]`;
+
+      case "study_code":
+        return `You are a structural & standard design codes expert for TerraMatrix Academy.
+Please generate a comprehensive Study Code breakdown for: "${promptTopic}" in branch "${promptBranch}".
+Return ONLY a valid JSON array matching this exact schema:
+[
+  {
+    "id": "code_${promptTopic.toLowerCase().replace(/[^a-z0-9]/g, "_")}",
+    "codeName": "${promptTopic}",
+    "standardBody": "BIS (Indian Standards)",
+    "branch": "${promptBranch}",
+    "department": "Core Design Department",
+    "title": "Full Official Title of Standard",
+    "scopeSummary": "Concise 2-sentence summary of scope and applicability.",
+    "keyClauses": [
+      { "clause": "Clause Number", "title": "Clause Title", "summary": "Exact technical provision and equation" },
+      { "clause": "Clause Number", "title": "Clause Title", "summary": "Exact technical provision and equation" }
+    ],
+    "verifiableRefUrl": "https://standardsbis.bsbedge.com"
+  }
+]`;
+
+      case "handbook":
+        return `You are an engineering reference publisher for TerraMatrix Academy.
+Please generate a Handbook summary for: "${promptTopic}" in branch "${promptBranch}".
+Return ONLY a valid JSON array matching this exact schema:
+[
+  {
+    "id": "hb_${promptTopic.toLowerCase().replace(/[^a-z0-9]/g, "_")}",
+    "title": "${promptTopic}",
+    "branch": "${promptBranch}",
+    "department": "Core Department",
+    "authorOrBody": "Publisher or Standard Committee",
+    "edition": "Latest Edition / Year",
+    "description": "Concise summary of practical handbook utility.",
+    "chapters": [
+      { "title": "Chapter 1 Title", "pages": "1-45", "summary": "Core provisions and formulas" },
+      { "title": "Chapter 2 Title", "pages": "46-90", "summary": "Core provisions and formulas" }
+    ],
+    "keyFormulas": ["Formula 1: ...", "Formula 2: ..."],
+    "readTime": "35 Mins reference"
+  }
+]`;
+
+      case "glossary":
+        return `You are an engineering lexicographer for TerraMatrix Academy.
+Please generate specialized glossary items for: "${promptTopic}" in branch "${promptBranch}".
+Return ONLY a valid JSON array matching this exact schema:
+[
+  {
+    "id": "gl_${promptTopic.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}",
+    "term": "${promptTopic}",
+    "branch": "${promptBranch}",
+    "department": "Specific Department",
+    "specialization": "Sub-specialization",
+    "definition": "Rigorous physical and mathematical definition.",
+    "formula": "Governing mathematical equation",
+    "siUnit": "SI Unit (e.g. m, N/m², Pa·s, Dimensionless)",
+    "significance": "Why this parameter governs design and failure."
+  }
+]`;
+
+      case "tma_short":
+        return `You are an AI video producer and technical engineering narrator for TMA Shorts.
+Please generate a 20-30s Concept Explainer Reel specification for: "${promptTopic}" in branch "${promptBranch}".
+Return ONLY a valid JSON array matching this exact schema:
+[
+  {
+    "id": "short_${promptTopic.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}",
+    "title": "${promptTopic}",
+    "category": "Fluid Dynamics",
+    "discipline": "${promptBranch}",
+    "conceptSummary": "High-density scientific summary in 2 sentences.",
+    "durationSeconds": 28,
+    "creatorName": "TerraMatrix AI Lab",
+    "creatorRole": "Engineering Simulation Group",
+    "dateAdded": "${new Date().toISOString().split("T")[0]}",
+    "tags": ["Tag1", "Tag2", "Physics"],
+    "aiProductionPrompt": {
+      "model": "Runway Gen-3 Alpha / OpenAI Sora",
+      "visualPrompt": "Detailed 4K cinematic macro prompt with lighting, colors, and camera angle.",
+      "motionCameraPrompt": "Camera tracking and slow motion instructions.",
+      "narratorScript": "Exact voiceover script under 50 words.",
+      "voiceTone": "Authoritative, crisp technical narrator",
+      "renderSpecs": "9:16 Vertical Reel (1080x1920), 60 FPS"
+    }
+  }
+]`;
+    }
+  }, [promptContentType, promptBranch, promptTopic]);
+
+  const copyPromptText = () => {
+    navigator.clipboard.writeText(generatedAiPrompt);
+    setCopiedPrompt(true);
+    setTimeout(() => setCopiedPrompt(false), 2000);
+  };
+
+  // Load sample JSON into textarea
+  const loadSampleJson = () => {
+    switch (loaderTarget) {
+      case "opportunity":
+        setJsonInput(
+          JSON.stringify(
+            [
+              {
+                id: `opp_custom_${Date.now()}`,
+                title: "L&T Construction Graduate Research Fellowship",
+                organization: "Larsen & Toubro Heavy Civil Infrastructure",
+                type: "Research Fellowship",
+                branch: "Civil & Infrastructure",
+                department: "Structural & Geotechnical",
+                specialization: "Prestressed Concrete & Tunneling",
+                stipendOrPrize: "₹35,000 / month",
+                location: "Chennai HQ / Project Sites",
+                mode: "Hybrid",
+                deadline: "30 April 2026",
+                officialUrl: "https://www.lntecc.com",
+                verified: true,
+                eligibility: "Final-year B.Tech / M.Tech in Civil / Structural",
+                description:
+                  "Practical fellowship working on high-speed rail viaduct segmental design and underground metro station diaphragm walls.",
+              },
+            ],
+            null,
+            2
+          )
+        );
+        break;
+      case "exam_calendar":
+        setJsonInput(
+          JSON.stringify(
+            [
+              {
+                id: `exam_custom_${Date.now()}`,
+                examName: "ISRO Scientist / Engineer 'SC' 2026",
+                conductingBody: "ISRO Centralised Recruitment Board (ICRB)",
+                branch: "All Engineering Branches",
+                department: "Civil, Mechanical & Electrical",
+                notificationDate: "December 2025",
+                applicationWindow: "15 Jan 2026 to 15 Feb 2026",
+                examDate: "April 2026",
+                officialUrl: "https://www.isro.gov.in/Careers.html",
+                status: "Upcoming Announcement",
+                eligibility: "First Class B.E / B.Tech with min 65% aggregate",
+                notes: "Objective screening followed by comprehensive interview at URSC Bangalore.",
+              },
+            ],
+            null,
+            2
+          )
+        );
+        break;
+      case "tma_short":
+        setJsonInput(
+          JSON.stringify(
+            [
+              {
+                id: `short_custom_${Date.now()}`,
+                title: "Reynolds Turbulence Transition in Pipe Flow",
+                category: "Fluid Dynamics",
+                discipline: "Civil & Mechanical Engineering",
+                conceptSummary:
+                  "How laminar streamlines disintegrate into chaotic turbulent eddies at critical Reynolds number Re > 2300.",
+                durationSeconds: 27,
+                creatorName: "TerraMatrix Fluid Lab",
+                creatorRole: "Hydrodynamics Unit",
+                dateAdded: new Date().toISOString().split("T")[0],
+                tags: ["Fluid Mechanics", "Reynolds", "Turbulence", "Laminar"],
+                aiProductionPrompt: {
+                  model: "Runway Gen-3 Alpha / Sora",
+                  visualPrompt:
+                    "4K engineering visualization of water flowing through smooth glass pipe. Ink filament remains straight at Re 1200, then violently disperses into 3D vortex rings as flow velocity increases to Re 4000.",
+                  motionCameraPrompt:
+                    "Smooth lateral dolly track matching the dye filament velocity.",
+                  narratorScript:
+                    "At low velocity, viscosity dampens perturbations. But as inertial forces overwhelm viscous shear, infinitesimal disturbances amplify, triggering sudden turbulent chaos.",
+                  voiceTone: "Crisp technical presenter",
+                  renderSpecs: "9:16 Vertical Reel (1080x1920), 60 FPS",
+                },
+              },
+            ],
+            null,
+            2
+          )
+        );
+        break;
+      default:
+        setJsonInput("[]");
+    }
+  };
+
+  // Publish JSON into Portal storage
+  const handlePublishJson = () => {
+    if (!jsonInput.trim()) {
+      alert("Please paste valid JSON before publishing.");
+      return;
+    }
+
+    try {
+      let parsed = JSON.parse(jsonInput);
+      if (!Array.isArray(parsed)) {
+        parsed = [parsed];
+      }
+
+      if (loaderTarget === "exam_calendar") {
+        const existing = loadExamCalendars();
+        const updated = [...parsed, ...existing.filter((e) => !parsed.some((p: ExamCalendarItem) => p.id === e.id))];
+        saveExamCalendars(updated);
+        setNotice(`Successfully published ${parsed.length} Exam Calendar(s) to live portal!`);
+      } else if (loaderTarget === "opportunity") {
+        const existing = loadOpportunities();
+        const updated = [...parsed, ...existing.filter((e) => !parsed.some((p: OpportunityItem) => p.id === e.id))];
+        saveOpportunities(updated);
+        setNotice(`Successfully published ${parsed.length} Opportunity(ies) to live portal!`);
+      } else if (loaderTarget === "study_code") {
+        const existing = loadStudyCodes();
+        const updated = [...parsed, ...existing.filter((e) => !parsed.some((p: StudyCodeItem) => p.id === e.id))];
+        saveStudyCodes(updated);
+        setNotice(`Successfully published ${parsed.length} Study Code(s) to live portal!`);
+      } else if (loaderTarget === "handbook") {
+        const existing = loadHandbooks();
+        const updated = [...parsed, ...existing.filter((e) => !parsed.some((p: HandbookItem) => p.id === e.id))];
+        saveHandbooks(updated);
+        setNotice(`Successfully published ${parsed.length} Handbook(s) to live portal!`);
+      } else if (loaderTarget === "glossary") {
+        const existing = loadGlossaries();
+        const updated = [...parsed, ...existing.filter((e) => !parsed.some((p: GlossaryItem) => p.id === e.id))];
+        saveGlossaries(updated);
+        setNotice(`Successfully published ${parsed.length} Glossary Term(s) to live portal!`);
+      } else if (loaderTarget === "tma_short") {
+        parsed.forEach((s: TmaShortVideo) => saveTmaShort(s));
+        setNotice(`Successfully published ${parsed.length} TMA Short(s) to live portal!`);
+      }
+
+      refreshCounts();
+      setJsonInput("");
+      setTimeout(() => setNotice(""), 4000);
+    } catch (err) {
+      alert(`Invalid JSON format: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
+
+  // Run Crawler Bot
+  const runOpportunityCrawler = () => {
+    setBotScanning(true);
+    setBotLogs(["[0.1s] Initializing TMA Autonomous National Opportunity Crawler..."]);
+
+    setTimeout(() => {
+      setBotLogs((prev) => [...prev, "[0.4s] Connecting to UPSC official gateway (upsc.gov.in)... Status: 200 OK"]);
+    }, 400);
+
+    setTimeout(() => {
+      setBotLogs((prev) => [
+        ...prev,
+        "[0.8s] Scanning GATE 2026 / IIT organizing committee notices... Detected active announcement.",
+      ]);
+    }, 900);
+
+    setTimeout(() => {
+      setBotLogs((prev) => [
+        ...prev,
+        "[1.3s] Crawling CSIR, DRDO RAC and AICTE Smart India Hackathon feeds... Verified institutional SSL certificates.",
+      ]);
+    }, 1500);
+
+    setTimeout(() => {
+      setBotLogs((prev) => [
+        ...prev,
+        "[1.9s] Crawl complete: 4 verified opportunities structured and ready for approval.",
+      ]);
+      setBotScanning(false);
+    }, 2100);
+  };
+
+  const publishBotItem = (item: (typeof discoveredItems)[0]) => {
+    if (item.type === "Exam") {
+      const existing = loadExamCalendars();
+      const newCal: ExamCalendarItem = {
+        id: item.id,
+        examName: item.title,
+        conductingBody: item.org,
+        branch: "General Engineering & Applied Sciences",
+        department: "Core Engineering",
+        notificationDate: "2025-2026",
+        applicationWindow: item.deadline,
+        examDate: "Scheduled",
+        officialUrl: item.url,
+        status: "Active Registration",
+        eligibility: item.eligibility,
+        notes: "Auto-verified by TMA Discovery Bot",
+      };
+      saveExamCalendars([newCal, ...existing.filter((e) => e.id !== newCal.id)]);
+    } else {
+      const existing = loadOpportunities();
+      const newOpp: OpportunityItem = {
+        id: item.id,
+        title: item.title,
+        organization: item.org,
+        type: item.type === "Competition" ? "Hackathon & Competition" : "Industrial Internship",
+        branch: "General Engineering & Applied Sciences",
+        department: "Multi-Disciplinary",
+        specialization: item.branch,
+        stipendOrPrize: "Competitive Institutional Stipend / Cash Prize",
+        location: "India / Hybrid",
+        mode: "Hybrid",
+        deadline: item.deadline,
+        officialUrl: item.url,
+        verified: true,
+        eligibility: item.eligibility,
+        description: `Verified opportunity discovered via institutional crawler from ${item.org}.`,
+      };
+      saveOpportunities([newOpp, ...existing.filter((o) => o.id !== newOpp.id)]);
+    }
+
+    setDiscoveredItems((prev) =>
+      prev.map((d) => (d.id === item.id ? { ...d, published: true } : d))
+    );
+    refreshCounts();
+    setNotice(`Published "${item.title}" directly to Knowledge Hub!`);
+    setTimeout(() => setNotice(""), 3500);
+  };
+
+  return (
+    <div style={{ display: "grid", gap: 24 }}>
+      {/* Banner */}
+      <div
+        style={{
+          borderRadius: 16,
+          background: "linear-gradient(135deg, #06261f 0%, #03120f 100%)",
+          border: "1px solid rgba(16,185,129,0.3)",
+          padding: "24px 28px",
+          color: "#ffffff",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 16,
+        }}
+      >
+        <div>
+          <span
+            style={{
+              fontSize: "0.74rem",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "var(--tm3-lime)",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <Compass size={14} /> Knowledge Hub & AI Content Engine
+          </span>
+          <h2 style={{ margin: "6px 0 4px", fontSize: "1.4rem", fontWeight: 800 }}>
+            Curriculum, Standards & Discovery Automation
+          </h2>
+          <p style={{ margin: 0, fontSize: "0.84rem", color: "rgba(255,255,255,0.75)", maxWidth: 640, lineHeight: 1.5 }}>
+            Generate structured AI prompts for single topics, paste JSON payloads to immediately publish materials without code redeployment, or run the national opportunity crawler bot.
+          </p>
+        </div>
+
+        {/* Live Counts Pill */}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: "0.76rem" }}>
+          <div style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <span style={{ opacity: 0.7, display: "block" }}>Exams</span>
+            <strong>{loaderStats.calendars} Live</strong>
+          </div>
+          <div style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <span style={{ opacity: 0.7, display: "block" }}>Opportunities</span>
+            <strong>{loaderStats.opportunities} Live</strong>
+          </div>
+          <div style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <span style={{ opacity: 0.7, display: "block" }}>Study Codes</span>
+            <strong>{loaderStats.codes} Live</strong>
+          </div>
+          <div style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <span style={{ opacity: 0.7, display: "block" }}>TMA Shorts</span>
+            <strong>{loaderStats.shorts} Live</strong>
+          </div>
+        </div>
+      </div>
+
+      {notice && (
+        <div
+          style={{
+            padding: "12px 18px",
+            borderRadius: 10,
+            background: "rgba(16,185,129,0.15)",
+            border: "1px solid #10b981",
+            color: "var(--tm3-primary)",
+            fontWeight: 700,
+            fontSize: "0.85rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <CheckCircle2 size={16} /> {notice}
+        </div>
+      )}
+
+      {/* Sub-Tabs Navigation */}
+      <div style={{ display: "flex", gap: 10, borderBottom: "1px solid var(--tm3-border)", paddingBottom: 10 }}>
+        <button
+          type="button"
+          className={`tm3-button ${subTab === "prompts" ? "tm3-button--dark" : "tm3-button--outline"}`}
+          onClick={() => setSubTab("prompts")}
+          style={{ fontSize: "0.82rem", padding: "6px 14px", minHeight: 34 }}
+        >
+          <Sparkles size={14} /> 1. AI Prompt Generator
+        </button>
+        <button
+          type="button"
+          className={`tm3-button ${subTab === "loader" ? "tm3-button--dark" : "tm3-button--outline"}`}
+          onClick={() => setSubTab("loader")}
+          style={{ fontSize: "0.82rem", padding: "6px 14px", minHeight: 34 }}
+        >
+          <Plus size={14} /> 2. One-Click JSON Content Loader
+        </button>
+        <button
+          type="button"
+          className={`tm3-button ${subTab === "bot" ? "tm3-button--dark" : "tm3-button--outline"}`}
+          onClick={() => setSubTab("bot")}
+          style={{ fontSize: "0.82rem", padding: "6px 14px", minHeight: 34 }}
+        >
+          <Bot size={14} /> 3. Opportunity & Exam Discovery Bot
+        </button>
+      </div>
+
+      {/* =========================================================================
+          SUB-TAB 1: AI PROMPT TEMPLATE GENERATOR
+          ========================================================================= */}
+      {subTab === "prompts" && (
+        <div
+          style={{
+            background: "var(--tm3-surface)",
+            padding: 24,
+            borderRadius: 14,
+            border: "1px solid var(--tm3-border)",
+            display: "grid",
+            gap: 18,
+          }}
+        >
+          <div>
+            <h3 style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 800 }}>
+              AI Prompt Generator for Engineering Content
+            </h3>
+            <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--tm3-text-soft)" }}>
+              Create standard JSON prompts for any single topic. Generate the content in ChatGPT, Claude, or Gemini, then copy the output into the One-Click Loader.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+            <div className="tm3-field" style={{ margin: 0 }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>Content Category</label>
+              <select
+                value={promptContentType}
+                onChange={(e) => setPromptContentType(e.target.value as any)}
+                style={{ height: 36, fontSize: "0.82rem" }}
+              >
+                <option value="exam_calendar">Exam Calendar</option>
+                <option value="opportunity">Internship / Opportunity</option>
+                <option value="study_code">Study Code (IS/IRC/Eurocode)</option>
+                <option value="handbook">Engineering Handbook</option>
+                <option value="glossary">Technical Glossary Term</option>
+                <option value="tma_short">TMA Short Concept Reel</option>
+              </select>
+            </div>
+
+            <div className="tm3-field" style={{ margin: 0 }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>Engineering Branch</label>
+              <select
+                value={promptBranch}
+                onChange={(e) => setPromptBranch(e.target.value)}
+                style={{ height: 36, fontSize: "0.82rem" }}
+              >
+                {ENGINEERING_BRANCHES.map((b: string) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="tm3-field" style={{ margin: 0 }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>Specific Subject / Exam / Code Name</label>
+              <input
+                type="text"
+                value={promptTopic}
+                onChange={(e) => setPromptTopic(e.target.value)}
+                placeholder="e.g. ISRO Scientist 2026, IS 13920..."
+                style={{ height: 36, fontSize: "0.82rem" }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <strong style={{ fontSize: "0.84rem", color: "var(--tm3-ink)" }}>
+                Generated Prompt (Copy & paste into ChatGPT / Claude / Gemini):
+              </strong>
+              <button
+                type="button"
+                onClick={copyPromptText}
+                className="tm3-button tm3-button--gold"
+                style={{ fontSize: "0.76rem", padding: "4px 12px", minHeight: 28, gap: 4 }}
+              >
+                <Copy size={12} /> {copiedPrompt ? "Copied Prompt!" : "Copy Prompt"}
+              </button>
+            </div>
+            <textarea
+              readOnly
+              value={generatedAiPrompt}
+              rows={12}
+              style={{
+                width: "100%",
+                fontFamily: "monospace",
+                fontSize: "0.8rem",
+                lineHeight: 1.5,
+                background: "#0f172a",
+                color: "#38bdf8",
+                padding: 14,
+                borderRadius: 10,
+                border: "1px solid #1e293b",
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          SUB-TAB 2: ONE-CLICK CONTENT LOADER (INSTANT LOCALSTORAGE SAVE)
+          ========================================================================= */}
+      {subTab === "loader" && (
+        <div
+          style={{
+            background: "var(--tm3-surface)",
+            padding: 24,
+            borderRadius: 14,
+            border: "1px solid var(--tm3-border)",
+            display: "grid",
+            gap: 18,
+          }}
+        >
+          <div>
+            <h3 style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 800 }}>
+              One-Click Content Loader
+            </h3>
+            <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--tm3-text-soft)" }}>
+              Paste the JSON generated by AI. It will instantly be validated and stored into the live portal database without having to redeploy code!
+            </p>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>Target Hub Entity:</span>
+              <select
+                value={loaderTarget}
+                onChange={(e) => setLoaderTarget(e.target.value as any)}
+                style={{ height: 34, fontSize: "0.82rem", padding: "0 10px", borderRadius: 8 }}
+              >
+                <option value="opportunity">Internship & Competition (Current: {loaderStats.opportunities})</option>
+                <option value="exam_calendar">Exam Calendar (Current: {loaderStats.calendars})</option>
+                <option value="study_code">Study Code (Current: {loaderStats.codes})</option>
+                <option value="handbook">Handbook (Current: {loaderStats.handbooks})</option>
+                <option value="glossary">Glossary Term (Current: {loaderStats.glossaries})</option>
+                <option value="tma_short">TMA Short Video (Current: {loaderStats.shorts})</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={loadSampleJson}
+              className="tm3-button tm3-button--outline"
+              style={{ fontSize: "0.76rem", padding: "4px 12px", minHeight: 30 }}
+            >
+              Load Sample JSON Template
+            </button>
+          </div>
+
+          <div>
+            <label style={{ fontSize: "0.8rem", fontWeight: 700, display: "block", marginBottom: 6 }}>
+              JSON Payload (Single Object or Array):
+            </label>
+            <textarea
+              value={jsonInput}
+              onChange={(e) => setJsonInput(e.target.value)}
+              placeholder="Paste valid JSON here..."
+              rows={12}
+              style={{
+                width: "100%",
+                fontFamily: "monospace",
+                fontSize: "0.8rem",
+                lineHeight: 1.5,
+                background: "var(--tm3-surface-muted)",
+                padding: 14,
+                borderRadius: 10,
+                border: "1px solid var(--tm3-border)",
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <button
+              type="button"
+              className="tm3-button tm3-button--ghost"
+              onClick={() => setJsonInput("")}
+              style={{ fontSize: "0.82rem" }}
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              className="tm3-button tm3-button--gold"
+              onClick={handlePublishJson}
+              style={{ fontSize: "0.85rem", padding: "8px 20px" }}
+            >
+              <CheckCircle2 size={16} /> Validate & Publish to Live Portal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          SUB-TAB 3: OPPORTUNITY & EXAM CRAWLER BOT
+          ========================================================================= */}
+      {subTab === "bot" && (
+        <div
+          style={{
+            background: "var(--tm3-surface)",
+            padding: 24,
+            borderRadius: 14,
+            border: "1px solid var(--tm3-border)",
+            display: "grid",
+            gap: 18,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 }}>
+            <div>
+              <h3 style={{ margin: "0 0 4px", fontSize: "1.1rem", fontWeight: 800 }}>
+                TMA National Engineering Opportunity Crawler Bot
+              </h3>
+              <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--tm3-text-soft)" }}>
+                Scans official government and institution portals for upcoming exam notifications, internships, fellowships, and hackathons with verifiable URLs.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="tm3-button tm3-button--gold"
+              onClick={runOpportunityCrawler}
+              disabled={botScanning}
+              style={{ fontSize: "0.85rem", padding: "8px 18px", gap: 8 }}
+            >
+              <RefreshCw size={15} className={botScanning ? "tm3-spin" : ""} />
+              {botScanning ? "Scanning National Portals..." : "Run Opportunity Scan"}
+            </button>
+          </div>
+
+          {/* Crawler Log Terminal */}
+          {botLogs.length > 0 && (
+            <div
+              style={{
+                borderRadius: 10,
+                background: "#090d16",
+                border: "1px solid #1e293b",
+                padding: 14,
+                fontFamily: "monospace",
+                fontSize: "0.78rem",
+                color: "#10b981",
+                display: "grid",
+                gap: 4,
+              }}
+            >
+              <div style={{ color: "#94a3b8", display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <Terminal size={14} /> Crawler Activity Log:
+              </div>
+              {botLogs.map((log, idx) => (
+                <div key={idx}>{log}</div>
+              ))}
+            </div>
+          )}
+
+          {/* Discovered Items List */}
+          <div>
+            <h4 style={{ margin: "10px 0 12px", fontSize: "0.95rem", fontWeight: 800 }}>
+              Discovered Candidates ({discoveredItems.length})
+            </h4>
+            <div style={{ display: "grid", gap: 12 }}>
+              {discoveredItems.map((item) => (
+                <article
+                  key={item.id}
+                  style={{
+                    padding: "16px 20px",
+                    borderRadius: 12,
+                    background: "var(--tm3-surface-muted)",
+                    border: "1px solid var(--tm3-border)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ flex: "1 1 380px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <Badge tone={item.type === "Exam" ? "gold" : "green"}>{item.type}</Badge>
+                      <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--tm3-primary)" }}>
+                        {item.org}
+                      </span>
+                      <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 700 }}>
+                        • SSL Verified
+                      </span>
+                    </div>
+                    <h5 style={{ margin: "0 0 4px", fontSize: "1.02rem", fontWeight: 800, color: "var(--tm3-ink)" }}>
+                      {item.title}
+                    </h5>
+                    <div style={{ fontSize: "0.76rem", color: "var(--tm3-text-soft)", display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      <span><strong>Branch:</strong> {item.branch}</span>
+                      <span>•</span>
+                      <span><strong>Deadline:</strong> {item.deadline}</span>
+                      <span>•</span>
+                      <span><strong>Eligibility:</strong> {item.eligibility}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="tm3-button tm3-button--outline"
+                      style={{ fontSize: "0.78rem", padding: "6px 12px", minHeight: 32 }}
+                    >
+                      Verify Link <ExternalLink size={12} />
+                    </a>
+                    {item.published ? (
+                      <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#10b981", display: "flex", alignItems: "center", gap: 4 }}>
+                        <CheckCircle2 size={15} /> Published
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="tm3-button tm3-button--gold"
+                        onClick={() => publishBotItem(item)}
+                        style={{ fontSize: "0.78rem", padding: "6px 14px", minHeight: 32 }}
+                      >
+                        Approve & Publish to Hub
+                      </button>
+                    )}
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
         </div>

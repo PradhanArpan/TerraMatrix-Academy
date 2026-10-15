@@ -5,7 +5,9 @@ import {
   BookOpen,
   BriefcaseBusiness,
   ChevronDown,
+  Compass,
   FileQuestion,
+  Film,
   GraduationCap,
   LogIn,
   Menu,
@@ -23,7 +25,8 @@ import Home from "./pages/Home";
 import StudentDashboard from "./pages/StudentDashboard";
 import LearningVideos from "./pages/LearningVideos";
 import ExamPractice from "./pages/ExamPractice";
-import LearnerHub from "./pages/LearnerHub";
+import KnowledgeHub from "./pages/KnowledgeHub";
+import TmaShorts from "./pages/TmaShorts";
 import Webinars from "./pages/Webinars";
 import Workshops from "./pages/Workshops";
 import CourseDetail from "./pages/CourseDetail";
@@ -237,11 +240,15 @@ function AppRoutes() {
                         </Link>
                         <Link to="/exam-prep" onClick={closeMenus}>
                           <span className="tm3-menu-icon"><FileQuestion size={20} /></span>
-                          <span><strong>Model Papers & CBT Simulator</strong><small>Standardized examination simulator & detailed solutions</small></span>
+                          <span><strong>Examination & CBT Simulator</strong><small>National model papers, randomized CBT testing & solutions</small></span>
                         </Link>
-                        <Link to="/learner-hub" onClick={closeMenus}>
-                          <span className="tm3-menu-icon"><Zap size={20} /></span>
-                          <span><strong>TMA Shorts & Knowledge Hub</strong><small>Visual engineering simulations, TMA Shorts & technical handbooks</small></span>
+                        <Link to="/knowledge-hub" onClick={closeMenus}>
+                          <span className="tm3-menu-icon"><Compass size={20} /></span>
+                          <span><strong>Knowledge Hub</strong><small>Exam calendars, internships, study codes, handbooks & calculators</small></span>
+                        </Link>
+                        <Link to="/tma-shorts" onClick={closeMenus}>
+                          <span className="tm3-menu-icon"><Film size={20} /></span>
+                          <span><strong>TMA Shorts</strong><small>High-density AI engineering concept explainer reels</small></span>
                         </Link>
                         <Link to="/webinars" onClick={closeMenus}>
                           <span className="tm3-menu-icon"><UsersRound size={20} /></span>
@@ -324,7 +331,9 @@ function AppRoutes() {
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/learning-videos" element={<LearningVideos />} />
           <Route path="/exam-prep" element={<ExamPractice />} />
-          <Route path="/learner-hub" element={<LearnerHub />} />
+          <Route path="/knowledge-hub" element={<KnowledgeHub />} />
+          <Route path="/learner-hub" element={<KnowledgeHub />} />
+          <Route path="/tma-shorts" element={<TmaShorts />} />
           <Route path="/webinars" element={<Webinars />} />
           <Route path="/workshops" element={<Workshops />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
@@ -352,8 +361,9 @@ function AppRoutes() {
               <h3>Explore</h3>
               <Link to="/student">Courses</Link>
               <Link to="/learning-videos">Learning library</Link>
-              <Link to="/exam-prep">Exam prep</Link>
-              <Link to="/learner-hub">Learner hub</Link>
+              <Link to="/exam-prep">Examination & CBT Simulator</Link>
+              <Link to="/knowledge-hub">Knowledge Hub</Link>
+              <Link to="/tma-shorts">TMA Shorts</Link>
               <Link to="/webinars">Webinars</Link>
               <Link to="/workshops">Workshops</Link>
             </div>
