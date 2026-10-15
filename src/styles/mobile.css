@@ -12,16 +12,14 @@
 
 @media (max-width: 900px) {
   .tm3-topline__message { display: none; }
-  .tm3-header__inner { width: min(100% - 28px, var(--tm3-content)); grid-template-columns: 1fr auto; min-height: 70px; }
+  .tm3-header__inner { width: min(100% - 28px, var(--tm3-content)); grid-template-columns: 1fr auto; min-height: 66px; }
   .tm3-brand strong { font-size: 19px; }
   .tm3-brand small { display: none; }
-  .tm3-nav { position: absolute; top: calc(100% + 1px); left: 14px; right: 14px; display: none; flex-direction: column; align-items: stretch; padding: 12px; border: 1px solid var(--tm3-line); border-radius: 20px; background: var(--tm3-surface); box-shadow: var(--tm3-shadow-lg); }
-  .tm3-nav.is-open { display: flex; }
-  .tm3-nav > a, .tm3-nav-dropdown > button { width: 100%; justify-content: space-between; border-radius: 13px; padding: 12px 14px; }
-  .tm3-nav-dropdown { width: 100%; }
-  .tm3-mega-menu, .tm3-login-menu { position: static; min-width: 0; width: 100%; box-shadow: none; margin-top: 5px; border-radius: 14px; }
-  .tm3-menu-button { display: grid; }
-  .tm3-search-link { display: none; }
+  .tm3-nav--desktop { display: none !important; }
+  .tm3-header-actions .tm3-nav-dropdown { display: none !important; }
+  .tm3-header-actions .tm3-header-portal-btn { display: none !important; }
+  .tm3-menu-button { display: grid !important; }
+  .tm3-search-link { display: none !important; }
   .tm3-hero__image { inset: 0; }
   .tm3-hero__inner { min-height: auto; grid-template-columns: 1fr; padding: 70px 0; }
   .tm3-hero-card { max-width: 520px; margin-bottom: 0; }
@@ -249,104 +247,14 @@
   display: grid;
 }
 
-.tm3-app--compact .tm3-mobile-nav-scrim {
-  display: block;
-  position: fixed;
-  inset: 66px 0 0;
-  z-index: 1120;
-  border: 0;
-  border-radius: 0;
-  background: rgba(1, 28, 24, .52);
-  backdrop-filter: blur(3px);
+.tm3-app--compact .tm3-nav--desktop {
+  display: none !important;
 }
 
-.tm3-app--compact .tm3-nav {
-  position: fixed;
-  z-index: 1140;
-  top: 66px;
-  right: 0;
-  bottom: 0;
-  left: auto;
-  width: min(88vw, 370px);
-  margin: 0;
-  padding: 14px 14px calc(28px + env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 5px;
-  overflow-y: auto;
-  border: 0;
-  border-left: 1px solid var(--tm3-line);
-  border-radius: 0;
-  background: var(--tm3-surface);
-  box-shadow: -22px 0 52px rgba(1, 28, 24, .2);
-  transform: translateX(105%);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: transform .2s ease, opacity .2s ease, visibility .2s ease;
-}
-
-.tm3-app--compact .tm3-nav.is-open {
-  transform: translateX(0);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-.tm3-app--compact .tm3-nav > a,
-.tm3-app--compact .tm3-nav-dropdown > button {
-  width: 100%;
-  min-height: 50px;
-  justify-content: space-between;
-  padding: 13px 15px;
-  border-radius: 14px;
-  font-size: 15px;
-}
-
-.tm3-app--compact .tm3-nav > a.is-active {
-  background: var(--tm3-soft);
-}
-
-.tm3-app--compact .tm3-nav-dropdown {
-  width: 100%;
-}
-
-.tm3-app--compact .tm3-login-trigger {
-  margin-top: 3px;
-  justify-content: flex-start !important;
-  gap: 9px !important;
-}
-
-.tm3-app--compact .tm3-login-trigger svg:last-child {
-  margin-left: auto;
-}
-
-.tm3-app--compact .tm3-mega-menu,
-.tm3-app--compact .tm3-login-menu {
-  position: static;
-  width: 100%;
-  min-width: 0;
-  margin-top: 5px;
-  padding: 6px;
-  border-radius: 15px;
-  box-shadow: none;
-  background: var(--tm3-soft);
-  animation: none;
-}
-
-.tm3-app--compact .tm3-mega-menu a,
-.tm3-app--compact .tm3-login-menu a {
-  min-height: 58px;
-  grid-template-columns: 38px minmax(0, 1fr);
-  padding: 10px;
-  background: var(--tm3-surface);
-}
-
-.tm3-app--compact .tm3-mega-menu small,
-.tm3-app--compact .tm3-login-menu small {
-  font-size: 11px;
+.tm3-app--compact .tm3-header-actions .tm3-nav-dropdown,
+.tm3-app--compact .tm3-header-actions .tm3-header-portal-btn,
+.tm3-app--compact .tm3-header-actions .tm3-search-link {
+  display: none !important;
 }
 
 .tm3-app--compact .tm3-shell,

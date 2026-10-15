@@ -221,7 +221,7 @@ function AppRoutes() {
                   </span>
                 </Link>
 
-                <nav id="tm3-primary-navigation" className={`tm3-nav ${mobileOpen ? "is-open" : ""}`} aria-label="Primary navigation">
+                <nav id="tm3-primary-navigation" className="tm3-nav tm3-nav--desktop" aria-label="Primary navigation">
                   <NavLink end to="/" className={({ isActive }) => isActive ? "is-active" : ""}>Academy</NavLink>
 
                   <div className="tm3-nav-dropdown" ref={exploreRef}>
@@ -304,13 +304,212 @@ function AppRoutes() {
               </div>
             </div>
           </header>
-          {compactUi && mobileOpen && (
-            <button
-              className="tm3-mobile-nav-scrim"
-              type="button"
-              aria-label="Close navigation"
-              onClick={closeMenus}
-            />
+
+          {/* Dedicated Mobile Navigation Drawer (Bulletproof Stacking & 100% Clickable) */}
+          {mobileOpen && (
+            <div className="tm3-mobile-drawer-portal" role="dialog" aria-modal="true" aria-label="Navigation menu">
+              <div
+                className="tm3-mobile-drawer-scrim"
+                onClick={closeMenus}
+                aria-label="Close navigation backdrop"
+              />
+              <aside className="tm3-mobile-drawer">
+                <div className="tm3-mobile-drawer__header">
+                  <Link to="/" className="tm3-brand" onClick={closeMenus}>
+                    <img src={logo} alt="TerraMatrix Academy" />
+                    <span>
+                      <strong>TerraMatrix</strong>
+                      <small>Academy</small>
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="tm3-mobile-drawer__close"
+                    onClick={closeMenus}
+                    aria-label="Close menu"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="tm3-mobile-drawer__body">
+                  {/* Account / Session status */}
+                  {studentSession ? (
+                    <div className="tm3-mobile-drawer__session">
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--tm3-green-100)", display: "grid", placeItems: "center", color: "var(--tm3-green-800)" }}>
+                          <GraduationCap size={20} />
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: "0.9rem", display: "block", color: "var(--tm3-ink)" }}>
+                            {studentSession.name || "Student"}
+                          </strong>
+                          <small style={{ fontSize: "0.75rem", color: "var(--tm3-text-soft)" }}>
+                            {studentSession.email}
+                          </small>
+                        </div>
+                      </div>
+                      <Link
+                        to="/student-portal"
+                        className="tm3-button tm3-button--dark"
+                        style={{ width: "100%", minHeight: 40, fontSize: "0.85rem" }}
+                        onClick={closeMenus}
+                      >
+                        <GraduationCap size={16} /> Open Student Portal
+                      </Link>
+                    </div>
+                  ) : instructorSession ? (
+                    <div className="tm3-mobile-drawer__session">
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--tm3-green-100)", display: "grid", placeItems: "center", color: "var(--tm3-green-800)" }}>
+                          <UserRound size={20} />
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: "0.9rem", display: "block", color: "var(--tm3-ink)" }}>
+                            {instructorSession.name}
+                          </strong>
+                          <small style={{ fontSize: "0.75rem", color: "var(--tm3-text-soft)" }}>
+                            Verified Instructor
+                          </small>
+                        </div>
+                      </div>
+                      <Link
+                        to="/instructor-portal"
+                        className="tm3-button tm3-button--dark"
+                        style={{ width: "100%", minHeight: 40, fontSize: "0.85rem" }}
+                        onClick={closeMenus}
+                      >
+                        <UserRound size={16} /> Open Instructor Hub
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="tm3-mobile-drawer__auth">
+                      <span style={{ fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 800, color: "var(--tm3-text-soft)", display: "block", marginBottom: 10 }}>
+                        Academy Portals & Access
+                      </span>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        <Link
+                          to="/student-login"
+                          className="tm3-button tm3-button--dark"
+                          style={{ minHeight: 40, fontSize: "0.85rem", padding: "8px 12px" }}
+                          onClick={closeMenus}
+                        >
+                          <GraduationCap size={16} /> Learner
+                        </Link>
+                        <Link
+                          to="/instructor-login"
+                          className="tm3-button tm3-button--outline"
+                          style={{ minHeight: 40, fontSize: "0.85rem", padding: "8px 12px" }}
+                          onClick={closeMenus}
+                        >
+                          <UserRound size={16} /> Instructor
+                        </Link>
+                      </div>
+                      <div style={{ textAlign: "center", marginTop: 10 }}>
+                        <Link
+                          to="/admin-login"
+                          style={{ fontSize: "0.78rem", color: "var(--tm3-text-soft)", textDecoration: "underline" }}
+                          onClick={closeMenus}
+                        >
+                          Admin Panel Operations
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Primary Navigation Links */}
+                  <div className="tm3-mobile-drawer__nav">
+                    <NavLink
+                      end
+                      to="/"
+                      className={({ isActive }) => `tm3-mobile-drawer__link ${isActive ? "is-active" : ""}`}
+                      onClick={closeMenus}
+                    >
+                      <span>Academy Overview</span>
+                      <ArrowUpRight size={15} style={{ opacity: 0.5 }} />
+                    </NavLink>
+
+                    {/* Explore Accordion Group */}
+                    <div className="tm3-mobile-drawer__group">
+                      <button
+                        type="button"
+                        className="tm3-mobile-drawer__group-toggle"
+                        onClick={() => setExploreOpen((v) => !v)}
+                        aria-expanded={exploreOpen}
+                      >
+                        <span>Explore Programmes & Tools</span>
+                        <ChevronDown size={17} style={{ transform: exploreOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                      </button>
+
+                      {exploreOpen && (
+                        <div className="tm3-mobile-drawer__sublinks">
+                          <Link to="/student" className="tm3-mobile-drawer__sublink" onClick={closeMenus}>
+                            <GraduationCap size={16} style={{ color: "var(--tm3-primary)" }} />
+                            <span><strong>Courses & Programmes</strong></span>
+                          </Link>
+                          <Link to="/learning-videos" className="tm3-mobile-drawer__sublink" onClick={closeMenus}>
+                            <PlayCircle size={16} style={{ color: "var(--tm3-primary)" }} />
+                            <span><strong>Learning Library</strong></span>
+                          </Link>
+                          <Link to="/exam-prep" className="tm3-mobile-drawer__sublink" onClick={closeMenus}>
+                            <FileQuestion size={16} style={{ color: "var(--tm3-primary)" }} />
+                            <span><strong>Examination & CBT Simulator</strong></span>
+                          </Link>
+                          <Link to="/knowledge-hub" className="tm3-mobile-drawer__sublink" onClick={closeMenus}>
+                            <Compass size={16} style={{ color: "var(--tm3-primary)" }} />
+                            <span><strong>Knowledge Hub</strong></span>
+                          </Link>
+                          <Link to="/tma-shorts" className="tm3-mobile-drawer__sublink" onClick={closeMenus}>
+                            <Film size={16} style={{ color: "var(--tm3-primary)" }} />
+                            <span><strong>TMA Shorts (Reels)</strong></span>
+                          </Link>
+                          <Link to="/webinars" className="tm3-mobile-drawer__sublink" onClick={closeMenus}>
+                            <UsersRound size={16} style={{ color: "var(--tm3-primary)" }} />
+                            <span><strong>Webinars</strong></span>
+                          </Link>
+                          <Link to="/workshops" className="tm3-mobile-drawer__sublink" onClick={closeMenus}>
+                            <BriefcaseBusiness size={16} style={{ color: "var(--tm3-primary)" }} />
+                            <span><strong>Workshops</strong></span>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+
+                    <NavLink
+                      to="/instructors"
+                      className={({ isActive }) => `tm3-mobile-drawer__link ${isActive ? "is-active" : ""}`}
+                      onClick={closeMenus}
+                    >
+                      <span>Instructors Directory</span>
+                      <ArrowUpRight size={15} style={{ opacity: 0.5 }} />
+                    </NavLink>
+
+                    <NavLink
+                      to="/student"
+                      className={({ isActive }) => `tm3-mobile-drawer__link ${isActive ? "is-active" : ""}`}
+                      onClick={closeMenus}
+                    >
+                      <span>Course Catalogue</span>
+                      <ArrowUpRight size={15} style={{ opacity: 0.5 }} />
+                    </NavLink>
+                  </div>
+
+                  {/* Drawer Footer with Legal & Compliance */}
+                  <div className="tm3-mobile-drawer__footer">
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: "0.78rem", color: "var(--tm3-text-soft)", marginBottom: 8 }}>
+                      <Link to="/terms" onClick={closeMenus}>Terms of Service</Link>
+                      <span>•</span>
+                      <Link to="/privacy" onClick={closeMenus}>Privacy Policy</Link>
+                      <span>•</span>
+                      <Link to="/accessibility" onClick={closeMenus}>Accessibility</Link>
+                    </div>
+                    <small style={{ fontSize: "0.72rem", color: "var(--tm3-text-soft)", display: "block" }}>
+                      © {new Date().getFullYear()} TerraMatrix Academy. All rights reserved.
+                    </small>
+                  </div>
+                </div>
+              </aside>
+            </div>
           )}
         </>
       )}
