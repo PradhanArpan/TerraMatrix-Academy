@@ -201,7 +201,7 @@ export default function Home() {
     if (isCarouselPaused) return;
     const timer = setInterval(() => {
       setCarouselIndex((prev) => (prev + 1) % engineeringTopics.length);
-    }, 4200);
+    }, 5500);
     return () => clearInterval(timer);
   }, [isCarouselPaused]);
 
@@ -416,19 +416,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        className="tm3-tools-section"
-        onMouseEnter={() => setIsCarouselPaused(true)}
-        onMouseLeave={() => setIsCarouselPaused(false)}
-      >
+      <section className="tm3-tools-section">
         <div className="tm3-shell">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
             <div>
-              <span className="tm3-eyebrow tm3-eyebrow--light">Competency matrix</span>
-              <h2 style={{ fontSize: "2rem", margin: "4px 0 8px", fontWeight: 800, color: "#fff" }}>
+              <span className="tm3-eyebrow">Competency matrix</span>
+              <h2>
                 Master authentic engineering tools & standards.
               </h2>
-              <p style={{ margin: 0, color: "#c5d9d1", fontSize: "0.95rem", maxWidth: 680 }}>
+              <p className="tm3-tools-lead">
                 Progressive capability pathways across computational mechanics, 2D river hydrodynamics, satellite geospatial intelligence, and engineering AI.
               </p>
             </div>
@@ -441,16 +437,7 @@ export default function Home() {
                     key={dotIdx}
                     type="button"
                     onClick={() => setCarouselIndex(dotIdx)}
-                    style={{
-                      width: dotIdx === carouselIndex ? 24 : 8,
-                      height: 8,
-                      borderRadius: 4,
-                      background: dotIdx === carouselIndex ? "var(--tm3-lime)" : "rgba(255,255,255,0.25)",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      transition: "all 0.25s ease",
-                    }}
+                    className={`tm3-tools-dot ${dotIdx === carouselIndex ? "tm3-tools-dot--active" : "tm3-tools-dot--inactive"}`}
                     aria-label={`Go to slide ${dotIdx + 1}`}
                   />
                 ))}
@@ -460,8 +447,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={prevCarouselSlide}
-                  className="tm3-button tm3-button--outline"
-                  style={{ width: 36, height: 36, padding: 0, display: "grid", placeItems: "center", borderRadius: "50%", color: "#fff", borderColor: "rgba(255,255,255,0.25)" }}
+                  className="tm3-tools-nav-btn"
                   aria-label="Previous competency cluster"
                 >
                   <ChevronLeft size={18} />
@@ -469,8 +455,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={nextCarouselSlide}
-                  className="tm3-button tm3-button--outline"
-                  style={{ width: 36, height: 36, padding: 0, display: "grid", placeItems: "center", borderRadius: "50%", color: "#fff", borderColor: "rgba(255,255,255,0.25)" }}
+                  className="tm3-tools-nav-btn"
                   aria-label="Next competency cluster"
                 >
                   <ChevronRight size={18} />
@@ -479,54 +464,52 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Carousel Slide Cards: Displaying rotating window */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
-            {[0, 1, 2].map((offset) => {
-              const topicIndex = (carouselIndex + offset) % engineeringTopics.length;
-              const topic = engineeringTopics[topicIndex];
-              const Icon = topic.icon;
-              return (
-                <Link
-                  to={topic.to}
-                  className="tm3-topic-card"
-                  key={topic.name}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
-                    minHeight: 280,
-                    textDecoration: "none",
-                    position: "relative",
-                  }}
-                >
-                  <div className="tm3-topic-card__head" style={{ marginBottom: 14 }}>
-                    <div className={`tm3-topic-card__icon tm3-topic-card__icon--${topic.tone}`}>
-                      <Icon size={22} />
-                    </div>
-                    <span className="tm3-topic-card__code">{topic.code}</span>
+          {/* Smooth Sliding Carousel Viewport & Track */}
+          <div
+            className="tm3-carousel-viewport"
+            onMouseEnter={() => setIsCarouselPaused(true)}
+            onMouseLeave={() => setIsCarouselPaused(false)}
+          >
+            <div
+              className="tm3-carousel-track"
+              style={{ "--carousel-idx": carouselIndex } as React.CSSProperties}
+            >
+              {[...engineeringTopics, ...engineeringTopics.slice(0, 3)].map((topic, idx) => {
+                const Icon = topic.icon;
+                return (
+                  <div className="tm3-carousel-card" key={`${topic.name}-${idx}`}>
+                    <Link
+                      to={topic.to}
+                      className="tm3-topic-card"
+                    >
+                      <div>
+                        <div className="tm3-topic-card__head">
+                          <div className={`tm3-topic-card__icon tm3-topic-card__icon--${topic.tone}`}>
+                            <Icon size={22} />
+                          </div>
+                          <span className="tm3-topic-card__code">{topic.code}</span>
+                        </div>
+
+                        <h3>{topic.name}</h3>
+
+                        <div className="tm3-topic-card__headline">
+                          {topic.headline}
+                        </div>
+
+                        <p>{topic.description}</p>
+                      </div>
+
+                      <div className="tm3-topic-card__footer">
+                        <span className="tm3-topic-card__tools">{topic.tools}</span>
+                        <span className="tm3-topic-card__explore">
+                          Explore <ArrowRight size={14} />
+                        </span>
+                      </div>
+                    </Link>
                   </div>
-
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: "0 0 6px", lineHeight: 1.35, color: "#fff" }}>
-                    {topic.name}
-                  </h3>
-
-                  <div style={{ color: "var(--tm3-lime)", fontSize: "0.84rem", fontWeight: 700, margin: "0 0 10px" }}>
-                    {topic.headline}
-                  </div>
-
-                  <p style={{ margin: "0 0 16px", color: "var(--tm3-text-soft)", fontSize: "0.85rem", lineHeight: 1.6, flex: 1 }}>
-                    {topic.description}
-                  </p>
-
-                  <div className="tm3-topic-card__footer" style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 14, marginTop: "auto" }}>
-                    <span style={{ fontSize: "0.78rem", color: "#a4c4b8" }}>{topic.tools}</span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--tm3-lime)", fontWeight: 700, fontSize: "0.82rem" }}>
-                      Explore <ArrowRight size={14} />
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>

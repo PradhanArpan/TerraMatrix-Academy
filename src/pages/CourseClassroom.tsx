@@ -987,7 +987,7 @@ export default function CourseClassroom() {
           {view === "overview" && (
             <>
               <section className="tm3-classroom-hero">
-                <div className="tm3-classroom-hero__image" style={{ backgroundImage: `linear-gradient(110deg, rgba(4,40,34,.94), rgba(4,40,34,.34)), url('${courseImage}')` }}>
+                <div className="tm3-classroom-hero__image" style={{ backgroundImage: `linear-gradient(110deg, rgba(4,40,34,.76), rgba(4,40,34,.18)), url('${courseImage}')`, filter: "brightness(1.04)" }}>
                   <div>
                     <Badge tone="gold">{enrollment.status}</Badge>
                     <h2>{course.title}</h2>

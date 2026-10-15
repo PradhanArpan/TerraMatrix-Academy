@@ -192,10 +192,11 @@ export default function LearningVideos() {
                     border: 0,
                     padding: 0,
                     cursor: "pointer",
-                    backgroundImage: `linear-gradient(to top, rgba(6,31,26,.65), transparent 50%), url('${video.thumbnailUrl}')`,
+                    backgroundImage: `linear-gradient(to top, rgba(6,31,26,.25), transparent 50%), url('${video.thumbnailUrl}')`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     position: "relative",
+                    filter: "brightness(1.04)",
                   }}
                   aria-label={`Play ${video.title}`}
                 >

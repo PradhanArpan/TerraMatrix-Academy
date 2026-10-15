@@ -57,9 +57,10 @@ export default function InstructorPage() {
                     style={{
                       height: 205,
                       width: "100%",
-                      backgroundImage: `linear-gradient(to top, rgba(6,31,26,.72), transparent 55%), url('${instructor.photoUrl}')`,
+                      backgroundImage: `linear-gradient(to top, rgba(6,31,26,.32), transparent 55%), url('${instructor.photoUrl}')`,
                       backgroundPosition: "center 20%",
                       backgroundSize: "cover",
+                      filter: "brightness(1.04)",
                       display: "flex",
                       alignItems: "flex-end",
                       padding: 14,
