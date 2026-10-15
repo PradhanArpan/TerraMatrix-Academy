@@ -29,12 +29,32 @@ export default function InstructorLogin() {
   }, [navigate]);
 
   const login = () => {
-    const cleanEmail = email.trim().toLowerCase(); const cleanPhone = validPhone(phone);
-    if (!cleanEmail || !cleanPhone) { setError("Enter the instructor email and valid mobile number."); return; }
-    const instructor = loadInstructors().find((item) => item.email.trim().toLowerCase() === cleanEmail && validPhone(item.phone) === cleanPhone);
-    if (!instructor) { setError("No matching instructor profile was found. Ask the admin to check your instructor record."); return; }
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = validPhone(phone);
+    if (!cleanEmail || !cleanPhone) {
+      setError("Please enter your registered instructor email and a valid 10-digit mobile number.");
+      return;
+    }
+    const allInstructors = loadInstructors(true);
+    const instructor = allInstructors.find(
+      (item) => item.email.trim().toLowerCase() === cleanEmail && validPhone(item.phone) === cleanPhone
+    );
+    if (!instructor) {
+      setError("No matching instructor profile was found for this email and mobile number. Please check your credentials or contact the administrator.");
+      return;
+    }
+    if (instructor.moderationStatus && instructor.moderationStatus !== "Approved") {
+      setError("Your instructor profile is currently pending administrator approval. Portal access will be activated once approved by the administrator.");
+      return;
+    }
+    if (instructor.status === "Inactive") {
+      setError("Your instructor account is currently deactivated or suspended. Please contact the administrator.");
+      return;
+    }
     const data = JSON.stringify({ id: instructor.id, email: cleanEmail, phone: cleanPhone, name: instructor.name });
-    localStorage.setItem("terramatrix_instructor_login", data); sessionStorage.setItem("terramatrix_instructor_login", data); navigate("/instructor-portal");
+    localStorage.setItem("terramatrix_instructor_login", data);
+    sessionStorage.setItem("terramatrix_instructor_login", data);
+    navigate("/instructor-portal");
   };
   return (
     <main className="tm3-auth-page">

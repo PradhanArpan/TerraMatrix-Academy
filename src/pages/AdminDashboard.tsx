@@ -62,13 +62,20 @@ type Instructor = {
   name: string;
   designation: string;
   company: string;
+  affiliation?: string;
   expertise: string;
+  pendingExpertise?: string;
   email: string;
   phone: string;
   bio: string;
+  pendingBio?: string;
   photoUrl: string;
   cvName: string;
   cvData: string;
+  status?: string;
+  moderationStatus?: "Approved" | "Pending Review" | "Changes Requested";
+  adminFeedback?: string;
+  displayOrder?: number;
 };
 
 type Course = {
@@ -349,6 +356,8 @@ const emptyInstructorForm: InstructorForm = {
   photoUrl: defaultImage,
   cvName: "",
   cvData: "",
+  status: "Active",
+  moderationStatus: "Approved",
 };
 
 const defaultLearningTools: LearningTool[] = [
@@ -1652,10 +1661,11 @@ export default function AdminDashboard() {
       return;
     }
 
+    const existing = instructorEditId ? instructors.find((i) => i.id === instructorEditId) : null;
     const instructorData: Instructor = normalizeInstructor({
+      ...existing,
       ...instructorForm,
       id: instructorEditId || Date.now(),
-      remoteId: "",
     });
 
     if (instructorEditId) {
@@ -1678,6 +1688,7 @@ export default function AdminDashboard() {
       name: instructor.name,
       designation: instructor.designation,
       company: instructor.company,
+      affiliation: instructor.affiliation || instructor.company,
       expertise: instructor.expertise,
       email: instructor.email,
       phone: instructor.phone,
@@ -1685,8 +1696,31 @@ export default function AdminDashboard() {
       photoUrl: instructor.photoUrl,
       cvName: instructor.cvName,
       cvData: instructor.cvData,
+      status: instructor.status || "Active",
+      moderationStatus: instructor.moderationStatus || "Approved",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const toggleInstructorApproval = (id: number) => {
+    const target = instructors.find((item) => item.id === id);
+    if (!target) return;
+    const isApproved = target.moderationStatus === "Approved";
+    const newStatus: "Approved" | "Pending Review" = isApproved ? "Pending Review" : "Approved";
+    saveInstructors(
+      instructors.map((instructor) => {
+        if (instructor.id !== id) return instructor;
+        return {
+          ...instructor,
+          moderationStatus: newStatus,
+          status: newStatus === "Approved" ? "Active" : "Inactive",
+          expertise: newStatus === "Approved" ? (instructor.pendingExpertise || instructor.expertise) : instructor.expertise,
+          bio: newStatus === "Approved" ? (instructor.pendingBio || instructor.bio) : instructor.bio,
+          pendingExpertise: newStatus === "Approved" ? undefined : instructor.pendingExpertise,
+          pendingBio: newStatus === "Approved" ? undefined : instructor.pendingBio,
+        };
+      })
+    );
   };
 
   const deleteInstructor = (id: number) => {
@@ -2300,11 +2334,33 @@ export default function AdminDashboard() {
                   <input type="email" value={instructorForm.email} onChange={(e) => setInstructorForm({ ...instructorForm, email: e.target.value })} style={compactInputStyle} placeholder="name@example.com" />
                 </Field>
                 <Field label="Phone">
-                  <input value={instructorForm.phone} onChange={(e) => setInstructorForm({ ...instructorForm, phone: e.target.value })} style={compactInputStyle} placeholder="Mobile number" />
+                  <input value={instructorForm.phone} onChange={(e) => setInstructorForm({ ...instructorForm, phone: e.target.value })} style={compactInputStyle} placeholder="10-digit mobile number" />
                 </Field>
                 <Field label="Expertise keywords">
                   <input value={instructorForm.expertise} onChange={(e) => setInstructorForm({ ...instructorForm, expertise: e.target.value })} style={compactInputStyle} placeholder="QGIS, SAP2000, Hydrology" />
                 </Field>
+                <Field label="Portal Login & Status">
+                  <select
+                    value={instructorForm.moderationStatus || "Approved"}
+                    onChange={(e) => {
+                      const mod = e.target.value as "Approved" | "Pending Review" | "Changes Requested";
+                      setInstructorForm({
+                        ...instructorForm,
+                        moderationStatus: mod,
+                        status: mod === "Approved" ? "Active" : "Inactive",
+                      });
+                    }}
+                    style={compactInputStyle}
+                  >
+                    <option value="Approved">Approved (Login Enabled)</option>
+                    <option value="Pending Review">Pending Review (Login Blocked)</option>
+                    <option value="Changes Requested">Suspended / Deactivated</option>
+                  </select>
+                </Field>
+              </div>
+
+              <div style={{ margin: "6px 0 14px", padding: "8px 12px", background: "#F5F2EA", borderRadius: "8px", border: "1px solid #E8E1D2", fontSize: "12px", color: "#35584D" }}>
+                <strong>Portal Access Requirement:</strong> Instructors can only log into the Instructor Portal (<code>#/instructor-login</code>) if status is <strong>Approved</strong> and they have both a registered email and a valid 10-digit mobile number.
               </div>
 
               <div className="tm-admin-upload-grid tm-admin-upload-grid--two" style={mediaUploadGridTwo}>
@@ -2708,51 +2764,207 @@ export default function AdminDashboard() {
         {instructors.length === 0 ? (
           <div style={emptyState}>No instructors added yet. Use + Add Instructor to create the first profile.</div>
         ) : (
-          <div style={instructorTableShell}>
-            <div style={instructorGridHeader}>
-              <div style={instructorGridHeaderCell}>Instructor</div>
-              <div style={instructorGridHeaderCell}>Designation</div>
-              <div style={instructorGridHeaderCell}>Tool Expertise</div>
-              <div style={instructorGridHeaderCell}>Contact</div>
-              <div style={instructorGridHeaderCell}>Actions</div>
-            </div>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "16px", overflowX: "auto", boxShadow: "0 10px 28px rgba(23,63,53,0.05)" }}>
+            <table style={{ width: "100%", minWidth: "1080px", borderCollapse: "collapse", textAlign: "left" }}>
+              <thead style={tableHead}>
+                <tr>
+                  <th style={{ ...tableHeaderCell, width: "22%" }}>Instructor</th>
+                  <th style={{ ...tableHeaderCell, width: "20%" }}>Designation & Org</th>
+                  <th style={{ ...tableHeaderCell, width: "24%" }}>Tool Expertise</th>
+                  <th style={{ ...tableHeaderCell, width: "18%" }}>Contact & Credentials</th>
+                  <th style={{ ...tableHeaderCell, width: "16%" }}>Approval & Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {instructors.map((instructor) => {
+                  const isApproved = instructor.moderationStatus === "Approved";
+                  const isPending = instructor.moderationStatus === "Pending Review";
+                  const isSuspended = instructor.status === "Inactive" || instructor.moderationStatus === "Changes Requested";
+                  const hasEmail = Boolean(instructor.email && instructor.email.includes("@"));
+                  const cleanPhone = getValidIndianPhone(instructor.phone);
+                  const hasValidPhone = Boolean(cleanPhone);
+                  const toolsList = (instructor.expertise || "")
+                    .split(/[,;]/)
+                    .map((t) => t.trim())
+                    .filter(Boolean);
 
-            {instructors.map((instructor) => (
-              <div key={instructor.id} style={instructorGridRow}>
-                <div style={instructorIdentityCell}>
-                  <div style={{ ...tablePhoto, backgroundImage: `url('${instructor.photoUrl}')` }} />
-                  <strong style={tablePrimaryText}>{instructor.name}</strong>
-                </div>
+                  return (
+                    <tr key={instructor.id} style={professionalTableRow}>
+                      <td style={professionalTableCell}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+                          <div
+                            style={{
+                              ...tablePhoto,
+                              backgroundImage: `url('${instructor.photoUrl}')`,
+                              width: "42px",
+                              height: "42px",
+                              borderRadius: "10px",
+                              border: "1px solid #D5CEBE",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <div style={{ minWidth: 0 }}>
+                            <strong style={{ color: "#173F35", fontSize: "14px", fontWeight: 900, display: "block" }}>
+                              {instructor.name}
+                            </strong>
+                            <span style={{ color: "#788780", fontSize: "11.5px", display: "block", marginTop: "2px" }}>
+                              ID #{instructor.id}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
 
-                <div style={instructorGridCell}>
-                  <strong style={designationLine}>{instructor.designation}</strong>
-                  <span style={tableMutedText}>{instructor.company}</span>
-                </div>
+                      <td style={professionalTableCell}>
+                        <div style={{ display: "grid", gap: "3px", textAlign: "left" }}>
+                          <strong
+                            style={{
+                              color: "#173F35",
+                              fontSize: "13px",
+                              fontWeight: 800,
+                              lineHeight: "1.3",
+                              whiteSpace: "normal",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {instructor.designation || "Instructor"}
+                          </strong>
+                          <span style={{ color: "#53665E", fontSize: "12px", lineHeight: "1.25" }}>
+                            {instructor.company || instructor.affiliation || "TerraMatrix Academy"}
+                          </span>
+                        </div>
+                      </td>
 
-                <div style={instructorGridCell}>
-                  <span style={tableMutedText}>
-                    {formatInstructorExpertise(instructor.expertise) || "Not added"}
-                  </span>
-                </div>
+                      <td style={professionalTableCell}>
+                        {toolsList.length > 0 ? (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                            {toolsList.map((tool) => (
+                              <span
+                                key={tool}
+                                style={{
+                                  display: "inline-block",
+                                  background: "#EBF3EF",
+                                  color: "#173F35",
+                                  fontSize: "11px",
+                                  fontWeight: 700,
+                                  padding: "3px 8px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #D1E3DB",
+                                  lineHeight: "1.2",
+                                }}
+                              >
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ color: "#8E9A94", fontSize: "12px", fontStyle: "italic" }}>
+                            No expertise added
+                          </span>
+                        )}
+                        {instructor.pendingExpertise && (
+                          <div style={{ marginTop: "6px" }}>
+                            <span style={{ background: "#FEF3C7", color: "#92400E", fontSize: "10.5px", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                              Pending update from portal: {instructor.pendingExpertise}
+                            </span>
+                          </div>
+                        )}
+                      </td>
 
-                <div style={instructorGridCell}>
-                  <span style={tableMutedText}>{instructor.email || "Email not added"}</span>
-                  <span style={tableMutedText}>{instructor.phone || "Phone not added"}</span>
-                </div>
+                      <td style={professionalTableCell}>
+                        <div style={{ display: "grid", gap: "4px", fontSize: "12px" }}>
+                          <div>
+                            {hasEmail ? (
+                              <span style={{ color: "#173F35", fontWeight: 700, wordBreak: "break-all" }}>
+                                {instructor.email}
+                              </span>
+                            ) : (
+                              <span style={{ color: "#B91C1C", background: "#FEF2F2", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: 700 }}>
+                                ⚠️ Email missing
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            {hasValidPhone ? (
+                              <span style={{ color: "#53665E", fontWeight: 600 }}>
+                                📱 +91 {cleanPhone}
+                              </span>
+                            ) : (
+                              <span style={{ color: "#B91C1C", background: "#FEF2F2", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: 700 }}>
+                                ⚠️ Phone missing (required for login)
+                              </span>
+                            )}
+                          </div>
+                          {hasEmail && hasValidPhone && isApproved && (
+                            <span style={{ color: "#065F46", fontSize: "11px", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                              ✓ Portal Login Ready
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
-                <div style={instructorActionRow}>
-                  <button onClick={() => editInstructor(instructor)} style={smallButton}>Edit</button>
-                  <button
-                    onClick={() => deleteInstructor(instructor.id)}
-                    style={deleteIconButton}
-                    title="Delete instructor"
-                    aria-label="Delete instructor"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            ))}
+                      <td style={professionalTableCell}>
+                        <div style={{ display: "grid", gap: "8px", justifyItems: "start" }}>
+                          {isApproved && (
+                            <span style={{ background: "#DDE9E2", color: "#0D5A3A", border: "1px solid #B8D6C7", padding: "4px 9px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 850, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              ✓ Approved
+                            </span>
+                          )}
+                          {isPending && (
+                            <span style={{ background: "#FEF3C7", color: "#92400E", border: "1px solid #FCD34D", padding: "4px 9px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 850, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              ⏳ Pending Review
+                            </span>
+                          )}
+                          {isSuspended && (
+                            <span style={{ background: "#FEE2E2", color: "#991B1B", border: "1px solid #FCA5A5", padding: "4px 9px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 850, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              🚫 Suspended
+                            </span>
+                          )}
+
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                            <button
+                              type="button"
+                              onClick={() => toggleInstructorApproval(instructor.id)}
+                              style={{
+                                background: isApproved ? "#FFF5F5" : "#173F35",
+                                color: isApproved ? "#991B1B" : "#FFFFFF",
+                                border: isApproved ? "1px solid #FCA5A5" : "1px solid #173F35",
+                                borderRadius: "7px",
+                                padding: "5px 10px",
+                                fontSize: "11.5px",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                transition: "all 0.15s ease",
+                              }}
+                              title={isApproved ? "Click to revoke portal login access" : "Click to approve and activate portal login"}
+                            >
+                              {isApproved ? "Suspend" : "✓ Approve"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => editInstructor(instructor)}
+                              style={smallButton}
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => deleteInstructor(instructor.id)}
+                              style={deleteIconButton}
+                              title="Delete instructor profile"
+                              aria-label="Delete instructor profile"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
@@ -5160,11 +5372,11 @@ const toolAdminItem: CSSProperties = { display: "grid", gridTemplateColumns: "48
 const toolAdminLogoBox: CSSProperties = { width: "42px", height: "42px", borderRadius: "12px", background: "#DDE9E2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", overflow: "hidden" };
 const toolAdminLogo: CSSProperties = { width: "100%", height: "100%", objectFit: "contain", background: "#FFFFFF" };
 
-const tableShell: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "16px", overflow: "hidden", boxShadow: "0 10px 28px rgba(23,63,53,0.05)" };
+const tableShell: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "16px", overflowX: "auto", boxShadow: "0 10px 28px rgba(23,63,53,0.05)" };
 const dataTable: CSSProperties = { width: "100%", borderCollapse: "collapse", tableLayout: "fixed" };
-const courseDataTable: CSSProperties = { ...dataTable };
-const instructorDataTable: CSSProperties = { ...dataTable };
-const instructorTableShell: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "16px", overflow: "hidden", boxShadow: "0 10px 28px rgba(23,63,53,0.05)" };
+const courseDataTable: CSSProperties = { ...dataTable, minWidth: "980px" };
+const instructorDataTable: CSSProperties = { ...dataTable, minWidth: "1080px", tableLayout: "auto" };
+const instructorTableShell: CSSProperties = { background: "#FFFFFF", border: "1px solid #E8E1D2", borderRadius: "16px", overflowX: "auto", boxShadow: "0 10px 28px rgba(23,63,53,0.05)" };
 const instructorGridColumns = "24% 21% 25% 21% 9%";
 const instructorGridHeader: CSSProperties = { display: "grid", gridTemplateColumns: instructorGridColumns, alignItems: "center", background: "#F5F2EA", color: "#173F35", fontSize: "11.5px", fontWeight: 900, letterSpacing: "0.55px", textTransform: "uppercase", borderBottom: "1px solid #E8E1D2" };
 const instructorGridHeaderCell: CSSProperties = { padding: "10px 8px", whiteSpace: "nowrap" };
@@ -5209,8 +5421,8 @@ const tableMutedText: CSSProperties = {
   marginTop: "3px",
   textAlign: "left",
 };
-const instructorNameLine: CSSProperties = { ...tableMutedText, whiteSpace: "nowrap" };
-const designationLine: CSSProperties = { ...tablePrimaryText, whiteSpace: "nowrap" };
+const instructorNameLine: CSSProperties = { ...tableMutedText, whiteSpace: "normal", wordBreak: "break-word" };
+const designationLine: CSSProperties = { ...tablePrimaryText, whiteSpace: "normal", wordBreak: "break-word" };
 const badgeStack: CSSProperties = { display: "grid", gap: "7px", justifyItems: "start" };
 const nameStack: CSSProperties = { display: "grid", gap: "2px", justifyItems: "start", textAlign: "left" };
 const courseActionGrid: CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", minWidth: 0, justifyItems: "stretch" };

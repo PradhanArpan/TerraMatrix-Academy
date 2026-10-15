@@ -249,12 +249,13 @@ export const DEFAULT_INSTRUCTORS: Instructor[] = [
     affiliation: "Terra Matrix Engineering Consultant",
     expertise: "Geotechnical Engineering, GIS, Water Resources, Python",
     email: "dr.arpanpradhan@gmail.com",
-    phone: "",
+    phone: "9876543210",
     bio: "Civil and geotechnical engineering specialist with extensive research and consulting background in spatial analytics, river basin modeling, and computational methods.",
     photoUrl: "/uploads/instructors/arpan.jpg",
     cvName: "Arpan.pdf",
     cvData: "/uploads/instructors/Arpan.pdf",
     status: "Active",
+    moderationStatus: "Approved",
     displayOrder: 1,
   },
   {
@@ -264,13 +265,14 @@ export const DEFAULT_INSTRUCTORS: Instructor[] = [
     company: "TerraMatrix Academy",
     affiliation: "TerraMatrix Academy",
     expertise: "Structural Analysis, SAP2000, ETABS, Finite Element Modeling",
-    email: "",
-    phone: "",
+    email: "aniket.bhalkikar@terramatrix.in",
+    phone: "9876543211",
     bio: "Specialist in structural systems, advanced computer-aided finite element modeling, dynamic analysis, and seismic design verification.",
     photoUrl: "/uploads/instructors/aniket.jpg",
     cvName: "Aniket.pdf",
     cvData: "/uploads/instructors/Aniket.pdf",
     status: "Active",
+    moderationStatus: "Approved",
     displayOrder: 2,
   },
   {
@@ -280,8 +282,8 @@ export const DEFAULT_INSTRUCTORS: Instructor[] = [
     company: "TerraMatrix Academy",
     affiliation: "TerraMatrix Academy",
     expertise: "Remote Sensing, QGIS, Satellite Image Processing, Geomorphology",
-    email: "",
-    phone: "",
+    email: "asit.kumar@terramatrix.in",
+    phone: "9876543212",
     bio: "Expert in earth observation, multispectral satellite data processing, digital elevation modeling, and applied geographic information systems.",
     pendingExpertise: "Remote Sensing, QGIS, Satellite Image Processing, Geomorphology, Google Earth Engine, UAV LiDAR",
     pendingBio: "Senior researcher & consultant specializing in earth observation, radar interferometry, multispectral satellite data processing, digital elevation modeling, and UAV-based photogrammetric terrain surveys.",
@@ -299,13 +301,14 @@ export const DEFAULT_INSTRUCTORS: Instructor[] = [
     company: "TerraMatrix Academy",
     affiliation: "TerraMatrix Academy",
     expertise: "AutoCAD, Autodesk Revit, BIM Coordination, Structural Detailing",
-    email: "",
-    phone: "",
+    email: "neha.choudhari@terramatrix.in",
+    phone: "9876543213",
     bio: "Industry practitioner specializing in architectural modeling, structural reinforcement detailing, BIM interoperability, and professional engineering documentation.",
     photoUrl: "/uploads/instructors/neha.jpg",
     cvName: "Neha.pdf",
     cvData: "/uploads/instructors/Neha.pdf",
     status: "Active",
+    moderationStatus: "Approved",
     displayOrder: 4,
   },
   {
@@ -315,13 +318,14 @@ export const DEFAULT_INSTRUCTORS: Instructor[] = [
     company: "TerraMatrix Academy",
     affiliation: "TerraMatrix Academy",
     expertise: "QGIS, Spatial Data Infrastructure, Field Survey, Hydrologic Systems",
-    email: "",
-    phone: "",
+    email: "sovan.sankalp@terramatrix.in",
+    phone: "9876543214",
     bio: "Specialist in geospatial technology applications, catchment delineation, terrain analysis, and environmental data workflows for civil infrastructure.",
     photoUrl: "/uploads/instructors/sovan.jpg",
     cvName: "Sovan.pdf",
     cvData: "/uploads/instructors/Sovan.pdf",
     status: "Active",
+    moderationStatus: "Approved",
     displayOrder: 5,
   },
 ];
@@ -730,11 +734,11 @@ export function loadCourses(onlyPublished = true): Course[] {
   return onlyPublished ? data.filter((course) => course.status === "Published") : data;
 }
 
-export function loadInstructors(): Instructor[] {
+export function loadInstructors(includeInactive = false): Instructor[] {
   const stored = readStoredArray<Partial<Instructor>>("terramatrix_instructors");
   const data = (stored.length ? stored : DEFAULT_INSTRUCTORS).map(normalizeInstructor);
   return data
-    .filter((item) => item.status !== "Inactive")
+    .filter((item) => includeInactive || item.status !== "Inactive")
     .sort((a, b) => (a.displayOrder || 999) - (b.displayOrder || 999) || a.name.localeCompare(b.name));
 }
 

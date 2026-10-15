@@ -96,8 +96,14 @@ export default function InstructorPortal() {
     if (!raw) { navigate("/instructor-login"); return; }
     const parsed = JSON.parse(raw) as InstructorLogin;
     setLogin(parsed);
-    const instructors = loadInstructors();
+    const instructors = loadInstructors(true);
     const profile = instructors.find((item) => (parsed.id && item.id === Number(parsed.id)) || item.email.toLowerCase() === parsed.email.toLowerCase() || item.name.toLowerCase() === parsed.name.toLowerCase()) || null;
+    if (profile && ((profile.moderationStatus && profile.moderationStatus !== "Approved") || profile.status === "Inactive")) {
+      localStorage.removeItem("terramatrix_instructor_login");
+      sessionStorage.removeItem("terramatrix_instructor_login");
+      navigate("/instructor-login");
+      return;
+    }
     setInstructor(profile);
     const assigned = loadCourses(false).filter((course) => {
       if (profile && course.instructorIds.includes(profile.id)) return true;
